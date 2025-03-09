@@ -6,17 +6,46 @@
 
     nix-darwin.url = "github:LnL7/nix-darwin/master";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
+
+    nix-homebrew.url = "github:zhaofengli/nix-homebrew";
   };
 
   outputs = inputs@{ self, nix-darwin, nixpkgs, nix-homebrew }:
   let
     configuration = { pkgs, ... }: {
+      nixpkgs.config.allowUnfree = true;
 
       environment.systemPackages =
         [
           pkgs.neovim
           pkgs.htop
         ];
+
+      homebrew = {
+        enable = true;
+        brews = [
+          "mas"
+          "git"
+          "direnv"
+          "tlrc"
+          "tmux"
+          "curl"
+          "asdf"
+          "the_silver_searcher"
+        ];
+        casks = [
+          "the-unarchiver"
+        ];
+
+        masApps = {
+          "Tailscale" = 1475387142;
+        };
+
+        onActivation.autoUpdate = true;
+        onActivation.upgrade    = true;
+        onActivation.cleanup    = "zap";
+      };
+
       # Necessary for using flakes on this system.
       nix.settings.experimental-features = "nix-command flakes";
 
@@ -37,9 +66,20 @@
     };
   in
   {
+    # Build darwin flake using:
+    # $ darwin-rebuild build --flake .#simple
     darwinConfigurations."dudumini" = nix-darwin.lib.darwinSystem {
       modules = [
         configuration
+        nix-homebrew.darwinModules.nix-homebrew {
+          nix-homebrew = {
+            enable = true;
+            user = "emaiax";
+
+            autoMigrate = true; # automatically migrate packages from Homebrew to Nix
+            # enableRosetta = true; # Apple Silicon only
+          };
+        }
         ];
     };
 
