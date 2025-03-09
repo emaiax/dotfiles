@@ -46,6 +46,24 @@
         onActivation.cleanup    = "zap";
       };
 
+      system.defaults = {
+        dock.autohide = true;
+
+        finder.AppleShowAllExtensions = true;
+        finder._FXShowPosixPathInTitle = true;
+
+        NSGlobalDomain.AppleShowAllExtensions = true;
+        NSGlobalDomain.InitialKeyRepeat = 14;
+        NSGlobalDomain.KeyRepeat = 1;
+
+        # trackpad.Clicking = true; # Whether to enable trackpad tap to click
+        # trackpad.Dragging = true; # Whether to enable tap-to-drag
+
+        # trackpad.TrackpadRightClick = true; # Whether to enable trackpad right click
+        # trackpad.TrackpadThreeFingerDrag = true; # Whether to enable three finger drag
+        # trackpad.TrackpadThreeFingerTapGesture = 0; # 0 to disable three finger tap, 2 to trigger Look up & data detectors
+      };
+
       # Necessary for using flakes on this system.
       nix.settings.experimental-features = "nix-command flakes";
 
