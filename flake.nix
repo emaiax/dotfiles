@@ -33,7 +33,6 @@
 
       environment.systemPackages = [
         pkgs.bat
-        pkgs.git
         pkgs.neovim
       ];
 
@@ -55,6 +54,7 @@
             home-manager.users.emaiax = {
               imports = [
                 ./modules/home-manager.nix
+                ./modules/git
               ];
             };
           }
