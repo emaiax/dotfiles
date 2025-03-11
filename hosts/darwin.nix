@@ -68,8 +68,15 @@
     defaults = {
       dock.autohide = true;
 
-      finder.AppleShowAllExtensions = true;
-      finder._FXShowPosixPathInTitle = true;
+      finder = {
+        _FXShowPosixPathInTitle = true;
+        FXEnableExtensionChangeWarning = false;
+        FXPreferredViewStyle = "Nlsv";
+        AppleShowAllExtensions = true;
+        AppleShowAllFiles = true;
+        ShowPathbar = false;
+        ShowStatusBar = true;
+      };
 
       NSGlobalDomain.AppleShowAllExtensions = true;
       NSGlobalDomain.InitialKeyRepeat = 14;
