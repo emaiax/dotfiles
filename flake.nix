@@ -68,6 +68,32 @@
           }
         ];
       };
+
+      dudupro = nix-darwin.lib.darwinSystem {
+        system = "aarch64-darwin"; # Apple Silicon
+        modules = [
+          configuration
+          ./hosts/dudupro.nix
+
+          home-manager.darwinModules.home-manager {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.users.emaiax = {
+              imports = [
+                ./modules/home-manager.nix
+              ];
+            };
+          }
+
+          nix-homebrew.darwinModules.nix-homebrew {
+            nix-homebrew.enable = true;
+            nix-homebrew.user = "emaiax";
+
+            # nix-homebrew.autoMigrate = true; # automatically migrate packages from Homebrew to Nix
+            nix-homebrew.enableRosetta = true; # Apple Silicon only
+          }
+        ];
+      };
     };
 
     # Expose the package set, including overlays
