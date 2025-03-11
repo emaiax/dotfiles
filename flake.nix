@@ -31,13 +31,13 @@
       # Necessary for using flakes on this system.
       nix.settings.experimental-features = "nix-command flakes";
 
-      # environment.systemPackages = [
-      #   pkgs.neovim
-      #   pkgs.htop
-      # ];
+      environment.systemPackages = [
+        pkgs.bat
+        pkgs.git
+        pkgs.neovim
+      ];
 
       # Enable alternative shell support in nix-darwin.
-      # programs.fish.enable = true;
       programs.zsh.enable = true;
     };
   in
@@ -63,8 +63,7 @@
             nix-homebrew.enable = true;
             nix-homebrew.user = "emaiax";
 
-            nix-homebrew.autoMigrate = true; # automatically migrate packages from Homebrew to Nix
-            # nix-homebrew.enableRosetta = true; # Apple Silicon only
+            nix-homebrew.autoMigrate = true;
           }
         ];
       };
@@ -89,7 +88,7 @@
             nix-homebrew.enable = true;
             nix-homebrew.user = "emaiax";
 
-            # nix-homebrew.autoMigrate = true; # automatically migrate packages from Homebrew to Nix
+            nix-homebrew.autoMigrate = true;
             nix-homebrew.enableRosetta = true; # Apple Silicon only
           }
         ];
