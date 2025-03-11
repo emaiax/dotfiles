@@ -14,10 +14,9 @@
     home = "/Users/emaiax";
   };
 
-  # security.pam.enableSudoTouchIdAuth = true;
-
   homebrew = {
     enable = true;
+
     brews = [
       "asdf"
       "curl"
@@ -29,6 +28,7 @@
       "tmux"
       "watch"
     ];
+
     casks = [
       # "amphetamine"
       # "1password"
@@ -81,13 +81,6 @@
       NSGlobalDomain.AppleShowAllExtensions = true;
       NSGlobalDomain.InitialKeyRepeat = 14;
       NSGlobalDomain.KeyRepeat = 1;
-
-      # trackpad.Clicking = true; # Whether to enable trackpad tap to click
-      # trackpad.Dragging = true; # Whether to enable tap-to-drag
-
-      # trackpad.TrackpadRightClick = true; # Whether to enable trackpad right click
-      # trackpad.TrackpadThreeFingerDrag = true; # Whether to enable three finger drag
-      # trackpad.TrackpadThreeFingerTapGesture = 0; # 0 to disable three finger tap, 2 to trigger Look up & data detectors
     };
   };
 }
