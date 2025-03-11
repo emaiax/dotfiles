@@ -32,7 +32,6 @@
       nix.settings.experimental-features = "nix-command flakes";
 
       environment.systemPackages = [
-        pkgs.bat
         pkgs.neovim
       ];
 
@@ -54,6 +53,7 @@
             home-manager.users.emaiax = {
               imports = [
                 ./modules/home-manager.nix
+                ./modules/bat.nix
                 ./modules/git
               ];
             };
