@@ -60,10 +60,13 @@
           }
 
           nix-homebrew.darwinModules.nix-homebrew {
-            nix-homebrew.enable = true;
-            nix-homebrew.user = "emaiax";
+            nix-homebrew = {
+              enable = true;
+              user = "emaiax";
 
-            nix-homebrew.autoMigrate = true;
+              autoMigrate = true;
+              enableRosetta = false; # Intel only
+            };
           }
         ];
       };
@@ -85,11 +88,13 @@
           }
 
           nix-homebrew.darwinModules.nix-homebrew {
-            nix-homebrew.enable = true;
-            nix-homebrew.user = "emaiax";
+            nix-homebrew = {
+              enable = true;
+              user = "emaiax";
 
-            nix-homebrew.autoMigrate = true;
-            nix-homebrew.enableRosetta = true; # Apple Silicon only
+              autoMigrate = true;
+              enableRosetta = true; # Apple Silicon only
+            };
           }
         ];
       };
