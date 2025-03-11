@@ -21,7 +21,6 @@
       "asdf"
       "curl"
       "direnv"
-      "git"
       "mas"
       "the_silver_searcher"
       "tlrc"
@@ -79,8 +78,8 @@
       };
 
       NSGlobalDomain.AppleShowAllExtensions = true;
-      NSGlobalDomain.InitialKeyRepeat = 14;
-      NSGlobalDomain.KeyRepeat = 1;
+      # NSGlobalDomain.InitialKeyRepeat = 14;
+      # NSGlobalDomain.KeyRepeat = 14;
     };
   };
 }
