@@ -2,9 +2,9 @@
 #
 *~             # backup files
 .env*          # ignore environment files (loaded by dotenv)
-sandbox/       # ignore sandbox folders
-vendor/        # dependency directories
-node_modules/  # fuck node_modules
+./sandbox/       # ignore sandbox folders
+./vendor/        # dependency directories
+./node_modules/  # fuck node_modules
 
 # macos.gitignore
 #
