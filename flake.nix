@@ -33,6 +33,7 @@
 
       environment.systemPackages = [
         pkgs.neovim
+        pkgs.just
       ];
 
       # Enable alternative shell support in nix-darwin.
