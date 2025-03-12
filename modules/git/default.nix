@@ -1,18 +1,20 @@
 { pkgs, lib, ... }:
 {
+  home.file.".ssh/allowed_signers".text = ''
+    * ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHiXDGZgMVYWInxXHxuwg2wDrCzWoJYfvhRWZeNAlS+p
+    * ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDGemuFIczUyeEW0SvxgEP5Rj3OWxJl1y87B3yF8ssNO
+  '';
+
   home.packages = with pkgs; [
     git-lfs
   ];
-
-  home.file.".ssh/allowed_signers".text =
-    "* ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHiXDGZgMVYWInxXHxuwg2wDrCzWoJYfvhRWZeNAlS+p";
 
   programs.git = {
     enable = true;
 
     delta.enable = true;
     lfs.enable = true;
-    ignores = lib.splitString "\n" (builtins.readFile ./gitignore);
+    ignores = lib.splitString "\n" (builtins.readFile ./gitignore-global);
 
     userName = "Eduardo Maia";
     userEmail = "emaiax@users.noreply.github.com";
