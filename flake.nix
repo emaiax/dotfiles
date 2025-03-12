@@ -48,11 +48,15 @@
           ./hosts/dudumini.nix
 
           home-manager.darwinModules.home-manager {
+            home-manager.backupFileExtension = "bak";
+
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+
             home-manager.users.emaiax = {
               imports = [
                 ./modules/home-manager.nix
+                ./modules/ssh.nix
                 ./modules/bat.nix
                 ./modules/git
               ];
@@ -78,11 +82,17 @@
           ./hosts/dudupro.nix
 
           home-manager.darwinModules.home-manager {
+            home-manager.backupFileExtension = "bak";
+
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+
             home-manager.users.emaiax = {
               imports = [
                 ./modules/home-manager.nix
+                ./modules/ssh.nix
+                ./modules/bat.nix
+                ./modules/git
               ];
             };
           }
