@@ -3,7 +3,6 @@
   programs.ssh = {
     enable = true;
 
-    identityFile = "~/.ssh/id_ed25519";
     addKeysToAgent = "yes";
     forwardAgent = true;
 
@@ -12,22 +11,15 @@
     extraOptionOverrides = {
       IgnoreUnknown = "UseKeychain";
       UseKeyChain = "yes";
-
-      setEnv = {
-        TERM = "xterm-256color";
-      };
-
-      sendEnv = [
-        "COLORTERM"
-      ];
     };
-
 
     matchBlocks = {
       "homelab" = {
-        identityFile = "~/.ssh/homelab";
         host = "*.homelab.local";
         user = "root";
+
+        identityFile = "~/.ssh/homelab";
+        identitiesOnly = true;
 
         extraOptions = {
           UserKnownHostsFile = "/dev/null";
