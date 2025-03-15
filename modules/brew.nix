@@ -14,8 +14,6 @@
     brews = [
       "mas"
       "the_silver_searcher"
-      "tlrc"
-      "tmux"
       "watch"
     ];
 
