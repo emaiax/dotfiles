@@ -5,6 +5,8 @@
     "emaiax"
   ];
 
+  environment.systemPackages = with pkgs; [ raycast ];
+
   nixpkgs.config = {
     allowUnfree = true;
   };
