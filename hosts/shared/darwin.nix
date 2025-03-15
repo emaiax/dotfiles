@@ -1,6 +1,7 @@
 { pkgs, ... }:
 {
   imports = [
+    ../../modules/pkgs.nix
     ../../modules/brew.nix
   ];
 
