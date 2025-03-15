@@ -1,7 +1,7 @@
 { ... }:
 {
   imports = [
-    ./darwin.nix
+    ./shared/darwin.nix
   ];
 
   # security.pam.services.sudo_local = {
