@@ -12,9 +12,6 @@
     };
 
     brews = [
-      "asdf"
-      "curl"
-      "direnv"
       "mas"
       "the_silver_searcher"
       "tlrc"
