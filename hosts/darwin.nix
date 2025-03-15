@@ -64,8 +64,18 @@
   };
 
   system = {
+    # still depending on https://github.com/LnL7/nix-darwin/pull/699 to be merged
+    # keyboard.shortcuts = {
+    #   enable = true;
+    #
+    #   spotlight.search.enable = false;
+    #   spotlight.search.finderSearch = false;
+    # };
+
     defaults = {
-      dock.autohide = true;
+      dock = {
+        autohide = true;
+      };
 
       finder = {
         _FXShowPosixPathInTitle = true;

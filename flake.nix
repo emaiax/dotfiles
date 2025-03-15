@@ -4,6 +4,8 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
+    # still depending on https://github.com/LnL7/nix-darwin/pull/699 to be merged
+    # nix-darwin.url = "github:lnl7/nix-darwin/pull/699/head";
     nix-darwin.url = "github:LnL7/nix-darwin/master";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
 
