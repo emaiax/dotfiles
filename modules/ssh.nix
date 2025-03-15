@@ -14,12 +14,17 @@
     };
 
     matchBlocks = {
+      "github.com" = {
+        identitiesOnly = true;
+        identityFile = "~/.ssh/github";
+      };
+
       "homelab" = {
         host = "*.homelab.local";
         user = "root";
 
-        identityFile = "~/.ssh/homelab";
         identitiesOnly = true;
+        identityFile = "~/.ssh/homelab";
 
         extraOptions = {
           UserKnownHostsFile = "/dev/null";

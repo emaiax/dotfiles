@@ -1,8 +1,7 @@
 { pkgs, lib, ... }:
 {
   home.file.".ssh/allowed_signers".text = ''
-    * ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHiXDGZgMVYWInxXHxuwg2wDrCzWoJYfvhRWZeNAlS+p
-    * ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDGemuFIczUyeEW0SvxgEP5Rj3OWxJl1y87B3yF8ssNO
+    * ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMTbZW/l0UNEFLwDKrEQGyc+pZGDCq85Nyy7P1JV9S2o
   '';
 
   home.packages = with pkgs; [
@@ -52,7 +51,7 @@
       gpg.format = "ssh";
       tag.gpgSign = true;
       commit.gpgSign = true;
-      user.signingkey = "~/.ssh/id_ed25519.pub";
+      user.signingkey = "~/.ssh/github.pub";
       gpg.ssh.allowedSignersFile = "~/.ssh/allowed_signers";
 
       # core = {
