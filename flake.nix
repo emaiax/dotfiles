@@ -106,7 +106,7 @@
               user = "emaiax";
 
               autoMigrate = true;
-              enableRosetta = true; # Apple Silicon only
+              enableRosetta = false; # Apple Silicon only
             };
           }
         ];
