@@ -9,7 +9,10 @@
     "emaiax"
   ];
 
-  environment.systemPackages = with pkgs; [ raycast ];
+  environment.systemPackages = with pkgs; [
+    arc-browser
+    raycast
+  ];
 
   nixpkgs.config = {
     allowUnfree = true;
