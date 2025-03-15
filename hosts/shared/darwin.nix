@@ -1,7 +1,7 @@
 { pkgs, ... }:
 {
   imports = [
-    ../../modules/homebrew.nix
+    ../../modules/brew.nix
   ];
 
   nix.settings.trusted-users = [

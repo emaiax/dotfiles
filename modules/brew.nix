@@ -1,8 +1,15 @@
 { pkgs, ... }:
 {
-
   homebrew = {
     enable = true;
+
+    # onActivation.autoUpdate = true;
+    # onActivation.upgrade    = true;
+    onActivation.cleanup    = "zap";
+
+    masApps = {
+      "Tailscale" = 1475387142;
+    };
 
     brews = [
       "asdf"
@@ -40,13 +47,5 @@
       # "vlc"
       # "whatsapp"
     ];
-
-    masApps = {
-      "Tailscale" = 1475387142;
-    };
-
-    # onActivation.autoUpdate = true;
-    # onActivation.upgrade    = true;
-    onActivation.cleanup    = "zap";
   };
 }

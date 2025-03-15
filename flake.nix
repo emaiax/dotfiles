@@ -33,11 +33,6 @@
       # Necessary for using flakes on this system.
       nix.settings.experimental-features = "nix-command flakes";
 
-      environment.systemPackages = [
-        pkgs.neovim
-        pkgs.just
-      ];
-
       # Enable alternative shell support in nix-darwin.
       programs.zsh.enable = true;
     };
