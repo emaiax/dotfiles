@@ -10,7 +10,7 @@
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
 
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
-  
+
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -67,7 +67,7 @@
               user = "emaiax";
 
               autoMigrate = true;
-              enableRosetta = false; # Intel only
+              enableRosetta = false; # use /opt/homebrew
             };
           }
         ];
@@ -100,8 +100,8 @@
               enable = true;
               user = "emaiax";
 
-              autoMigrate = true;
-              enableRosetta = false; # Apple Silicon only
+              autoMigrate = false;
+              enableRosetta = false; # use /opt/homebrew
             };
           }
         ];
