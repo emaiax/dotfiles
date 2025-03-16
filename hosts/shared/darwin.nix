@@ -5,6 +5,8 @@
     ../../modules/brew.nix
   ];
 
+  nixpkgs.config.allowUnfree = true;
+
   nix.settings.trusted-users = [
     "root"
     "emaiax"
@@ -14,10 +16,6 @@
     arc-browser
     raycast
   ];
-
-  nixpkgs.config = {
-    allowUnfree = true;
-  };
 
   users.users.emaiax = {
     name = "emaiax";
