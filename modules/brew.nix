@@ -16,8 +16,6 @@
 
     brews = [
       "mas"
-      "the_silver_searcher"
-      "watch"
     ];
 
     casks = [

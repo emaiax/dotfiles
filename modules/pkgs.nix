@@ -7,6 +7,7 @@
     jq
     just
     neovim
+    ripgrep
     tlrc
     unixtools.watch
   ];
