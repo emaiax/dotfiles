@@ -26,6 +26,7 @@
       # "discord"
       # "font-jetbrains-mono-nerd-font"
       # "font-jetbrains-mono"
+      "github" # github desktop
       "the-unarchiver"
       # "arc"
       # "claude"
