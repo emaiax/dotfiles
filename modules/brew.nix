@@ -3,6 +3,9 @@
   homebrew = {
     enable = true;
 
+    # nix-homebrew is handling homebrew updates
+    global.autoUpdate = false;
+
     # onActivation.autoUpdate = true;
     # onActivation.upgrade    = true;
     onActivation.cleanup    = "zap";
