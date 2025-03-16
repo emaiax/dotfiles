@@ -41,12 +41,21 @@
           # Necessary for using flakes on this system.
           nix.settings.experimental-features = "nix-command flakes";
 
+          # https://github.com/NixOS/nixpkgs/blob/88a55dffa4d44d294c74c298daf75824dc0aafb5/pkgs/data/fonts/nerd-fonts/manifests/fonts.json
+          fonts.packages = with pkgs.nerd-fonts; [
+            fira-code
+            hack
+            inconsolata
+            jetbrains-mono
+            lilex
+            meslo-lg
+            monaspace
+            zed-mono
+          ];
+
           nixpkgs.overlays = [
             nix-vscode-extensions.overlays.default
           ];
-
-          # Enable alternative shell support in nix-darwin.
-          programs.zsh.enable = true;
         };
     in
     {
@@ -104,8 +113,9 @@
                 imports = [
                   ./modules/home-manager.nix
                   ./modules/ssh.nix
-                  ./modules/bat.nix
                   ./modules/git
+                  ./modules/bat.nix
+                  ./modules/shell.nix
                   ./modules/vscode.nix
                 ];
               };

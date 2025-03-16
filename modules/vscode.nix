@@ -27,10 +27,10 @@
 
         # https://code.visualstudio.com/docs/getstarted/settings#_settingsjson
         userSettings = {
-          # general settings
-          #
-          "breadcrumbs.filePath" = "off";
-
+          "editor.fontFamily" = "Inconsolata Nerd Font, FiraCode Nerd Font, Hack Nerd Font";
+          "editor.fontLigatures" = true;
+          "editor.fontSize" = 14;
+          "editor.fontVariations" = "'calt', 'ss02', 'ss08', 'zero', 'onum'";
           "editor.formatOnSave" = true;
           "editor.minimap.enabled" = false;
           "editor.tabSize" = 2;
