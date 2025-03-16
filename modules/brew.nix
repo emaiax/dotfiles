@@ -8,7 +8,7 @@
 
     # onActivation.autoUpdate = true;
     # onActivation.upgrade    = true;
-    onActivation.cleanup    = "zap";
+    onActivation.cleanup = "zap";
 
     masApps = {
       "Tailscale" = 1475387142;
