@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
 {
   programs.vscode = {
     enable = true;
@@ -9,14 +9,20 @@
           brettm12345.nixfmt-vscode
           esbenp.prettier-vscode
           jnoortheen.nix-ide
-          teabyii.ayu	
+          teabyii.ayu
           vscodevim.vim
         ];
 
         # https://code.visualstudio.com/docs/getstarted/keybindings#_advanced-customization
         keybindings = [
-          { key = "cmd+shift+c"; command = "copyRelativeFilePath"; }
-          { key = "cmd+shift+s"; command = "workbench.action.files.saveAll"; }
+          {
+            key = "cmd+shift+c";
+            command = "copyRelativeFilePath";
+          }
+          {
+            key = "cmd+shift+s";
+            command = "workbench.action.files.saveAll";
+          }
         ];
 
         # https://code.visualstudio.com/docs/getstarted/settings#_settingsjson
@@ -34,9 +40,17 @@
           "explorer.confirmDelete" = false;
           "explorer.confirmDragAndDrop" = false;
 
-          # "[nix]"."editor.defaultFormatter" = "nixfmt";
+          "[nix]" = {
+            "editor.defaultFormatter" = "brettm12345.nixfmt-vscode";
+          };
         };
       };
     };
+  };
+
+  home.activation = {
+    vsCodeVimModeKeyRepeat = lib.hm.dag.entryAfter [ "installPackages" "vscodeProfiles" ] ''
+      /usr/bin/defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false
+    '';
   };
 }
