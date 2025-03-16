@@ -11,107 +11,121 @@
 
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
 
+    nix-vscode-extensions.url = "github:nix-community/nix-vscode-extensions";
+
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = inputs@{
+  outputs =
+    inputs@{
       self,
       home-manager,
       nix-darwin,
       nix-homebrew,
       nixpkgs,
-  }:
-  let
-    configuration = { pkgs, ... }: {
-      # Used for backwards compatibility, please read the changelog before changing.
-      system.stateVersion = 6;
+      nix-vscode-extensions,
+    }:
+    let
+      configuration =
+        { pkgs, ... }:
+        {
+          # Used for backwards compatibility, please read the changelog before changing.
+          system.stateVersion = 6;
 
-      # Set Git commit hash for darwin-version.
-      system.configurationRevision = self.rev or self.dirtyRev or null;
+          # Set Git commit hash for darwin-version.
+          system.configurationRevision = self.rev or self.dirtyRev or null;
 
-      # Necessary for using flakes on this system.
-      nix.settings.experimental-features = "nix-command flakes";
+          # Necessary for using flakes on this system.
+          nix.settings.experimental-features = "nix-command flakes";
 
-      # Enable alternative shell support in nix-darwin.
-      programs.zsh.enable = true;
-    };
-  in
-  {
-    darwinConfigurations =  {
-      dudumini = nix-darwin.lib.darwinSystem {
-        system = "x86_64-darwin"; # Intel
-        modules = [
-          configuration
-          ./hosts/dudumini.nix
+          nixpkgs.overlays = [
+            nix-vscode-extensions.overlays.default
+          ];
 
-          home-manager.darwinModules.home-manager {
-            home-manager.backupFileExtension = "bak";
+          # Enable alternative shell support in nix-darwin.
+          programs.zsh.enable = true;
+        };
+    in
+    {
+      darwinConfigurations = {
+        dudumini = nix-darwin.lib.darwinSystem {
+          system = "x86_64-darwin"; # Intel
+          modules = [
+            configuration
+            ./hosts/dudumini.nix
 
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
+            home-manager.darwinModules.home-manager
+            {
+              home-manager.backupFileExtension = "bak";
 
-            home-manager.users.emaiax = {
-              imports = [
-                ./modules/home-manager.nix
-                ./modules/ssh.nix
-                ./modules/bat.nix
-                ./modules/git
-              ];
-            };
-          }
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
 
-          nix-homebrew.darwinModules.nix-homebrew {
-            nix-homebrew = {
-              enable = true;
-              user = "emaiax";
+              home-manager.users.emaiax = {
+                imports = [
+                  ./modules/home-manager.nix
+                  ./modules/ssh.nix
+                  ./modules/bat.nix
+                  ./modules/git
+                ];
+              };
+            }
 
-              autoMigrate = true;
-              enableRosetta = false; # use /opt/homebrew
-            };
-          }
-        ];
+            nix-homebrew.darwinModules.nix-homebrew
+            {
+              nix-homebrew = {
+                enable = true;
+                user = "emaiax";
+
+                autoMigrate = true;
+                enableRosetta = false; # use /opt/homebrew
+              };
+            }
+          ];
+        };
+
+        dudupro = nix-darwin.lib.darwinSystem {
+          system = "aarch64-darwin"; # Apple Silicon
+          modules = [
+            configuration
+            ./hosts/dudupro.nix
+
+            home-manager.darwinModules.home-manager
+            {
+              home-manager.backupFileExtension = "bak";
+
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+
+              home-manager.users.emaiax = {
+                imports = [
+                  ./modules/home-manager.nix
+                  ./modules/ssh.nix
+                  ./modules/bat.nix
+                  ./modules/git
+                  ./modules/vscode.nix
+                ];
+              };
+            }
+
+            nix-homebrew.darwinModules.nix-homebrew
+            {
+              nix-homebrew = {
+                enable = true;
+                user = "emaiax";
+
+                autoMigrate = false;
+                enableRosetta = false; # use /opt/homebrew
+              };
+            }
+          ];
+        };
       };
 
-      dudupro = nix-darwin.lib.darwinSystem {
-        system = "aarch64-darwin"; # Apple Silicon
-        modules = [
-          configuration
-          ./hosts/dudupro.nix
-
-          home-manager.darwinModules.home-manager {
-            home-manager.backupFileExtension = "bak";
-
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-
-            home-manager.users.emaiax = {
-              imports = [
-                ./modules/home-manager.nix
-                ./modules/ssh.nix
-                ./modules/bat.nix
-                ./modules/git
-                ./modules/vscode.nix
-              ];
-            };
-          }
-
-          nix-homebrew.darwinModules.nix-homebrew {
-            nix-homebrew = {
-              enable = true;
-              user = "emaiax";
-
-              autoMigrate = false;
-              enableRosetta = false; # use /opt/homebrew
-            };
-          }
-        ];
-      };
+      # Expose the package set, including overlays
+      darwinPackages = self.darwinConfigurations.dudumini.pkgs;
     };
-
-    # Expose the package set, including overlays
-    darwinPackages = self.darwinConfigurations.dudumini.pkgs;
-  };
 }
