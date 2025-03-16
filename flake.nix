@@ -93,6 +93,7 @@
                 ./modules/ssh.nix
                 ./modules/bat.nix
                 ./modules/git
+                ./modules/vscode.nix
               ];
             };
           }
