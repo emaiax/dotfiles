@@ -19,13 +19,13 @@
         Dragging = true; # Whether to enable tap-to-drag
 
         # Whether to enable trackpad right click
-        TrackpadRightClick = true; 
+        TrackpadRightClick = true;
 
         # Whether to enable three finger drag
-        TrackpadThreeFingerDrag = true; 
+        TrackpadThreeFingerDrag = true;
 
         # 0 to disable three finger tap, 2 to trigger Look up & data detectors
-        TrackpadThreeFingerTapGesture = 0; 
+        TrackpadThreeFingerTapGesture = 0;
       };
     };
   };

@@ -28,11 +28,11 @@
 
       co = "checkout";
 
-      # grab a change from a branch and replay it 
-      cp = "cherry-pick -x" ;
+      # grab a change from a branch and replay it
+      cp = "cherry-pick -x";
 
-      # diff 
-      df = "diff";          # unstaged changes
+      # diff
+      df = "diff"; # unstaged changes
       dc = "diff --cached"; # staged changes
 
       # log
