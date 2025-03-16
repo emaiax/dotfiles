@@ -6,43 +6,34 @@
     # nix-homebrew is handling homebrew updates
     global.autoUpdate = false;
 
-    # onActivation.autoUpdate = true;
-    # onActivation.upgrade    = true;
+    onActivation.autoUpdate = true;
+    onActivation.upgrade = true;
     onActivation.cleanup = "zap";
-
-    masApps = {
-      "Tailscale" = 1475387142;
-    };
 
     brews = [
       "mas"
     ];
 
     casks = [
-      # "amphetamine"
-      # "1password"
-      # "discord"
-      # "font-jetbrains-mono-nerd-font"
-      # "font-jetbrains-mono"
-      "github" # github desktop
+      "1password-cli"
+      "1password"
+      "cleanshot"
+      "contexts"
+      "discord"
+      "github" # github desktop for mac
+      "slack"
+      "spotify"
+      "tableplus"
+      "telegram"
       "the-unarchiver"
-      # "arc"
-      # "claude"
-      # "cleanshot"
-      # "contexts"
-      # "discord"
-      # "iterm2"
-      # "podman"
-      # "raycast"
-      # "rio"
-      # "setapp"
-      # "slack"
-      # "spotify"
-      # "tableplus"
-      # "telegram"
-      # "visual-studio-code"
-      # "vlc"
-      # "whatsapp"
+      "vlc"
+      "whatsapp"
+      "setapp"
     ];
+
+    masApps = {
+      "Amphetamine" = 937984704;
+      "Tailscale" = 1475387142;
+    };
   };
 }
