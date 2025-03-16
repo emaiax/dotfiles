@@ -14,6 +14,7 @@
 
   environment.systemPackages = with pkgs; [
     arc-browser
+    nixfmt-rfc-style
     raycast
   ];
 
@@ -21,7 +22,6 @@
     name = "emaiax";
     home = "/Users/emaiax";
   };
-
 
   system = {
     # still depending on https://github.com/LnL7/nix-darwin/pull/699 to be merged
