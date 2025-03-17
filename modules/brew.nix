@@ -21,6 +21,8 @@
       "contexts"
       "discord"
       "github" # github desktop for mac
+      "rectangle"
+      "setapp"
       "slack"
       "spotify"
       "tableplus"
@@ -28,7 +30,6 @@
       "the-unarchiver"
       "vlc"
       "whatsapp"
-      "setapp"
     ];
 
     masApps = {
