@@ -21,6 +21,7 @@
       "contexts"
       "discord"
       "github" # github desktop for mac
+      "logi-options+" # logitech options
       "rectangle"
       "setapp"
       "slack"
