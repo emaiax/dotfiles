@@ -20,7 +20,9 @@
       "cleanshot"
       "contexts"
       "discord"
+      "ghostty"
       "github" # github desktop for mac
+      "setapp"
       "slack"
       "spotify"
       "tableplus"
@@ -28,7 +30,6 @@
       "the-unarchiver"
       "vlc"
       "whatsapp"
-      "setapp"
     ];
 
     masApps = {
