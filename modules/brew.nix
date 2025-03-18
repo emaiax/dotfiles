@@ -1,5 +1,13 @@
 { ... }:
 {
+  environment.variables = {
+    # disable analytics
+    HOMEBREW_NO_ANALYTICS = "1";
+
+    # update after 1 hour of the last update
+    HOMEBREW_AUTO_UPDATE_SECS = "3600";
+  };
+
   homebrew = {
     enable = true;
 
