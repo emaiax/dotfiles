@@ -1,0 +1,9 @@
+# vi:ft=conf
+#
+# https://ghostty.org/docs/config/reference
+#
+auto-update-channel = tip
+window-decoration = true
+window-theme = "dark"
+window-save-state = always
+window-padding-balance = true
