@@ -7,3 +7,19 @@ window-decoration = true
 window-theme = "dark"
 window-save-state = always
 window-padding-balance = true
+
+# makes it maximizes the window
+#
+window-height = 9999
+window-width = 9999
+confirm-close-surface = true
+macos-option-as-alt = true
+macos-titlebar-style = "tabs"
+shell-integration = none
+cursor-style = block
+cursor-style-blink = true
+mouse-hide-while-typing = true
+theme = GruvboxDarkHard
+clipboard-read = "allow"
+clipboard-paste-protection = false
+
