@@ -22,6 +22,9 @@
       "discord"
       "ghostty"
       "github" # github desktop for mac
+      "logi-options+" # logitech options
+      "obsidian"
+      "rectangle"
       "setapp"
       "slack"
       "spotify"
