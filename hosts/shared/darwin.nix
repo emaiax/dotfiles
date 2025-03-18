@@ -39,7 +39,7 @@
       };
 
       finder = {
-        _FXShowPosixPathInTitle = true;
+        _FXShowPosixPathInTitle = false;
         FXEnableExtensionChangeWarning = false;
         FXPreferredViewStyle = "Nlsv";
         AppleShowAllExtensions = true;
