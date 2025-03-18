@@ -23,6 +23,7 @@
       "ghostty"
       "github" # github desktop for mac
       "logi-options+" # logitech options
+      "iterm2"
       "obsidian"
       "rectangle"
       "setapp"
