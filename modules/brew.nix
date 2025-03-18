@@ -4,7 +4,7 @@
     enable = true;
 
     # nix-homebrew is handling homebrew updates
-    global.autoUpdate = false;
+    global.autoUpdate = true;
 
     onActivation.autoUpdate = true;
     onActivation.upgrade = true;
