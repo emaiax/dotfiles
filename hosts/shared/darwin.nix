@@ -14,6 +14,7 @@
 
   environment.systemPackages = with pkgs; [
     arc-browser
+    iterm2
     nixfmt-rfc-style
     raycast
   ];
