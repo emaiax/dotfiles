@@ -77,8 +77,9 @@
                 imports = [
                   ./modules/home-manager.nix
                   ./modules/ssh.nix
-                  ./modules/bat
+                  ./modules/shell.nix
                   ./modules/git
+                  ./modules/bat
                 ];
               };
             }
