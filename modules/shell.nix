@@ -5,5 +5,6 @@
     ./ghostty
     ./zsh.nix
     ./starship.nix
+    ./zoxide.nix
   ];
 }
