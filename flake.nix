@@ -77,7 +77,7 @@
                 imports = [
                   ./modules/home-manager.nix
                   ./modules/ssh.nix
-                  ./modules/bat.nix
+                  ./modules/bat
                   ./modules/git
                 ];
               };
@@ -113,10 +113,10 @@
                 imports = [
                   ./modules/home-manager.nix
                   ./modules/ssh.nix
-                  ./modules/git
-                  ./modules/bat.nix
                   ./modules/shell.nix
                   ./modules/vscode.nix
+                  ./modules/git
+                  ./modules/bat
                 ];
               };
             }
