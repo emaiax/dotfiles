@@ -1,6 +1,8 @@
-{ config, ... }:
+{ config, lib, ... }:
+let
+  sourcePath = "${config.xdg.configHome}/nix/modules/iterm2/config";
+  targetPath = "iterm2/com.googlecode.iterm2.plist";
+in
 {
-  xdg.configFile."iterm2/com.googlecode.iterm2.plist" = {
-    source = config.lib.file.mkOutOfStoreSymlink ./config;
-  };
+  xdg.configFile."${targetPath}".source = config.lib.file.mkOutOfStoreSymlink sourcePath;
 }
