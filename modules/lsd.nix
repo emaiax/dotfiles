@@ -4,6 +4,10 @@
     enable = true;
     enableAliases = true;
 
+    settings = {
+      icons = { when = "never"; };
+    };
+
     # aliases = {
     #   ls = "${pkgs.lsd}/bin/lsd";
     #   ll = "${pkgs.lsd}/bin/lsd -l";
