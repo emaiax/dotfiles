@@ -1,5 +1,18 @@
-{ lib, pkgs, ... }:
 {
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+let
+  sourcePath = "${config.xdg.configHome}/nix/modules/vscode/settings.json";
+  targetPath = "${config.home.homeDirectory}/Library/Application\ Support/Code/User/settings.json";
+in
+{
+  # https://code.visualstudio.com/docs/getstarted/settings#_settingsjson
+  #
+  xdg.configFile."${targetPath}".source = config.lib.file.mkOutOfStoreSymlink sourcePath;
+
   programs.vscode = {
     enable = true;
 
@@ -24,28 +37,6 @@
             command = "workbench.action.files.saveAll";
           }
         ];
-
-        # https://code.visualstudio.com/docs/getstarted/settings#_settingsjson
-        userSettings = {
-          "editor.fontFamily" = "Monaco, Inconsolata Nerd Font, FiraCode Nerd Font, Hack Nerd Font";
-          "editor.fontLigatures" = false;
-          "editor.fontSize" = 12;
-          "editor.fontVariations" = "'calt', 'ss02', 'ss08', 'zero', 'onum'";
-          "editor.formatOnSave" = true;
-          "editor.minimap.enabled" = false;
-          "editor.tabSize" = 2;
-
-          "explorer.confirmDelete" = false;
-          "explorer.confirmDragAndDrop" = false;
-
-          "telemetry.telemetryLevel" = "off";
-
-          "workbench.colorTheme" = "Ayu Mirage Bordered";
-
-          "[nix]" = {
-            "editor.defaultFormatter" = "brettm12345.nixfmt-vscode";
-          };
-        };
       };
     };
   };

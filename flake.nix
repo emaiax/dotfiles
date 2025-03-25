@@ -115,7 +115,7 @@
                   ./modules/home-manager.nix
                   ./modules/ssh.nix
                   ./modules/shell.nix
-                  ./modules/vscode.nix
+                  ./modules/vscode
                   ./modules/git
                   ./modules/bat
                 ];

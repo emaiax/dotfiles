@@ -1,0 +1,19 @@
+{
+  "editor.fontFamily": "FiraCode Nerd Font, Monaco, Inconsolata Nerd Font, Hack Nerd Font",
+  "editor.fontLigatures": true,
+  "editor.fontSize": 12,
+  "editor.fontVariations": "'calt', 'ss02', 'ss08', 'zero', 'onum'",
+  "editor.formatOnSave": true,
+  "editor.minimap.enabled": false,
+  "editor.tabSize": 2,
+  "explorer.confirmDelete": false,
+  "explorer.confirmDragAndDrop": false,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "telemetry.telemetryLevel": "off",
+  "workbench.colorTheme": "Ayu Mirage Bordered",
+
+  "[nix]": {
+    "editor.defaultFormatter": "brettm12345.nixfmt-vscode"
+  },
+}
