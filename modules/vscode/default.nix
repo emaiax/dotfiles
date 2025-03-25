@@ -19,11 +19,42 @@ in
     profiles = {
       default = {
         extensions = with pkgs.vscode-marketplace; [
-          brettm12345.nixfmt-vscode
-          esbenp.prettier-vscode
-          jnoortheen.nix-ide
+          # themes and icons
+          #
           teabyii.ayu
+          emmanuelbeziat.vscode-great-icons
+
+          bierner.github-markdown-preview
+          bierner.markdown-preview-github-styles
+          mechatroner.rainbow-csv
+          ms-vscode.live-server
+          naumovs.color-highlight
           vscodevim.vim
+          wakatime.vscode-wakatime
+
+          # git and github
+          #
+          eamodio.gitlens
+          github.copilot
+          github.copilot-chat
+          github.vscode-github-actions
+          github.vscode-pull-request-github
+
+          # languages and formatters
+          #
+          brettm12345.nixfmt-vscode
+          elixir-lsp.vscode-elixir-ls
+          esbenp.prettier-vscode
+          golang.go
+          hashicorp.hcl # support for packer HCL files
+          hashicorp.terraform
+          jnoortheen.nix-ide
+          redhat.ansible
+          redhat.vscode-yaml
+          samuelcolvin.jinjahtml
+          shopify.ruby-lsp
+          tamasfe.even-better-toml
+          ziglang.vscode-zig
         ];
 
         # https://code.visualstudio.com/docs/getstarted/keybindings#_advanced-customization

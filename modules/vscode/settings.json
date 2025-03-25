@@ -1,19 +1,66 @@
 {
+  "breadcrumbs.filePath": "off",
+  "editor.accessibilitySupport": "off",
+  "editor.colorDecorators": true,
   "editor.fontFamily": "FiraCode Nerd Font, Monaco, Inconsolata Nerd Font, Hack Nerd Font",
   "editor.fontLigatures": true,
   "editor.fontSize": 12,
   "editor.fontVariations": "'calt', 'ss02', 'ss08', 'zero', 'onum'",
   "editor.formatOnSave": true,
+  "editor.inlineSuggest.enabled": true,
   "editor.minimap.enabled": false,
+  "editor.renderWhitespace": "all",
+  "editor.suggestSelection": "first",
   "editor.tabSize": 2,
+  "elixirLS.dialyzerEnabled": false,
+  "elixirLS.fetchDeps": false,
+  "elixirLS.useCurrentRootFolderAsProjectDir": true,
   "explorer.confirmDelete": false,
   "explorer.confirmDragAndDrop": false,
   "files.trimFinalNewlines": true,
   "files.trimTrailingWhitespace": true,
+  "git.ignoreMissingGitWarning": true,
+  "git.openRepositoryInParentFolders": "never",
+  "gitlens.telemetry.enabled": false,
+  "go.toolsManagement.autoUpdate": true,
+  "html.autoClosingTags": false,
+  "html.format.wrapAttributes": "auto",
+  "html.format.wrapLineLength": 0,
+  "outline.icons": false,
+  "security.workspace.trust.untrustedFiles": "open",
   "telemetry.telemetryLevel": "off",
+  "typescript.updateImportsOnFileMove.enabled": "always",
   "workbench.colorTheme": "Ayu Mirage Bordered",
 
+  "[ansible]": {
+    // "editor.defaultFormatter": "redhat.vscode-yaml"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  "[elixir]": {
+    "editor.defaultFormatter": "JakeBecker.elixir-ls"
+  },
+
+  "[go]": {
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    },
+    "editor.defaultFormatter": "golang.go"
+  },
+
+  "[html]": {
+    "editor.defaultFormatter": "vscode.html-language-features"
+  },
+  
   "[nix]": {
     "editor.defaultFormatter": "brettm12345.nixfmt-vscode"
   },
+
+  "[phoenix-heex]": {
+    "editor.defaultFormatter": "JakeBecker.elixir-ls"
+  },
+
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  }
 }
