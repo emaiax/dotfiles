@@ -18,19 +18,12 @@ in
 
     profiles = {
       default = {
+        # search for vscode-extensions on https://search.nixos.org/packages
         extensions = with pkgs.vscode-marketplace; [
           # themes and icons
           #
           teabyii.ayu
           emmanuelbeziat.vscode-great-icons
-
-          bierner.github-markdown-preview
-          bierner.markdown-preview-github-styles
-          mechatroner.rainbow-csv
-          ms-vscode.live-server
-          naumovs.color-highlight
-          vscodevim.vim
-          wakatime.vscode-wakatime
 
           # git and github
           #
@@ -43,18 +36,32 @@ in
           # languages and formatters
           #
           brettm12345.nixfmt-vscode
-          elixir-lsp.vscode-elixir-ls
+          # elixir-lsp.vscode-elixir-ls
           esbenp.prettier-vscode
           golang.go
-          hashicorp.hcl # support for packer HCL files
+          hashicorp.hcl # support Packer HCL files
           hashicorp.terraform
           jnoortheen.nix-ide
+          phoenixframework.phoenix
           redhat.ansible
           redhat.vscode-yaml
           samuelcolvin.jinjahtml
           shopify.ruby-lsp
           tamasfe.even-better-toml
           ziglang.vscode-zig
+
+          # markdown previews
+          #
+          bierner.github-markdown-preview
+          bierner.markdown-preview-github-styles
+
+          # utilities
+          #
+          dotenv.dotenv-vscode
+          mechatroner.rainbow-csv
+          naumovs.color-highlight
+          vscodevim.vim
+          wakatime.vscode-wakatime
         ];
 
         # https://code.visualstudio.com/docs/getstarted/keybindings#_advanced-customization
