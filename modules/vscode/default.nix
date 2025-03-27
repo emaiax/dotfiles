@@ -18,12 +18,23 @@ in
 
     profiles = {
       default = {
+        # https://code.visualstudio.com/docs/getstarted/keybindings#_advanced-customization
+        keybindings = [
+          {
+            key = "cmd+shift+c";
+            command = "copyRelativeFilePath";
+          }
+          {
+            key = "cmd+shift+s";
+            command = "workbench.action.files.saveAll";
+          }
+        ];
+
         # search for vscode-extensions on https://search.nixos.org/packages
         extensions = with pkgs.vscode-marketplace; [
           # themes and icons
           #
           teabyii.ayu
-          emmanuelbeziat.vscode-great-icons
 
           # git and github
           #
@@ -36,11 +47,11 @@ in
           # languages and formatters
           #
           brettm12345.nixfmt-vscode
-          # elixir-lsp.vscode-elixir-ls
           esbenp.prettier-vscode
           golang.go
-          hashicorp.hcl # support Packer HCL files
+          hashicorp.hcl # Packer HCL files
           hashicorp.terraform
+          jakebecker.elixir-ls
           jnoortheen.nix-ide
           phoenixframework.phoenix
           redhat.ansible
@@ -53,6 +64,7 @@ in
           # markdown previews
           #
           bierner.github-markdown-preview
+          bierner.markdown-mermaid
           bierner.markdown-preview-github-styles
 
           # utilities
@@ -64,17 +76,6 @@ in
           wakatime.vscode-wakatime
         ];
 
-        # https://code.visualstudio.com/docs/getstarted/keybindings#_advanced-customization
-        keybindings = [
-          {
-            key = "cmd+shift+c";
-            command = "copyRelativeFilePath";
-          }
-          {
-            key = "cmd+shift+s";
-            command = "workbench.action.files.saveAll";
-          }
-        ];
       };
     };
   };
