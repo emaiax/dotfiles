@@ -48,9 +48,23 @@
         ShowStatusBar = true;
       };
 
-      NSGlobalDomain.AppleShowAllExtensions = true;
-      # NSGlobalDomain.InitialKeyRepeat = 14;
-      # NSGlobalDomain.KeyRepeat = 14;
+      NSGlobalDomain = {
+        AppleShowAllExtensions = true;
+
+        # Repeat a key when it is held down (false) or display the accented character selector (true)
+        ApplePressAndHoldEnabled = false;
+
+        # https://apple.stackexchange.com/questions/261163/default-value-for-nsglobaldomain-initialkeyrepeat
+        # https://mac-key-repeat.zaymon.dev
+        #
+        # The step values that correspond to the sliders on the GUI are as follow (lower equals faster):
+        #
+        # KeyRepeat:        120, 90, 60, 30, 12, 6, 2
+        # InitialKeyRepeat: 120, 94, 68, 35, 25, 15
+        #
+        InitialKeyRepeat = 15; # 225ms
+        KeyRepeat = 4; # 60ms
+      };
     };
   };
 }

@@ -83,6 +83,8 @@ in
   home.activation = {
     vsCodeVimModeKeyRepeat = lib.hm.dag.entryAfter [ "installPackages" "vscodeProfiles" ] ''
       /usr/bin/defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false
+
+      /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
     '';
   };
 }
