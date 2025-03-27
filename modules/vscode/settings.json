@@ -31,13 +31,21 @@
   "telemetry.telemetryLevel": "off",
   "typescript.updateImportsOnFileMove.enabled": "always",
   "workbench.colorTheme": "Ayu Mirage Bordered",
+  "workbench.iconTheme": "ayu",
+
+  "files.associations": {
+    ".env*": "dotenv"
+  },
 
   "[ansible]": {
-    // "editor.defaultFormatter": "redhat.vscode-yaml"
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "redhat.vscode-yaml"
   },
 
   "[elixir]": {
+    "editor.defaultFormatter": "JakeBecker.elixir-ls"
+  },
+
+  "[phoenix-heex]": {
     "editor.defaultFormatter": "JakeBecker.elixir-ls"
   },
 
@@ -56,44 +64,7 @@
     "editor.defaultFormatter": "brettm12345.nixfmt-vscode"
   },
 
-  "[phoenix-heex]": {
-    "editor.defaultFormatter": "JakeBecker.elixir-ls"
-  },
-
   "[yaml]": {
     "editor.defaultFormatter": "redhat.vscode-yaml"
-  },
-  "files.associations": {
-    ".env*": "dotenv"
-  },
-  "editor.tokenColorCustomizations": {
-    "[*Light*]": {
-      "textMateRules": [
-        {
-          "scope": "ref.matchtext",
-          "settings": {
-            "foreground": "#000"
-          }
-        }
-      ]
-    },
-    "[*Dark*]": {
-      "textMateRules": [
-        {
-          "scope": "ref.matchtext",
-          "settings": {
-            "foreground": "#fff"
-          }
-        }
-      ]
-    },
-    "textMateRules": [
-      {
-        "scope": "keyword.other.dotenv",
-        "settings": {
-          "foreground": "#FF000000"
-        }
-      }
-    ]
   }
 }
