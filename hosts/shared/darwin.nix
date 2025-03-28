@@ -2,6 +2,7 @@
 {
   imports = [
     ../../modules/pkgs.nix
+    ../../modules/fonts.nix
     ../../modules/brew.nix
   ];
 

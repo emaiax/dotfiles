@@ -4,19 +4,21 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
-    # still depending on https://github.com/LnL7/nix-darwin/pull/699 to be merged
-    # nix-darwin.url = "github:lnl7/nix-darwin/pull/699/head";
-    nix-darwin.url = "github:LnL7/nix-darwin/master";
-    nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
-
-    nix-homebrew.url = "github:zhaofengli/nix-homebrew";
-
-    nix-vscode-extensions.url = "github:nix-community/nix-vscode-extensions";
-
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # still depending on https://github.com/LnL7/nix-darwin/pull/699 to be merged
+    # nix-darwin.url = "github:lnl7/nix-darwin/pull/699/head";
+    nix-darwin = {
+      url = "github:LnL7/nix-darwin/master";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    nix-homebrew.url = "github:zhaofengli/nix-homebrew";
+
+    nix-vscode-extensions.url = "github:nix-community/nix-vscode-extensions";
   };
 
   outputs =
@@ -29,110 +31,145 @@
       nix-vscode-extensions,
     }:
     let
-      configuration =
+      ###################################
+      # 1. Host variables
+      ###################################
+      hostVars = {
+        dudumini = {
+          hostname = "dudumini";
+          arch = "x86_64-darwin";
+        };
+
+        dudupro = {
+          hostname = "dudupro";
+          arch = "aarch64-darwin";
+        };
+      };
+
+      ###################################
+      # 2. User variables
+      ###################################
+      userVars = {
+        emaiax = {
+          username = "emaiax";
+          homeDirectory = "/Users/emaiax";
+        };
+      };
+
+      # usernames = builtins.attrNames userVars;
+
+      ###################################
+      # 3. Base Darwin config function
+      ###################################
+      darwinModule =
+        host:
         { pkgs, ... }:
         {
-          # Used for backwards compatibility, please read the changelog before changing.
-          system.stateVersion = 6;
+          # Use nix from current nixpkgs
+          #
+          # nix.package = pkgs.nixVersions.stable; # Stable release
+          # nix.package = pkgs.nixVersions.unstable; # Latest development version
+          # nix.package = pkgs.nixFlakes; # Version with flake support enabled
+          #
+          nix.package = pkgs.nix;
 
-          # Set Git commit hash for darwin-version.
-          system.configurationRevision = self.rev or self.dirtyRev or null;
+          # TODO: remove nix.conf
+          #
+          # nix.extraOptions = ''
+          #   experimental-features = nix-command flakes
+          # '';
 
           # Necessary for using flakes on this system.
           nix.settings.experimental-features = "nix-command flakes";
 
-          # https://github.com/NixOS/nixpkgs/blob/88a55dffa4d44d294c74c298daf75824dc0aafb5/pkgs/data/fonts/nerd-fonts/manifests/fonts.json
-          fonts.packages = with pkgs.nerd-fonts; [
-            fira-code
-            hack
-            inconsolata
-            jetbrains-mono
-            lilex
-            meslo-lg
-            monaspace
-            zed-mono
-          ];
+          nix.settings.trusted-users = [ "root" ] ++ (builtins.attrNames userVars);
 
-          nixpkgs.overlays = [
-            nix-vscode-extensions.overlays.default
-          ];
+          # allow
+          nixpkgs.config.allowUnfree = true;
+
+          nixpkgs.hostPlatform = host.arch;
+
+          nixpkgs.overlays = [ nix-vscode-extensions.overlays.default ];
+
+          # Set Git commit hash for darwin-version.
+          system.configurationRevision = self.rev or self.dirtyRev or null;
+
+          # Used for backwards compatibility, please read the changelog before changing.
+          system.stateVersion = 6;
+        };
+
+      ###################################
+      # 4. Homebrew config function
+      ###################################
+      homebrewModule =
+        user:
+        { ... }:
+        {
+          nix-homebrew = {
+            enable = true;
+            user = user.username;
+
+            autoMigrate = true;
+            enableRosetta = false;
+            mutableTaps = true;
+          };
+        };
+
+      ###################################
+      # 5. Home Manager config function
+      ###################################
+      homeManagerModule =
+        user:
+        { ... }:
+        {
+          home-manager = {
+            backupFileExtension = "bak";
+
+            useGlobalPkgs = true;
+            useUserPackages = true;
+
+            users.${user.username} =
+              { lib, ... }:
+              {
+                home.stateVersion = "25.05";
+                home.homeDirectory = lib.mkForce (user.homeDirectory);
+
+                # let home-manager manage itself
+                programs.home-manager.enable = true;
+
+                # import home-manager modules
+                imports = [ ./home/${user.username}.nix ];
+              };
+          };
         };
     in
     {
       darwinConfigurations = {
-        dudumini = nix-darwin.lib.darwinSystem {
-          system = "x86_64-darwin"; # Intel
+        dudupro = nix-darwin.lib.darwinSystem {
           modules = [
-            configuration
-            ./hosts/dudumini.nix
-
-            home-manager.darwinModules.home-manager
-            {
-              home-manager.backupFileExtension = "bak";
-
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-
-              home-manager.users.emaiax = {
-                imports = [
-                  ./modules/home-manager.nix
-                  ./modules/ssh.nix
-                  ./modules/shell.nix
-                  ./modules/vscode
-                  ./modules/git
-                  ./modules/bat
-                ];
-              };
-            }
-
             nix-homebrew.darwinModules.nix-homebrew
-            {
-              nix-homebrew = {
-                enable = true;
-                user = "emaiax";
+            home-manager.darwinModules.home-manager
 
-                autoMigrate = true;
-                enableRosetta = false; # use /opt/homebrew
-              };
-            }
+            (darwinModule hostVars.dudupro)
+            (homebrewModule userVars.emaiax)
+            (homeManagerModule userVars.emaiax)
+
+            # custom config per host
+            ./hosts/dudupro.nix
           ];
         };
 
-        dudupro = nix-darwin.lib.darwinSystem {
-          system = "aarch64-darwin"; # Apple Silicon
+        dudumini = nix-darwin.lib.darwinSystem {
           modules = [
-            configuration
-            ./hosts/dudupro.nix
-
-            home-manager.darwinModules.home-manager
-            {
-              home-manager.backupFileExtension = "bak";
-
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-
-              home-manager.users.emaiax = {
-                imports = [
-                  ./modules/home-manager.nix
-                  ./modules/ssh.nix
-                  ./modules/shell.nix
-                  ./modules/vscode
-                  ./modules/git
-                  ./modules/bat
-                ];
-              };
-            }
-
             nix-homebrew.darwinModules.nix-homebrew
-            {
-              nix-homebrew = {
-                enable = true;
-                user = "emaiax";
+            home-manager.darwinModules.home-manager
 
-                autoMigrate = false;
-                enableRosetta = false; # use /opt/homebrew
-              };
-            }
+            (darwinModule hostVars.dudumini)
+            (homebrewModule userVars.emaiax)
+            (homeManagerModule userVars.emaiax)
+
+            # custom config per host
+            ./hosts/dudumini.nix
           ];
         };
       };
