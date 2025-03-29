@@ -61,7 +61,7 @@
       ###################################
       # 3. Base Darwin config function
       ###################################
-      darwinModule =
+      mkDarwinModule =
         host:
         { pkgs, ... }:
         {
@@ -101,47 +101,41 @@
       ###################################
       # 4. Homebrew config function
       ###################################
-      homebrewModule =
-        user:
-        { ... }:
-        {
-          nix-homebrew = {
-            enable = true;
-            user = user.username;
+      mkHomebrewModule = user: {
+        nix-homebrew = {
+          enable = true;
+          user = user.username;
 
-            autoMigrate = true;
-            enableRosetta = false;
-            mutableTaps = true;
-          };
+          autoMigrate = true;
+          enableRosetta = false;
+          mutableTaps = true;
         };
+      };
 
       ###################################
       # 5. Home Manager config function
       ###################################
-      homeManagerModule =
-        user:
-        { ... }:
-        {
-          home-manager = {
-            backupFileExtension = "bak";
+      mkHomeManagerModule = user: {
+        home-manager = {
+          backupFileExtension = "bak";
 
-            useGlobalPkgs = true;
-            useUserPackages = true;
+          useGlobalPkgs = true;
+          useUserPackages = true;
 
-            users.${user.username} =
-              { lib, ... }:
-              {
-                home.stateVersion = "25.05";
-                home.homeDirectory = lib.mkForce (user.homeDirectory);
+          users.${user.username} =
+            { lib, ... }:
+            {
+              home.stateVersion = "25.05";
+              home.homeDirectory = lib.mkForce (user.homeDirectory);
 
-                # let home-manager manage itself
-                programs.home-manager.enable = true;
+              # let home-manager manage itself
+              programs.home-manager.enable = true;
 
-                # import home-manager modules
-                imports = [ ./home/${user.username}.nix ];
-              };
-          };
+              # import home-manager modules
+              imports = [ ./home/${user.username}.nix ];
+            };
         };
+      };
     in
     {
       darwinConfigurations = {
@@ -150,9 +144,9 @@
             nix-homebrew.darwinModules.nix-homebrew
             home-manager.darwinModules.home-manager
 
-            (darwinModule hostVars.dudupro)
-            (homebrewModule userVars.emaiax)
-            (homeManagerModule userVars.emaiax)
+            (mkDarwinModule hostVars.dudupro)
+            (mkHomebrewModule userVars.emaiax)
+            (mkHomeManagerModule userVars.emaiax)
 
             # custom config per host
             ./hosts/dudupro.nix
@@ -164,9 +158,9 @@
             nix-homebrew.darwinModules.nix-homebrew
             home-manager.darwinModules.home-manager
 
-            (darwinModule hostVars.dudumini)
-            (homebrewModule userVars.emaiax)
-            (homeManagerModule userVars.emaiax)
+            (mkDarwinModule hostVars.dudumini)
+            (mkHomebrewModule userVars.emaiax)
+            (mkHomeManagerModule userVars.emaiax)
 
             # custom config per host
             ./hosts/dudumini.nix
