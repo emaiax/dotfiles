@@ -23,24 +23,24 @@
     ];
 
     casks = [
-      "1password-cli"
-      "1password"
-      "cleanshot"
-      "contexts"
+      "1password-cli"  # 1password cli
+      "1password"      # 1password
+      "cleanshot"      # screenshots and screen recording
+      "contexts"       # context menu for mac
+      "github"         # github desktop for mac
+      "logi-options+"  # logitech options
+      "obsidian"       # note taking
+      "rectangle"      # window manager
+      "setapp"         # setapp
+      "spotify"        # music
+      "tableplus"      # database management
+      "the-unarchiver" # unarchiver
+      "vlc"            # media player
+      
+      # communication
       "discord"
-      "ghostty"
-      "github" # github desktop for mac
-      "logi-options+" # logitech options
-      "iterm2"
-      "obsidian"
-      "rectangle"
-      "setapp"
       "slack"
-      "spotify"
-      "tableplus"
       "telegram"
-      "the-unarchiver"
-      "vlc"
       "whatsapp"
     ];
 

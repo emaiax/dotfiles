@@ -43,4 +43,11 @@
       };
     };
   };
+
+  # update macOS settings after activation without needing to restart
+  #
+  system.activationScripts.postActivation.text = ''
+    /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
+    echo "Reloading macOS settings..."
+  '';
 }
