@@ -1,30 +1,5 @@
-{ pkgs, ... }:
+{ ... }:
 {
-  imports = [
-    ../../modules/pkgs.nix
-    ../../modules/fonts.nix
-    ../../modules/brew.nix
-  ];
-
-  nixpkgs.config.allowUnfree = true;
-
-  nix.settings.trusted-users = [
-    "root"
-    "emaiax"
-  ];
-
-  environment.systemPackages = with pkgs; [
-    arc-browser
-    iterm2
-    nixfmt-rfc-style
-    raycast
-  ];
-
-  users.users.emaiax = {
-    name = "emaiax";
-    home = "/Users/emaiax";
-  };
-
   system = {
     # still depending on https://github.com/LnL7/nix-darwin/pull/699 to be merged
     # keyboard.shortcuts = {

@@ -1,14 +1,9 @@
 { ... }:
 {
   imports = [
-    ./shared/darwin.nix
+    ./darwin
+    ./darwin/security/pam-touch-id.nix
   ];
-
-  security.pam.services.sudo_local = {
-    enable = true;
-    touchIdAuth = true;
-    # watchIdAuth = true;
-  };
 
   system = {
     defaults = {

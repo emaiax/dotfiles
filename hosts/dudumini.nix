@@ -1,11 +1,7 @@
 { ... }:
 {
   imports = [
-    ./shared/darwin.nix
+    ./darwin
+    ./darwin/security/pam-watch-id.nix
   ];
-
-  security.pam.services.sudo_local = {
-    enable = true;
-    watchIdAuth = true;
-  };
 }
