@@ -167,8 +167,5 @@
           ];
         };
       };
-
-      # Expose the package set, including overlays
-      darwinPackages = self.darwinConfigurations.dudumini.pkgs;
     };
 }
