@@ -1,12 +1,6 @@
 # Exit on error
 set -e
 
-# Ensure script is run with root privileges
-if [ "$EUID" -ne 0 ]; then
-    echo "Please run this script as root or using sudo."
-    exit 1
-fi
-
 # Request sudo upfront and keep it active
 sudo -v
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
@@ -48,12 +42,6 @@ sudo sed -i '' '/\/nix/d' /etc/fstab
 echo "Removing Nix installation directory..."
 sudo rm -rf /nix/store /nix/var
 
-# Remove the Nix storage volume if it exists
-if diskutil list | grep -q "Nix"; then
-    echo "Deleting Nix storage volume..."
-    sudo diskutil apfs deleteVolume /nix
-fi
-
 # Remove additional Nix-related files and configurations
 echo "Removing additional Nix files..."
 sudo rm -rf /etc/nix /var/root/.nix-profile /var/root/.nix-defexpr /var/root/.nix-channels
@@ -64,8 +52,12 @@ if [ -f /etc/synthetic.conf ]; then
     sudo rm /etc/synthetic.conf
 fi
 
-# Invalidate sudo timestamp
-echo "Invalidating sudo timestamp..."
-sudo -k
+# Try to remove the Nix storage volume if it exists
+if diskutil list | grep -q "Nix"; then
+    echo "Deleting Nix storage volume..."
+    sudo diskutil apfs deleteVolume /nix
+fi
 
+# Invalidate sudo timestamp and finish
+sudo -k
 echo "Nix uninstallation complete."
