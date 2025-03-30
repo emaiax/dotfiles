@@ -4,7 +4,7 @@
   # It installs the packages in the system environment (available for all users).
   #
   environment.systemPackages = with pkgs; [
-    asdf             # programming languages version manager
+    asdf-vm          # programming languages version manager
     curl             # command line tool for transferring data with URLs
     direnv           # shell extension for loading/unloading environment variables
     jq               # command-line JSON processor
