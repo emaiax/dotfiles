@@ -1,5 +1,7 @@
 { ... }:
 {
+  # https://github.com/mathiasbynens/dotfiles/blob/master/.macos
+  #
   system = {
     # still depending on https://github.com/LnL7/nix-darwin/pull/699 to be merged
     # keyboard.shortcuts = {
