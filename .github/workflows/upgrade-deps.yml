@@ -1,0 +1,25 @@
+name: Upgrade dependencies
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * SUN" # Every Sunday at midnight
+jobs:
+  upgrade-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@V27
+
+      - name: Update dependencies
+        run: nix run '.#update'
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6.1.0
+        with:
+          branch: bot/routine-update
+          delete-branch: true
+          labels: dependencies
+          title: "chore(deps): update dependencies"
+          commit-message: "chore(deps): update dependencies"
+          body: |
+            - Update flakes and packages
