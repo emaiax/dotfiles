@@ -4,6 +4,8 @@
     enable = true;
     enableCompletion = true;
 
+    defaultKeymap = "viins"; # emacs, vicmd, viins
+
     shellAliases = {
       cat = "bat";
 
