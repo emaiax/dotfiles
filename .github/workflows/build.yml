@@ -1,9 +1,11 @@
 name: Build
+
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+
 jobs:
   flake:
     strategy:
@@ -18,4 +20,5 @@ jobs:
       - uses: cachix/install-nix-action@v31
       - uses: DeterminateSystems/flake-checker-action@v9
       - uses: DeterminateSystems/flakehub-cache-action@v1
+
       - run: nix flake check --show-trace
