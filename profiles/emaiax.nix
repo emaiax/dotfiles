@@ -11,6 +11,9 @@
   };
 
   imports = [
+    ../modules/common
+    ../modules/darwin
+
     ../modules/ssh.nix
     ../modules/shell.nix
     ../modules/vscode

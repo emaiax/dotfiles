@@ -1,11 +1,10 @@
 { ... }:
 {
   imports = [
-    ../common
+    ../../modules/common
+    ../../modules/darwin
+    ../../modules/darwin/brew.nix
 
-    ./brew.nix
-    ./fonts.nix
-    ./packages.nix
     ./system.nix
   ];
 }

@@ -7,7 +7,7 @@
   # iterm2 is available in nixpkgs, but unsupported
   nixpkgs.config.allowUnsupportedSystem = true;
 
-  environment.systemPackages = with pkgs; [
+  home.packages = with pkgs; [
     arc-browser
     iterm2
     raycast
