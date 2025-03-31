@@ -1,8 +1,10 @@
 name: Upgrade dependencies
+
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 0 * * SUN" # Every Sunday at midnight
+    - cron: "@weekly"
+
 jobs:
   upgrade-dependencies:
     runs-on: ubuntu-latest
@@ -23,7 +25,6 @@ jobs:
           delete-branch: true
           labels: dependencies
           title: "chore(deps): update dependencies"
-          author: "github-actions <github-actions[bot]@users.noreply.github.com>"
           commit-message: "chore(deps): update dependencies"
           body: |
             - Update flakes and packages
