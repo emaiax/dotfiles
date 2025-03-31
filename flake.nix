@@ -84,8 +84,11 @@
 
           nix.settings.trusted-users = [ "root" ] ++ (builtins.attrNames userVars);
 
-          # allow
-          nixpkgs.config.allowUnfree = true;
+          # iterm2 is available in nixpkgs, but unsupported
+          nixpkgs.config = {
+            allowUnfree = true;
+            allowUnsupportedSystem = true;
+          };
 
           nixpkgs.hostPlatform = host.arch;
 

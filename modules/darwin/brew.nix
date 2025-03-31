@@ -1,3 +1,6 @@
+# this module is responsible for configuring homebrew and managing homebrew packages
+# and should be imported by the darwin module and not by the home-manager module.
+# 
 { ... }:
 {
   environment.variables = {
