@@ -132,7 +132,7 @@
               programs.home-manager.enable = true;
 
               # import home-manager modules
-              imports = [ ./home/${user.username}.nix ];
+              imports = [ ./profiles/${user.username}.nix ];
             };
         };
       };
