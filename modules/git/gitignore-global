@@ -1,6 +1,7 @@
 # general.gitignore
 #
 *~             # backup files
+.git           # git directory
 .env*          # ignore environment files (loaded by dotenv)
 sandbox/       # ignore all sandbox folders
 vendor/        # dependency directories
