@@ -23,7 +23,7 @@ jobs:
           delete-branch: true
           labels: dependencies
           title: "chore(deps): update dependencies"
-          author: "github-actions[bot]@users.noreply.github.com"
+          author: "github-actions <github-actions[bot]@users.noreply.github.com>"
           commit-message: "chore(deps): update dependencies"
           body: |
             - Update flakes and packages
