@@ -16,6 +16,7 @@
 
     ../modules/ssh.nix
     ../modules/shell.nix
+    ../modules/gh.nix
     ../modules/vscode
     ../modules/git
     ../modules/bat
