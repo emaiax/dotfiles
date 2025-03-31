@@ -18,8 +18,8 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6.1.0
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: bot/routine-update
+          token: ${{ secrets.ACCESS_TOKEN }}
+          branch: upgrade-deps
           delete-branch: true
           labels: dependencies
           title: "chore(deps): update dependencies"
