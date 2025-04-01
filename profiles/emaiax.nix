@@ -1,24 +1,12 @@
 { ... }:
 {
-  home.sessionVariables = {
-    COLORTERM = "truecolor";
-
-    EDITOR = "nvim";
-    VISUAL = "nvim";
-
-    LC_ALL = "en_US.UTF-8";
-    LC_CTYPE = "en_US.UTF-8";
-  };
-
+  # home-manager.users.${host.user.username} = {
   imports = [
-    ../modules/common
-    ../modules/darwin
-
-    ../modules/ssh.nix
-    ../modules/shell.nix
-    ../modules/gh.nix
-    ../modules/vscode
-    ../modules/git
-    ../modules/bat
+    ../modules/user/apps
+    ../modules/user/cli-tools
+    ../modules/user/darwin
+    ../modules/user/git
+    ../modules/user/shell
   ];
+  # };
 }

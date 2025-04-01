@@ -31,24 +31,7 @@
       nix-vscode-extensions,
     }:
     let
-      ###################################
-      # 1. Host variables
-      ###################################
-      hostVars = {
-        dudumini = {
-          hostname = "dudumini";
-          arch = "x86_64-darwin";
-        };
-
-        dudupro = {
-          hostname = "dudupro";
-          arch = "aarch64-darwin";
-        };
-      };
-
-      ###################################
-      # 2. User variables
-      ###################################
+      # Define all users (supports multiple users)
       userVars = {
         emaiax = {
           username = "emaiax";
@@ -56,119 +39,47 @@
         };
       };
 
-      # usernames = builtins.attrNames userVars;
+      # Define all hosts (auto-scales when new hosts are added)
+      hostVars = {
+        dudumini = {
+          hostname = "dudumini";
+          arch = "x86_64-darwin";
+          user = userVars.emaiax;
+        };
+        dudupro = {
+          hostname = "dudupro";
+          arch = "aarch64-darwin";
+          user = userVars.emaiax;
+        };
+      };
 
-      ###################################
-      # 3. Base Darwin config function
-      ###################################
-      mkDarwinModule =
+      mkDarwinHost =
         host:
-        { pkgs, ... }:
-        {
-          # Use nix from current nixpkgs
-          #
-          # nix.package = pkgs.nixVersions.stable; # Stable release
-          # nix.package = pkgs.nixVersions.unstable; # Latest development version
-          # nix.package = pkgs.nixFlakes; # Version with flake support enabled
-          #
-          nix.package = pkgs.nix;
+        nix-darwin.lib.darwinSystem {
+          system = host.arch; # uses host's arch (aarch64/x86_64)
 
-          # TODO: remove nix.conf
-          #
-          # nix.extraOptions = ''
-          #   experimental-features = nix-command flakes
-          # '';
+          specialArgs = { inherit inputs host; }; # pass the host variable to all the modules
 
-          # Necessary for using flakes on this system.
-          nix.settings.experimental-features = "nix-command flakes";
+          modules = [
+            nix-homebrew.darwinModules.nix-homebrew # Homebrew integration
+            home-manager.darwinModules.home-manager # HomeManager integration
 
-          nix.settings.trusted-users = [ "root" ] ++ (builtins.attrNames userVars);
+            # ./hosts/common.nix # shared host config
+            ./hosts/darwin # darwin-specific config
 
-          # iterm2 is available in nixpkgs, but unsupported
-          nixpkgs.config = {
-            allowUnfree = true;
-            allowUnsupportedSystem = true;
-          };
+            ./modules/core/nix.nix # core nix settings
+            ./modules/core/homebrew.nix # homebrew settings
+            ./modules/core/home-manager.nix # home-manager settings and profiles modules
 
-          nixpkgs.hostPlatform = host.arch;
+            ./modules/system/common # shared system settings
+            ./modules/system/darwin # darwin-specific system settings
 
-          nixpkgs.overlays = [ nix-vscode-extensions.overlays.default ];
-
-          # Set Git commit hash for darwin-version.
-          system.configurationRevision = self.rev or self.dirtyRev or null;
-
-          # Used for backwards compatibility, please read the changelog before changing.
-          system.stateVersion = 6;
+            ./hosts/${host.hostname}.nix # host-specific overrides
+            # ./profiles/${host.user.username}.nix # user-specific overrides
+          ];
         };
-
-      ###################################
-      # 4. Homebrew config function
-      ###################################
-      mkHomebrewModule = user: {
-        nix-homebrew = {
-          enable = true;
-          user = user.username;
-
-          autoMigrate = true;
-          enableRosetta = false;
-          mutableTaps = true;
-        };
-      };
-
-      ###################################
-      # 5. Home Manager config function
-      ###################################
-      mkHomeManagerModule = user: {
-        home-manager = {
-          backupFileExtension = "bak";
-
-          useGlobalPkgs = true;
-          useUserPackages = true;
-
-          users.${user.username} =
-            { lib, ... }:
-            {
-              home.stateVersion = "25.05";
-              home.homeDirectory = lib.mkForce (user.homeDirectory);
-
-              # let home-manager manage itself
-              programs.home-manager.enable = true;
-
-              # import home-manager modules
-              imports = [ ./profiles/${user.username}.nix ];
-            };
-        };
-      };
     in
     {
-      darwinConfigurations = {
-        dudupro = nix-darwin.lib.darwinSystem {
-          modules = [
-            nix-homebrew.darwinModules.nix-homebrew
-            home-manager.darwinModules.home-manager
-
-            (mkDarwinModule hostVars.dudupro)
-            (mkHomebrewModule userVars.emaiax)
-            (mkHomeManagerModule userVars.emaiax)
-
-            # custom config per host
-            ./hosts/dudupro.nix
-          ];
-        };
-
-        dudumini = nix-darwin.lib.darwinSystem {
-          modules = [
-            nix-homebrew.darwinModules.nix-homebrew
-            home-manager.darwinModules.home-manager
-
-            (mkDarwinModule hostVars.dudumini)
-            (mkHomebrewModule userVars.emaiax)
-            (mkHomeManagerModule userVars.emaiax)
-
-            # custom config per host
-            ./hosts/dudumini.nix
-          ];
-        };
-      };
+      darwinConfigurations = builtins.mapAttrs (name: host: mkDarwinHost host) hostVars;
     };
 }

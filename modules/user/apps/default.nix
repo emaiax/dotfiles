@@ -1,6 +1,7 @@
 { ... }:
 {
   imports = [
-    ./system.nix
+    ./iterm2
+    ./vscode
   ];
 }
