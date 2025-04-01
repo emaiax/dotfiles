@@ -5,8 +5,10 @@
   ...
 }:
 let
-  sourcePath = "${config.xdg.configHome}/nix/modules/vscode/settings.json";
-  targetPath = "${config.home.homeDirectory}/Library/Application\ Support/Code/User/settings.json";
+  sourcePath = "${config.xdg.configHome}/nix/modules/user/apps/vscode/settings.json";
+
+  targetDir = "${config.home.homeDirectory}/Library/Application Support/Code/User";
+  targetPath = "${targetDir}/settings.json";
 in
 {
   # https://code.visualstudio.com/docs/getstarted/settings#_settingsjson
