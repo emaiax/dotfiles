@@ -2,6 +2,8 @@
 {
   imports = [
     ./fonts.nix
-    ./packages.nix
+    ./iterm2
+    ./raycast
+    ./vscode
   ];
 }

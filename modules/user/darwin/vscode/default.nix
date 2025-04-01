@@ -77,7 +77,6 @@ in
           vscodevim.vim
           wakatime.vscode-wakatime
         ];
-
       };
     };
   };
