@@ -16,16 +16,6 @@
       programs.home-manager.enable = true;
 
       imports = [ ../../profiles/${host.user.username}.nix ];
-
-      # users.${host.user.username} = {
-      #   imports = [
-      #     ../user/apps
-      #     ../user/cli-tools
-      #     ../user/darwin
-      #     ../user/git
-      #     ../user/shell
-      #   ];
-      # };
     };
   };
 }
