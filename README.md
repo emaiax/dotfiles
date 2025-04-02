@@ -7,30 +7,30 @@ Declarative configuration using [Nix][nix] with [Nix-Darwin][nix-darwin] for mac
 ```
 dotfiles/
 ├── hosts/
-│   ├── common/       # shared machine configs
-│   ├── darwin/       # macOS host tuning
-│   ├── linux/        # linux host tuning
-│   └── machine.nix   # hardware-specific overrides
+│   ├── common/        # shared machine configs
+│   ├── darwin/        # macOS host tuning
+│   ├── linux/         # linux host tuning
+│   └── machine.nix    # hardware-specific overrides
 │
 ├── modules/
-│   ├── core/         # core setup (nix, homebrew, home-manager)
+│   ├── core/          # core setup (nix, homebrew, home-manager)
 │   │
-│   ├── system/       # system configs and services managed by nix-darwin
-│   │   ├── common/   # cross-platform system-level configs
-│   │   ├── darwin/   # macOS system-level settings
-│   │   └── linux/    # linux system-level settings
+│   ├── system/        # system configs and services managed by nix-darwin
+│   │   ├── common/    # cross-platform system-level configs
+│   │   ├── darwin/    # macOS system-level settings and applications
+│   │   └── linux/     # linux system-level settings and applications
 │   │
-│   └── user/         # user configs and applications managed by home-manager
-│       ├── apps/     # gui apps (iterm2, raycast, vscode)
-│       ├── cli/      # command line tools and utilities
-│       ├── common/   # cross-platform user configs
-│       ├── darwin/   # macOS user settings
-│       ├── linux/    # linux user settings
-│       └── shell/    # shell runtime
+│   └── user/          # user configs and applications managed by home-manager
+│       ├── cli/       # command line tools and utilities
+│       ├── common/    # cross-platform user configs
+│       ├── darwin/    # macOS user-level settings and applications
+│       │   └── apps/  # macOS GUI apps (iterm2, raycast, vscode)
+│       ├── linux/     # linux user-level settings and applications
+│       └── shell/     # shell runtime
 │
-└── profiles/         # user environment bundles
-    ├── emaiax.nix    # personal config and imports
-    └── work.nix      # work-specific setup
+└── profiles/          # user environment bundles
+    ├── emaiax.nix     # personal config and imports
+    └── work.nix       # work-specific setup
 ```
 
 ## Installation
