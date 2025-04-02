@@ -5,7 +5,7 @@
   ...
 }:
 let
-  sourcePath = "${config.xdg.configHome}/nix/modules/user/apps/vscode/settings.json";
+  sourcePath = "${config.xdg.configHome}/nix/modules/user/darwin/vscode/settings.json";
 
   targetDir = "${config.home.homeDirectory}/Library/Application Support/Code/User";
   targetPath = "${targetDir}/settings.json";
