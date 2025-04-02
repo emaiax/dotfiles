@@ -1,7 +1,7 @@
 { ... }:
 {
   imports = [
-    ./fonts.nix
+    ./env.nix
     ./packages.nix
   ];
 }

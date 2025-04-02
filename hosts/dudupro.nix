@@ -1,7 +1,6 @@
 { ... }:
 {
   imports = [
-    ./darwin
     ./darwin/security/pam-touch-id.nix
   ];
 

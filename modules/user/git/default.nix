@@ -1,6 +1,7 @@
 { ... }:
 {
   imports = [
-    ./packages.nix
+    ./git.nix
+    ./gh.nix
   ];
 }
