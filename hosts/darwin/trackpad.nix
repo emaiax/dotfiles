@@ -1,4 +1,4 @@
-{ }:
+{ ... }:
 {
   system = {
     defaults = {
