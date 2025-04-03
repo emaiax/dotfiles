@@ -4,7 +4,7 @@
 set -e
 
 # Install Xcode developer tools
-if ! comand -v xcode-select >/dev/null 2>&1; then
+if ! command -v xcode-select >/dev/null 2>&1; then
     echo "Installing Xcode developer tools..."
     xcode-select --install
     echo "Xcode developer tools installation complete. Please restart your terminal and re-run this script to continue."
