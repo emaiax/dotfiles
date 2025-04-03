@@ -81,16 +81,19 @@
 
             # ./hosts/common.nix # shared host config
             ./hosts/darwin # darwin-specific config
+            ./hosts/${host.hostname}.nix # host-specific overrides
 
             ./modules/core/nix.nix # core nix settings
             ./modules/core/homebrew.nix # homebrew settings
             ./modules/core/home-manager.nix # home-manager settings and profiles modules
 
             ./modules/system/common # shared system settings
-            ./modules/system/darwin # darwin-specific system settings
+            # ./modules/system/darwin # darwin-specific system settings
 
-            ./hosts/${host.hostname}.nix # host-specific overrides
-            # ./profiles/${host.user.username}.nix # user-specific overrides
+            # user settings and applications
+            #
+            ./modules/user/darwin/brew/${host.user.username}.brew.nix
+            ./profiles/${host.user.username}.nix # user-specific overrides
           ];
         };
     in
