@@ -14,8 +14,6 @@
 
       # let home-manager manage itself
       programs.home-manager.enable = true;
-
-      imports = [ ../../profiles/${host.user.username}.nix ];
     };
   };
 }

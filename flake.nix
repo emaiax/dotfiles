@@ -37,6 +37,11 @@
           username = "emaiax";
           homeDirectory = "/Users/emaiax";
         };
+
+        eduardo = {
+          username = "eduardo.maia";
+          homeDirectory = "/Users/eduardo.maia";
+        };
       };
 
       # Define all hosts (auto-scales when new hosts are added)
