@@ -56,6 +56,16 @@
           arch = "aarch64-darwin";
           user = userVars.emaiax;
         };
+        M125356 = {
+          hostname = "M125356";
+          arch = "aarch64-darwin";
+          user = userVars.eduardo;
+        };
+        M137516 = {
+          hostname = "M137516";
+          arch = "aarch64-darwin";
+          user = userVars.eduardo;
+        };
       };
 
       mkDarwinHost =
