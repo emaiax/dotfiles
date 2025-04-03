@@ -3,6 +3,16 @@
 # Exit on error
 set -e
 
+# Install Xcode developer tools
+if ! comand -v xcode-select >/dev/null 2>&1; then
+    echo "Installing Xcode developer tools..."
+    xcode-select --install
+    echo "Xcode developer tools installation complete. Please restart your terminal and re-run this script to continue."
+    exit 0
+else
+    echo "Xcode developer tools are already installed. Skipping installation."
+fi
+
 # Install Nix if not already installed
 if ! command -v nix >/dev/null 2>&1; then
     echo "Installing Nix..."
