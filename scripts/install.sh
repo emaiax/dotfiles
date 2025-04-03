@@ -29,6 +29,13 @@ mkdir -p "$HOME/.config/nix"
 
 # Navigate to the configuration directory
 if cd "$HOME/.config/nix"; then
+    echo "Changed directory to $HOME/.config/nix."
+
+    if [ ! -f "flake.nix" ]; then
+        echo "flake.nix not found in $HOME/.config/nix. Cloning the repository."
+        git clone https://github.com/emaiax/dotfiles .
+    fi
+
     # Install dotfiles using nix-darwin
     if [ -f "flake.nix" ]; then
         echo "Installing dotfiles with nix-darwin..."

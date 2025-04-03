@@ -35,7 +35,13 @@ dotfiles/
 
 ## Installation
 
-Run the provided installation script to set up everything automatically:
+Paste the install command in a shell prompt to install.
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/emaiax/dotfiles/HEAD/scripts/install.sh)"
+```
+
+Or you can manually run the provided installation script to set up everything:
 
 ```bash
 ./scripts/install.sh
