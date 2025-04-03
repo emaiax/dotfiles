@@ -22,20 +22,47 @@
     onActivation.cleanup = "zap";
 
     brews = [
-      "mas"
+      "openssl@1.1" # openssl@3: (libev) kqueue kevent: Bad file descriptor
+      "coreutils"
+      "gnupg"
+      "gnutls"
+      
+      # rs-deps
+      #
+      "cmake"
+      "jemalloc"
+      "libxml2"
+      "pkg-config"
+      "readline"
+      "ruby-build"
+      "shared-mime-info"
+      
+      # databases and dev languages
+      #
+      "mysql@8.0"
+      "opensearch"
+      "postgresql@14"
+      "redis"
     ];
 
     casks = [
-      "1password-cli"  # 1password cli
-      "1password"      # 1password
-      "contexts"       # context menu for mac
-      "github"         # github desktop for mac
-      "logi-options+"  # logitech options
-      "obsidian"       # note taking
-      "rectangle"      # window manager
-      "slack"          # communication
-      "tableplus"      # database management
-      "the-unarchiver" # unarchiver
+      # applications
+      #
+      "1password-cli"     # 1password cli
+      "1password"         # 1password
+      "contexts"          # context menu for mac
+      "domzilla-caffeine" # caffeine
+      "github"            # github desktop for mac
+      "logi-options+"     # logitech options
+      "obsidian"          # note taking
+      "rectangle"         # window manager
+      "slack"             # communication
+      "tableplus"         # database management
+      "the-unarchiver"    # unarchiver
+
+      # dependencies
+      #
+      "temurin"           # java 17
     ];
   };
 }
