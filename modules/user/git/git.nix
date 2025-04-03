@@ -3,6 +3,7 @@
   home.file.".ssh/allowed_signers".text = ''
     * ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMTbZW/l0UNEFLwDKrEQGyc+pZGDCq85Nyy7P1JV9S2o
     * ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAThvvZjzCVQw5OVznRb/xvWN/bGMAmfdyDGdISZPips
+    * ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINLMC5il0Ji5XzSEzIylvAKwfNt0iRprU1i0igVfa69l
   '';
 
   home.packages = with pkgs; [
