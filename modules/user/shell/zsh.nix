@@ -7,7 +7,8 @@
     defaultKeymap = "viins"; # emacs, vicmd, viins
 
     initExtra = ''
-      export PATH="$PATH:${config.home.homeDirectory}/.asdf/shims" # Add asdf binaries to PATH
+      export PATH="$PATH:${config.home.homeDirectory}/.bun/bin"
+      export PATH="$PATH:${config.home.homeDirectory}/.asdf/shims"
     '';
 
     shellAliases = {
