@@ -15,5 +15,6 @@
     ripgrep          # fast search tool
     tlrc             # command line tool for managing TL;DR pages
     unixtools.watch  # watch command for running a program periodically
+    wget             # command line tool for downloading files from the web
   ];
 }
