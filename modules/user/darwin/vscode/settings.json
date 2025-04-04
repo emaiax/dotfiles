@@ -34,7 +34,8 @@
   "workbench.iconTheme": "ayu",
 
   "files.associations": {
-    ".env*": "dotenv"
+    ".env*": "dotenv",
+    "*.css": "tailwindcss"
   },
 
   "[ansible]": {
