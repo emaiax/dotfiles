@@ -2,6 +2,7 @@
 {
   imports = [
     ./arc-browser
+    ./docker.nix
     ./fonts.nix
     ./iterm2
     ./raycast

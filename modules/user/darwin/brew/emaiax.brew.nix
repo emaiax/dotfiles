@@ -23,6 +23,7 @@
       "1password"      # 1password
       "cleanshot"      # screenshots and screen recording
       "contexts"       # context menu for mac
+      "docker"         # docker desktop for mac
       "github"         # github desktop for mac
       "logi-options+"  # logitech options
       "obsidian"       # note taking
