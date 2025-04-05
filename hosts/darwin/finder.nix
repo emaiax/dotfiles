@@ -13,7 +13,7 @@
         AppleShowAllExtensions = true;
 
         # Show hidden files in Finder
-        AppleShowAllFiles = true;
+        AppleShowAllFiles = false;
 
         # Change the default search scope, use "SCcf" to default to current folder
         # The default is unset ("This Mac")
@@ -75,4 +75,17 @@
       };
     };
   };
+
+  system.activationScripts.preActivation.text = ''
+    echo "setting up Finder preferences..."
+
+    # Avoid creating .DS_Store files on network or USB volumes
+    #
+    # defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
+    # defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true
+
+    # Expand the following File Info panes: “General” and “Open with”
+    #
+    defaults write com.apple.finder FXInfoPanesExpanded -dict General -bool true OpenWith -bool true MetaData -bool true
+  '';
 }
