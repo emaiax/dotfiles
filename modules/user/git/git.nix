@@ -50,11 +50,11 @@
       # sign commits with ssh key
       # https://docs.github.com/en/authentication/managing-commit-signature-verification/telling-git-about-your-signing-key#telling-git-about-your-ssh-key
       #
-      gpg.format = "ssh";
-      tag.gpgSign = true;
       commit.gpgSign = true;
-      user.signingkey = "~/.ssh/github.pub";
+      gpg.format = "ssh";
       gpg.ssh.allowedSignersFile = "~/.ssh/allowed_signers";
+      tag.gpgSign = true;
+      user.signingkey = "~/.ssh/github.pub";
 
       # core = {
       #   editor = "nvim";
@@ -63,46 +63,47 @@
       #   whitespace = "trailing-space,space-before-tab";
       #   precomposeunicode = true;
       # };
-      color = {
-        diff = "auto";
-        status = "auto";
-        branch = "auto";
-        ui = true;
-      };
       advice = {
         addEmptyPathspec = false;
       };
       apply = {
         whitespace = "nowarn";
       };
-      help = {
-        autocorrect = 1;
+      color = {
+        diff = "auto";
+        status = "auto";
+        branch = "auto";
+        ui = true;
+      };
+      format = {
+        signOff = true;
       };
       grep = {
         extendRegexp = true;
         lineNumber = true;
       };
-      push = {
-        autoSetupRemote = true;
-        default = "simple";
-      };
-      submodule = {
-        fetchJobs = 4;
+      help = {
+        autocorrect = 1;
       };
       log = {
         showSignature = false;
       };
-      format = {
-        signOff = true;
+      init = {
+        defaultBranch = "main";
+      };
+      pull = {
+        # ff = "only";
+        rebase = true;
+      };
+      push = {
+        autoSetupRemote = true;
+        default = "simple";
       };
       rerere = {
         enabled = true;
       };
-      pull = {
-        ff = "only";
-      };
-      init = {
-        defaultBranch = "main";
+      submodule = {
+        fetchJobs = 4;
       };
     };
   };
