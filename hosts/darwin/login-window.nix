@@ -8,9 +8,6 @@
 
         # Allow users to login to the machine as guests using the Guest account
         GuestEnabled = false;
-
-        # Text to be shown on the login window
-        LoginwindowText = "darwin+nix";
       };
     };
   };
