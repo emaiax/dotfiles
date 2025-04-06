@@ -23,6 +23,10 @@
     osascript -e 'tell application "System Preferences" to quit'
   '';
 
+  # Disable Apple Intelligence and Siri
+  #
+  # defaults write com.apple.CloudSubscriptionFeatures.optIn "545129924" -bool "false"
+
   # TODO: this doesn't seem to work sometimes
   #
   # update macOS settings after activation without needing to restart
