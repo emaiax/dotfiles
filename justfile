@@ -1,20 +1,28 @@
 # list options
 default:
-  @just --list
+	@just --list
+
+# activate macOS settings
+[macos]
+activate-settings:
+	#!/usr/bin/env bash
+	echo "Activating macOS settings..."
+	/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
 
 # apply the configuration
 apply *FLAGS:
-	@git a
+	@git add .
 	@darwin-rebuild switch --flake . {{FLAGS}}
+	@just activate-settings
 
 # build the configuration
 build *FLAGS:
-	@git a
+	@git add .
 	@darwin-rebuild build --flake . {{FLAGS}}
 
-# cleanup home-manager and nix generations
+# cleanup old home-manager and nix generations (> 7 days)
 cleanup:
-	@./result/sw/bin/nix-collect-garbage --delete-old --delete-older-than 2d
+	@./result/sw/bin/nix-collect-garbage --delete-old --delete-older-than 7d
 
 # generate SSH key for a given name and comment
 ssh-keygen NAME COMMENT:

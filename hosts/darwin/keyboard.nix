@@ -24,6 +24,22 @@
         #
         InitialKeyRepeat = 15; # 225ms
         KeyRepeat = 4; # 60ms
+
+        # Keyboard navigation with tab key
+        # AppleKeyboardUIMode = "3";
+
+        # Disable automatic capitalization
+        NSAutomaticCapitalizationEnabled = false;
+        # Disable smart dash substitution
+        NSAutomaticDashSubstitutionEnabled = false;
+        # Disable smart period substitution
+        NSAutomaticPeriodSubstitutionEnabled = false;
+        # Disable smart quotes substitution
+        NSAutomaticQuoteSubstitutionEnabled = false;
+        # Disable automatic spelling correction
+        NSAutomaticSpellingCorrectionEnabled = false;
+        # Disable automatic text replacement
+        NSAutomaticInlinePredictionEnabled = false;
       };
     };
   };

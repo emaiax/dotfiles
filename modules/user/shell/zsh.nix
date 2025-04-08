@@ -12,11 +12,13 @@
     '';
 
     shellAliases = {
-      cat = "bat";
+      activateSettings = "/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u";
 
+      cat = "bat";
       dotfiles = "cd ~/.config/nix";
 
-      reload = "source ~/.zshrc";
+      zr = "source ~/.zshrc"; # zsh reload
+      zv = "cat ~/.zshrc"; # zsh view
     };
   };
 }

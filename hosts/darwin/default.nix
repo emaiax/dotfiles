@@ -12,7 +12,7 @@
     ./finder.nix
     ./keyboard.nix
     ./login-window.nix
-    ./siri.nix
+    ./system.nix
   ];
 
   # Close any open System Preferences panes, to prevent them from overriding settings we’re about to change
@@ -23,11 +23,17 @@
     osascript -e 'tell application "System Preferences" to quit'
   '';
 
+  # Disable Apple Intelligence and Siri
+  #
+  # defaults write com.apple.CloudSubscriptionFeatures.optIn "545129924" -bool "false"
+
+  # TODO: this doesn't seem to work sometimes
+  #
   # update macOS settings after activation without needing to restart
   #
-  system.activationScripts.postActivation.text = ''
-    echo "reloading macOS settings..."
+  # system.activationScripts.postActivation.text = ''
+  #   echo "reloading macOS settings..."
 
-    /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
-  '';
+  #   /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
+  # '';
 }
