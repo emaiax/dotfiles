@@ -17,18 +17,19 @@
       extraFlags = [ "--force" ];
     };
 
-    brews = [
-      "openssl@1.1" # openssl@3: (libev) kqueue kevent: Bad file descriptor
+    taps = [
+      "hashicorp/tap"
+    ];
 
+    brews = [
+      "cmake"
       "coreutils"
       "gnupg"
       "gnutls"
-
-      # rs-deps
-      #
-      "cmake"
+      "hashicorp/tap/vault"
       "jemalloc"
       "libxml2"
+      "openssl@1.1" # openssl@3: (libev) kqueue kevent: Bad file descriptor
       "pkg-config"
       "readline"
       "ruby-build"
@@ -61,6 +62,7 @@
       "1password" # 1password
       "contexts" # context menu for mac
       "domzilla-caffeine" # caffeine
+      "docker" # docker desktop for mac
       "github" # github desktop for mac
       "logi-options+" # logitech options
       "obsidian" # note taking
