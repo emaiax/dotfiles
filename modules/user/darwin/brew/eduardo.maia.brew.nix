@@ -35,23 +35,16 @@
       "ruby-build"
       "shared-mime-info"
 
-      # databases and dev languages
-      #
-      "opensearch"
-      "redis"
-
       {
         name = "mysql@8.0";
         link = true;
-        start_service = true;
-        restart_service = "changed";
+        start_service = false;
       }
 
       {
         name = "postgresql@14";
         link = true;
-        start_service = true;
-        restart_service = "changed";
+        start_service = false;
       }
     ];
 
