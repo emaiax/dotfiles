@@ -6,7 +6,6 @@
   environment.systemPackages = with pkgs; [
     asdf-vm          # programming languages version manager
     curl             # command line tool for transferring data with URLs
-    direnv           # shell extension for loading/unloading environment variables
     go               # go programming language
     jq               # command-line JSON processor
     just             # command runner, similar to make
