@@ -34,69 +34,31 @@
   "workbench.iconTheme": "ayu",
 
   "files.associations": {
-    ".env*": "dotenv",
     "*.css": "tailwindcss"
   },
 
   "[ansible]": {
     "editor.defaultFormatter": "redhat.vscode-yaml"
   },
-
   "[elixir]": {
     "editor.defaultFormatter": "JakeBecker.elixir-ls"
   },
-
   "[phoenix-heex]": {
     "editor.defaultFormatter": "JakeBecker.elixir-ls"
   },
-
   "[go]": {
     "editor.codeActionsOnSave": {
       "source.organizeImports": "explicit"
     },
     "editor.defaultFormatter": "golang.go"
   },
-
   "[html]": {
     "editor.defaultFormatter": "vscode.html-language-features"
   },
-
   "[nix]": {
     "editor.defaultFormatter": "brettm12345.nixfmt-vscode"
   },
-
   "[yaml]": {
     "editor.defaultFormatter": "redhat.vscode-yaml"
-  },
-
-  "editor.tokenColorCustomizations": {
-    "[*Light*]": {
-      "textMateRules": [
-        {
-          "scope": "ref.matchtext",
-          "settings": {
-            "foreground": "#000"
-          }
-        }
-      ]
-    },
-    "[*Dark*]": {
-      "textMateRules": [
-        {
-          "scope": "ref.matchtext",
-          "settings": {
-            "foreground": "#fff"
-          }
-        }
-      ]
-    },
-    "textMateRules": [
-      {
-        "scope": "keyword.other.dotenv",
-        "settings": {
-          "foreground": "#FF000000"
-        }
-      }
-    ]
   }
 }
