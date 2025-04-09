@@ -31,42 +31,7 @@
       nix-vscode-extensions,
     }:
     let
-      # Define all users (supports multiple users)
-      userVars = {
-        emaiax = {
-          username = "emaiax";
-          homeDirectory = "/Users/emaiax";
-        };
-
-        eduardo = {
-          username = "eduardo.maia";
-          homeDirectory = "/Users/eduardo.maia";
-        };
-      };
-
-      # Define all hosts (auto-scales when new hosts are added)
-      hostVars = {
-        dudumini = {
-          hostname = "dudumini";
-          arch = "x86_64-darwin";
-          user = userVars.emaiax;
-        };
-        dudupro = {
-          hostname = "dudupro";
-          arch = "aarch64-darwin";
-          user = userVars.emaiax;
-        };
-        M125356 = {
-          hostname = "M125356";
-          arch = "aarch64-darwin";
-          user = userVars.eduardo;
-        };
-        M137516 = {
-          hostname = "M137516";
-          arch = "aarch64-darwin";
-          user = userVars.eduardo;
-        };
-      };
+      vars = import ./vars.nix;
 
       mkDarwinHost =
         host:
@@ -98,6 +63,6 @@
         };
     in
     {
-      darwinConfigurations = builtins.mapAttrs (name: host: mkDarwinHost host) hostVars;
+      darwinConfigurations = builtins.mapAttrs (name: host: mkDarwinHost host) vars.hosts;
     };
 }
