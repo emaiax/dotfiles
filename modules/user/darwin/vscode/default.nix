@@ -71,7 +71,6 @@ in
 
           # utilities
           #
-          dotenv.dotenv-vscode
           mechatroner.rainbow-csv
           naumovs.color-highlight
           vscodevim.vim
