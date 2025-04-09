@@ -7,5 +7,13 @@
       ../modules/user/git
       ../modules/user/shell
     ];
+
+    programs.zsh = {
+      initExtra = ''
+        # ulimit was low and sometimes hangs, setting to max value
+        #
+        ulimit -n 65536
+      '';
+    };
   };
 }
