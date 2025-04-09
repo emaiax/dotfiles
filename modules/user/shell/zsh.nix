@@ -19,6 +19,9 @@
 
       zr = "source ~/.zshrc"; # zsh reload
       zv = "cat ~/.zshrc"; # zsh view
+
+      # rails apps
+      be = "bundle exec";
     };
   };
 }
