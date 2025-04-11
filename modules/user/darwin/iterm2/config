@@ -121342,6 +121342,8 @@
 	<false/>
 	<key>HotkeyMigratedFromSingleToMulti</key>
 	<true/>
+	<key>JiggleTTYSizeOnClearBuffer</key>
+	<true/>
 	<key>MaxVertically</key>
 	<false/>
 	<key>NeverBlockSystemShutdown</key>
