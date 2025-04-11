@@ -1,4 +1,4 @@
-# list options
+# list available options
 default:
 	@just --list
 

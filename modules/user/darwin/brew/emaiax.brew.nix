@@ -1,6 +1,6 @@
 # this module is responsible for configuring homebrew and managing homebrew packages
 # and should be imported by the darwin module and not by the home-manager module.
-# 
+#
 { ... }:
 {
   homebrew = {
@@ -19,26 +19,38 @@
     ];
 
     casks = [
-      "1password-cli"  # 1password cli
-      "1password"      # 1password
-      "cleanshot"      # screenshots and screen recording
-      "contexts"       # context menu for mac
-      "docker"         # docker desktop for mac
-      "github"         # github desktop for mac
-      "logi-options+"  # logitech options
-      "obsidian"       # note taking
-      "rectangle"      # window manager
-      "setapp"         # setapp
-      "spotify"        # music
-      "tableplus"      # database management
-      "the-unarchiver" # unarchiver
-      "vlc"            # media player
-      
-      # communication
+      # Productivity
+      #
+      "1password-cli" # 1password cli
+      "1password" # 1password
+      "cleanshot" # screenshots and screen recording
+      "contexts" # context menu for mac
+      "obsidian" # note taking
+      "rectangle" # window manager
+
+      # Development
+      #
+      "docker" # docker desktop for mac
+      "github" # github desktop for mac
+      "tableplus" # database management
+
+      # Media
+      #
+      "spotify" # music
+      "vlc" # media player
+
+      # Communication
+      #
       "discord"
       "slack"
       "telegram"
       "whatsapp"
+
+      # Utilities
+      #
+      "logi-options+" # logitech options
+      "the-unarchiver" # unarchiver
+      "setapp" # setapp for mac
     ];
 
     # mas is broken in 10.5 (sequoia), should be fixed in 2.0 release, https://github.com/mas-cli/mas/issues/724
