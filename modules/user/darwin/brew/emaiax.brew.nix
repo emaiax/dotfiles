@@ -41,9 +41,10 @@
       "whatsapp"
     ];
 
-    masApps = {
-      "Amphetamine" = 937984704;
-      "Tailscale" = 1475387142;
-    };
+    # mas is broken in 10.5 (sequoia), should be fixed in 2.0 release, https://github.com/mas-cli/mas/issues/724
+    # masApps = {
+    #   "Amphetamine" = 937984704;
+    #   "Tailscale" = 1475387142;
+    # };
   };
 }
