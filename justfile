@@ -22,7 +22,7 @@ build *FLAGS:
 
 # cleanup old home-manager and nix generations (> 7 days)
 cleanup:
-	@./result/sw/bin/nix-collect-garbage --delete-old --delete-older-than 7d
+	@nix-collect-garbage --delete-old --delete-older-than 7d
 
 # update flake lock file
 update:
