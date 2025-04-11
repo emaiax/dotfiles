@@ -24,6 +24,10 @@ build *FLAGS:
 cleanup:
 	@./result/sw/bin/nix-collect-garbage --delete-old --delete-older-than 7d
 
+# update flake lock file
+update:
+	@nix flake update
+
 # generate SSH key for a given name and comment
 ssh-keygen NAME COMMENT:
 	@ssh-keygen -t ed25519 -f ~/.ssh/{{NAME}} -C "{{COMMENT}}"
