@@ -8,6 +8,7 @@
   # https://developer.apple.com/documentation/devicemanagement/profile-specific-payload-keys
   #
   imports = [
+    ./appearance.nix
     ./dock.nix
     ./finder.nix
     ./keyboard.nix
