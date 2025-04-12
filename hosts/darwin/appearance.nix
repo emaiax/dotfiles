@@ -37,9 +37,26 @@ in
     # | Green      |           1           |      3      | "0.752941 0.964706 0.678431 Green"    |
     # | Graphite   |           6           |     -1      | "0.847059 0.847059 0.862745 Graphite" |
     #
+    printf "\n"
+    echo "DEBUG DEFAULTS: UI BEFORE"
+    printf "\n"
+    echo "AppleAccentColor: $(defaults read NSGlobalDomain AppleAccentColor)"
+    echo "AppleAquaColorVariant: $(defaults read NSGlobalDomain AppleAquaColorVariant)"
+    echo "AppleHighlightColor: $(defaults read NSGlobalDomain AppleHighlightColor)"
+
+    printf "\n"
     echo "setting UI accent color to ${accent.AccentColorName} (restart required to take effect)"
+    printf "\n"
     defaults write NSGlobalDomain AppleAccentColor -int ${toString accent.AppleAccentColor}
     defaults write NSGlobalDomain AppleAquaColorVariant -int ${toString accent.AppleAquaColorVariant}
     defaults write NSGlobalDomain AppleHighlightColor -string "${accent.AppleHighlightColor}"
+    echo "AQUI AQUI AQUI"
+
+    printf "\n"
+    echo "DEBUG DEFAULTS: UI AFTER SET"
+    printf "\n"
+    echo "AppleAccentColor: $(defaults read NSGlobalDomain AppleAccentColor)"
+    echo "AppleAquaColorVariant: $(defaults read NSGlobalDomain AppleAquaColorVariant)"
+    echo "AppleHighlightColor: $(defaults read NSGlobalDomain AppleHighlightColor)"
   '';
 }
