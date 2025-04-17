@@ -1,5 +1,7 @@
 #!/usr/bin/env swift
 
+// https://developer.apple.com/documentation/foundation/nsnotification/name-swift.struct
+// https://github.com/FelixKratz/SketchyBar/discussions/151
 import Foundation
 import Cocoa
 
@@ -111,6 +113,7 @@ class SystemEventLogger {
 let notificationsToMonitor = SystemEventLogger.MonitoredNotifications(
     distributed: [
         // System Preferences/Appearance
+        "ApplePrivateInterfaceThemeChangedNotification",
         "AppleInterfaceThemeChangedNotification",
         "AppleColorPreferencesChangedNotification",
         "AppleAquaColorVariantChanged",
@@ -125,7 +128,10 @@ let notificationsToMonitor = SystemEventLogger.MonitoredNotifications(
         "com.apple.system.config.network_change",
 
         // Audio
-        "com.apple.sound.settingsChanged"
+        "com.apple.sound.settingsChanged",
+
+        // Spotify
+        "com.spotify.client.PlaybackStateChanged"
     ],
 
     local: [

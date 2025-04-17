@@ -2,7 +2,7 @@
 
 /**
     Robust event sender for macOS Sequoia
-    Usage: ./sendevent EVENT_NAME
+    Usage: ./send-event EVENT_NAME
 */
 
 import Foundation
