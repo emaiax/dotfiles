@@ -3,7 +3,7 @@
   imports = [ ./appearance ];
 
   system.defaults.appearance = {
-    mode = "light";
+    mode = "dark";
     accent = "green";
   };
 }
