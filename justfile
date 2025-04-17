@@ -24,6 +24,10 @@ build *FLAGS:
 cleanup:
 	@nix-collect-garbage --delete-old --delete-older-than 7d
 
+# print nix info
+nix-info:
+	@nix-shell -p nix-info --run "nix-info -m"
+
 # update flake lock file
 update:
 	@nix flake update
