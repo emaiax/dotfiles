@@ -24,6 +24,14 @@ build *FLAGS:
 cleanup:
 	@nix-collect-garbage --delete-old --delete-older-than 7d
 
+# show the dependency tree and graph
+dependency-graph:
+	@nix-store -q --tree /nix/var/nix/profiles/system
+
+# list user activations
+list-user-activations:
+	@ls -la /nix/var/nix/profiles/system/activate-user
+
 # update flake lock file
 update:
 	@nix flake update
