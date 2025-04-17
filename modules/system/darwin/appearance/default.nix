@@ -1,8 +1,5 @@
 { config, lib, ... }:
 let
-  colorAccents = import ./accent-colors.nix;
-  sendUIEvents = import ./send-ui-events.nix;
-
   # https://mynixos.com/nix-darwin/option/system.defaults.NSGlobalDomain.AppleInterfaceStyle
   # Set to 'Dark' to enable dark mode, or leave unset for normal mode.
   #
@@ -11,19 +8,23 @@ let
     light.appleInterfaceStyle = null;
   };
 
+  accentColors = import ./accent-colors.nix;
+  sendUIEvents = import ./send-ui-events.nix;
+
   # helpers to access the correct interface mode and color accent
+  #
   currentMode = interfaceModes.${config.system.defaults.appearance.mode};
-  currentAccent = colorAccents.${config.system.defaults.appearance.accent};
+  currentAccent = accentColors.${config.system.defaults.appearance.accent};
 in
 {
   options = {
     system.defaults.appearance = {
       accent = lib.mkOption {
-        type = lib.types.enum (lib.attrNames colorAccents);
+        type = lib.types.enum (lib.attrNames accentColors);
         default = "blue";
         example = "green";
         description = ''
-          System appearance accent color. Available accents are: ${lib.concatStringsSep ", " (lib.attrNames colorAccents)}
+          System appearance accent color. Available accents are: ${lib.concatStringsSep ", " (lib.attrNames accentColors)}
         '';
       };
 
