@@ -62,7 +62,7 @@ in
 
     system.activationScripts = {
       setupInterfaceMode.text = ''
-        echo "setting up appearance mode to ${config.system.defaults.appearance.mode}..."
+        echo "setting up appearance ${config.system.defaults.appearance.mode} mode..."
 
         osascript -e '
           tell application "System Events"
@@ -74,7 +74,7 @@ in
       '';
 
       setupAccentColor.text = ''
-        echo "setting up appearance accent colors to ${config.system.defaults.appearance.accent}..."
+        echo "setting up appearance ${config.system.defaults.appearance.accent} accent..."
 
         ${sendUIEvents}/bin/send-ui-events
       '';
