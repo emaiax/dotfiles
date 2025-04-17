@@ -2,8 +2,12 @@
 {
   imports = [ ./appearance ];
 
-  system.defaults.appearance = {
-    mode = "dark";
-    accent = "green";
+  system = {
+    defaults = {
+      appearance = {
+        mode = "dark";
+        accent = "green";
+      };
+    };
   };
 }
