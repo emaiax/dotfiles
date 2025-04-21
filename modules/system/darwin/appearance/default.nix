@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   # https://mynixos.com/nix-darwin/option/system.defaults.NSGlobalDomain.AppleInterfaceStyle
   # Set to 'Dark' to enable dark mode, or leave unset for normal mode.
@@ -9,12 +14,7 @@ let
   };
 
   accentColors = import ./accent-colors.nix;
-  sendUIEvents = import ./send-ui-events.nix;
-
-  # helpers to access the correct interface mode and color accent
-  #
-  currentMode = interfaceModes.${config.system.defaults.appearance.mode};
-  currentAccent = accentColors.${config.system.defaults.appearance.accent};
+  sendUIEvents = import ./send-ui-events.nix { inherit pkgs; };
 in
 {
   options = {
@@ -42,43 +42,55 @@ in
   config = {
     environment.systemPackages = [ sendUIEvents ];
 
-    system.defaults = {
-      NSGlobalDomain = {
-        # this requires the user to logout and login again.
-        # toggling dark/ligh mode via osascript reflects immediatelly
-        #
-        AppleInterfaceStyle = lib.mkForce currentMode.appleInterfaceStyle;
+    system.defaults =
+      let
+        currentMode = interfaceModes.${config.system.defaults.appearance.mode};
+        currentAccent = accentColors.${config.system.defaults.appearance.accent};
+      in
+      {
+        NSGlobalDomain = {
+          # this requires the user to logout and login again.
+          # toggling dark/ligh mode via osascript reflects immediatelly
+          #
+          AppleInterfaceStyle = lib.mkForce currentMode.appleInterfaceStyle;
 
-        # never switch modes automatically
-        AppleInterfaceStyleSwitchesAutomatically = lib.mkForce false;
-      };
+          # never switch modes automatically
+          AppleInterfaceStyleSwitchesAutomatically = lib.mkForce false;
+        };
 
-      CustomUserPreferences.NSGlobalDomain = {
-        AppleAccentColor = lib.mkDefault (toString currentAccent.AppleAccentColor);
-        AppleHighlightColor = lib.mkDefault (toString currentAccent.AppleHighlightColor);
-        AppleAquaColorVariant = lib.mkDefault (toString currentAccent.AppleAquaColorVariant);
+        CustomUserPreferences.NSGlobalDomain = {
+          AppleAccentColor = lib.mkDefault (toString currentAccent.AppleAccentColor);
+          AppleHighlightColor = lib.mkDefault (toString currentAccent.AppleHighlightColor);
+          AppleAquaColorVariant = lib.mkDefault (toString currentAccent.AppleAquaColorVariant);
+        };
       };
-    };
 
     system.activationScripts = {
-      setupInterfaceMode.text = ''
-        echo "setting up appearance ${config.system.defaults.appearance.mode} mode..."
+      setupInterfaceMode.text =
+        let
+          isDarkMode = config.system.defaults.appearance.mode != "light";
 
-        osascript -e '
-          tell application "System Events"
-          to tell appearance preferences
-          to set dark mode to ${
-            if config.system.defaults.appearance.mode == "dark" then "true" else "false"
-          }
-        '
-      '';
+          appleScriptDarkMode = if isDarkMode then "true" else "false";
+          interfaceMode = if isDarkMode then "dark" else "light";
+        in
+        ''
+          echo "setting up appearance mode to ${interfaceMode}..."
+
+          osascript -e '
+            tell application "System Events"
+              tell appearance preferences
+                set dark mode to ${appleScriptDarkMode}
+              end tell
+            end tell
+          '
+        '';
 
       setupAccentColor.text = ''
-        echo "setting up appearance ${config.system.defaults.appearance.accent} accent..."
+        echo "setting up appearance accent color to ${config.system.defaults.appearance.accent}..."
 
+        # send UI events to update the accent color via Swift script
         ${sendUIEvents}/bin/send-ui-events
       '';
-
     };
 
     system.activationScripts.postUserActivation.text = ''

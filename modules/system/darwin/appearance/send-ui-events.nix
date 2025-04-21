@@ -1,6 +1,6 @@
 # https://github.com/NixOS/nixpkgs/blob/master/doc/stdenv/platform-notes.chapter.md
 #
-{ pkgs, ... }:
+{ pkgs }:
 pkgs.stdenv.mkDerivation {
   name = "send-ui-events";
   version = "unstable";
