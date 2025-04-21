@@ -1,6 +1,6 @@
 { ... }:
 {
   imports = [
-    ./darwin/security/pam-watch-id.nix
+    ../modules/system/darwin/security/pam-watch-id.nix
   ];
 }

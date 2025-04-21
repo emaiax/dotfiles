@@ -44,20 +44,24 @@
             nix-homebrew.darwinModules.nix-homebrew # Homebrew integration
             home-manager.darwinModules.home-manager # HomeManager integration
 
-            # ./hosts/common.nix # shared host config
-            ./hosts/darwin # darwin-specific config
-            ./hosts/${host.hostname}.nix # host-specific overrides
-
+            # core modules
+            #
             ./modules/core/nix.nix # core nix settings
             ./modules/core/homebrew.nix # homebrew settings
             ./modules/core/home-manager.nix # home-manager settings and profiles modules
 
+            # system configurations
+            #
             ./modules/system/common # shared system settings
-            # ./modules/system/darwin # darwin-specific system settings
+            ./modules/system/darwin # darwin-specific settings
+
+            # host configurations
+            #
+            ./hosts/${host.hostname}.nix # host-specific overrides
 
             # user settings and applications
             #
-            ./modules/user/darwin/brew/${host.user.username}.brew.nix
+            ./modules/user/darwin/brew/${host.user.username}.brew.nix # user-specific brew settings
             ./profiles/${host.user.username}.nix # user-specific overrides
           ];
         };

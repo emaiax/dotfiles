@@ -69,8 +69,6 @@
       };
 
       NSGlobalDomain = {
-        AppleInterfaceStyle = "Dark";
-
         AppleShowAllExtensions = true;
       };
     };
