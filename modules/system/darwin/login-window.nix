@@ -18,7 +18,7 @@
     };
   };
 
-  system.activationScripts.preActivation.text = ''
+  system.activationScripts.postActivation.text = ''
     echo "setting up login window information"
 
     # Hide Other Accounts

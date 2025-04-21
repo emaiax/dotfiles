@@ -93,7 +93,7 @@ in
       '';
     };
 
-    system.activationScripts.postUserActivation.text = ''
+    system.activationScripts.postActivation.text = ''
       ${config.system.activationScripts.setupInterfaceMode.text}
       ${config.system.activationScripts.setupAccentColor.text}
     '';

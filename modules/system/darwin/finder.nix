@@ -74,7 +74,7 @@
     };
   };
 
-  system.activationScripts.preActivation.text = ''
+  system.activationScripts.postActivation.text = ''
     echo "setting up Finder preferences..."
 
     # Avoid creating .DS_Store files on network or USB volumes
