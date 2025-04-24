@@ -27,6 +27,7 @@
       "contexts" # context menu for mac
       "obsidian" # note taking
       "rectangle" # window manager
+      "todoist" # task manager
 
       # Development
       #
