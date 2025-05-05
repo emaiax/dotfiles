@@ -2,6 +2,7 @@
 {
   imports = [
     ./arc-browser
+    ./code-cursor.nix
     ./docker.nix
     ./fonts.nix
     ./iterm2
