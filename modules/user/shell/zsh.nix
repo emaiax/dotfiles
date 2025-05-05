@@ -6,7 +6,7 @@
 
     defaultKeymap = "viins"; # emacs, vicmd, viins
 
-    initExtra = ''
+    initContent = ''
       export PATH="${config.home.homeDirectory}/.bun/bin:$PATH"
       export PATH="${config.home.homeDirectory}/.asdf/shims:$PATH"
     '';

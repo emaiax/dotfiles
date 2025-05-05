@@ -9,7 +9,7 @@
     ];
 
     programs.zsh = {
-      initExtra = ''
+      initContent = ''
         # ulimit was low and sometimes hangs, setting to max value
         #
         ulimit -n 65536
