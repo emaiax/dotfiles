@@ -1,10 +1,8 @@
 { config, ... }:
 {
   imports = [
-    ./arc-browser
-    ./code-cursor.nix
-    ./docker.nix
     ./fonts.nix
+    ./packages.nix
     ./iterm2
     ./raycast
     ./vscode
