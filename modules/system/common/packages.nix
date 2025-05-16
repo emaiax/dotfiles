@@ -5,6 +5,7 @@
   #
   environment.systemPackages = with pkgs; [
     asdf-vm          # programming languages version manager
+    btop             # better top
     curl             # command line tool for transferring data with URLs
     go               # go programming language
     jq               # command-line JSON processor
