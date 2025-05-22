@@ -2,10 +2,11 @@
 {
   imports = [
     ./fonts.nix
-    ./packages.nix
     ./iterm2
+    ./packages.nix
     ./raycast
     ./vscode
+    ./zed.nix
   ];
 
   # ensures ~/code folder exists.
