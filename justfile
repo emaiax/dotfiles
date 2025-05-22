@@ -12,7 +12,7 @@ activate-settings:
 # apply the configuration
 apply *FLAGS:
 	@git add .
-	@darwin-rebuild switch --flake . {{FLAGS}}
+	@sudo darwin-rebuild switch --flake . {{FLAGS}}
 	@just activate-settings
 
 # build the configuration
