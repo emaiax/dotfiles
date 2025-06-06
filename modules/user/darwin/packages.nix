@@ -8,5 +8,6 @@
     code-cursor # cursor ide
     docker # docker cli
     docker-compose # docker compose cli
+    lmstudio # local and open-source LLMs
   ];
 }

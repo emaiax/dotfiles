@@ -23,6 +23,7 @@
       #
       "1password-cli" # 1password cli
       "1password" # 1password
+      "claude" # claude ai
       "cleanshot" # screenshots and screen recording
       "contexts" # context menu for mac
       "obsidian" # note taking
