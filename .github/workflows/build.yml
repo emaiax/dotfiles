@@ -16,10 +16,10 @@ jobs:
           #   platform: ARM64
           - runner: macos-latest
             name: dudumini
-            platform: x64
+            arch: X64
           - runner: macos-latest
             name: dudupro
-            platform: arm64
+            arch: ARM64
 
     runs-on: ${{ matrix.runners.runner }}
     permissions:
