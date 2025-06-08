@@ -21,7 +21,7 @@ jobs:
             name: dudupro
             platform: ARM64
 
-    runs-on: ${{ matrix.runners }}
+    runs-on: ${{ matrix.runners.runner }}
     permissions:
       id-token: "write"
       contents: "read"
@@ -33,7 +33,7 @@ jobs:
 
       - run: nix flake check --show-trace
 
-      - run: echo "building ${{ matrix.buildName }}"
-        if: matrix.runners == 'macos-latest'
+      - run: echo "building ${{ matrix.runners.name }}"
+        if: matrix.runners.runner == 'macos-latest'
 
-      - run: nix build .#darwinConfigurations.${{ matrix.buildName }}.system
+      - run: nix build .#darwinConfigurations.${{ matrix.runners.name }}.system
