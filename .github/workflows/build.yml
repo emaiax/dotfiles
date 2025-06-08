@@ -10,7 +10,17 @@ jobs:
   flake:
     strategy:
       matrix:
-        runners: [ubuntu-latest, macos-latest]
+        runners:
+          - runner: ubuntu-latest
+            name: default
+            platform: ARM64
+          - runner: macos-latest
+            name: dudumini
+            platform: x64
+          - runner: macos-latest
+            name: dudupro
+            platform: ARM64
+
     runs-on: ${{ matrix.runners }}
     permissions:
       id-token: "write"
@@ -22,3 +32,8 @@ jobs:
       - uses: DeterminateSystems/flakehub-cache-action@v2
 
       - run: nix flake check --show-trace
+
+      - run: echo "building ${{ matrix.buildName }}"
+        if: matrix.runners == 'macos-latest'
+
+      - run: nix build .#darwinConfigurations.${{ matrix.buildName }}.system
