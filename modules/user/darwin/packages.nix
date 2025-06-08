@@ -9,5 +9,6 @@
     docker # docker cli
     docker-compose # docker compose cli
     lmstudio # local and open-source LLMs
+    uv # python package manager
   ];
 }
