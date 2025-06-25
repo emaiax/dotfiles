@@ -9,6 +9,7 @@
     docker # docker cli
     docker-compose # docker compose cli
     # lmstudio # local and open-source LLMs
+    ngrok # ngrok tunnel for local development
     uv # python package manager
   ];
 }
