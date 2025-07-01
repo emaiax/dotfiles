@@ -6,7 +6,7 @@
     ./packages.nix
     ./raycast
     ./vscode
-    ./zed.nix
+    # ./zed.nix
   ];
 
   # ensures ~/code folder exists.
