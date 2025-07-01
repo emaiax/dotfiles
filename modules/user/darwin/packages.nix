@@ -5,6 +5,7 @@
   #
   home.packages = with pkgs; [
     arc-browser # better browser
+    bruno # http client for testing APIs
     code-cursor # cursor ide
     docker # docker cli
     docker-compose # docker compose cli
