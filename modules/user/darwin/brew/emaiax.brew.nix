@@ -24,7 +24,7 @@
       "1password-cli" # 1password cli
       "1password" # 1password
       "claude" # claude ai
-      "cleanshot" # screenshots and screen recording
+      # "cleanshot" # screenshots and screen recording
       "contexts" # context menu for mac
       "obsidian" # note taking
       "rectangle" # window manager
@@ -32,9 +32,9 @@
 
       # Development
       #
-      "docker" # docker desktop for mac
+      # "docker" # docker desktop for mac
+      # "tableplus" # database management
       "github" # github desktop for mac
-      "tableplus" # database management
 
       # Media
       #
