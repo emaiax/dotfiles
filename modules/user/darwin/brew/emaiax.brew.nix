@@ -28,11 +28,11 @@
       "contexts" # context menu for mac
       "obsidian" # note taking
       "rectangle" # window manager
-      "todoist" # task manager
+      "todoist-app" # task manager
 
       # Development
       #
-      # "docker" # docker desktop for mac
+      "docker-desktop" # docker desktop for mac
       # "tableplus" # database management
       "github" # github desktop for mac
 
