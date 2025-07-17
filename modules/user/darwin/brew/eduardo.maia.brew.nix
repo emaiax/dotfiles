@@ -54,8 +54,8 @@
       "1password-cli" # 1password cli
       "1password" # 1password
       "contexts" # context menu for mac
+      "docker-desktop" # docker desktop for mac
       "domzilla-caffeine" # caffeine
-      "docker" # docker desktop for mac
       "github" # github desktop for mac
       "logi-options+" # logitech options
       "obsidian" # note taking
