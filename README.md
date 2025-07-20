@@ -1,61 +1,224 @@
-# Dotfiles
+# 🏠 Dotfiles
 
-Declarative configuration using [Nix][nix] with [Nix-Darwin][nix-darwin] for macOS system management, [Home Manager][home-manager] for user environments and [Nix-Homebrew][nix-homebrew] integration for macOS package management.
+> Declarative system configuration using Nix with cross-platform support for macOS
 
-## Structure
+A comprehensive, modular configuration management system built on [Nix][nix] that provides:
+- **macOS System Management** via [Nix-Darwin][nix-darwin]
+- **User Environment Configuration** via [Home Manager][home-manager] 
+- **Package Management** via [Nix-Homebrew][nix-homebrew] integration
+- **Multi-Host Support** with host-specific configurations
+- **Multi-User Support** with user-specific profiles
+
+## ✨ Features
+
+- **🔧 Modular Architecture**: Organized into reusable modules for system, user, and host configurations
+- **🖥️ Multi-Host Management**: Support for multiple machines with different architectures (Intel/Apple Silicon)
+- **👥 Multi-User Support**: Separate profiles for personal and work environments
+- **🍺 Homebrew Integration**: Declarative Homebrew package management through Nix
+- **⚡ Development Tools**: Pre-configured CLI tools, shell environment, and development applications
+- **🎨 macOS Customization**: System appearance, dock, finder, and security settings
+- **🔄 Automated Updates**: GitHub Actions for dependency management and build validation
+- **📦 Flake-based**: Modern Nix flakes for reproducible and composable configurations
+
+## 🏗️ Architecture
 
 ```
 dotfiles/
-├── hosts/
-│   ├── common/        # shared machine configs
-│   ├── darwin/        # macOS host tuning
-│   ├── linux/         # linux host tuning
-│   └── machine.nix    # hardware-specific overrides
+├── 📁 hosts/                    # Host-specific configurations
+│   ├── dudumini.nix            # Intel Mac configuration
+│   ├── dudupro.nix             # Apple Silicon Mac configuration
+│   └── M137516.nix             # Work machine configuration
 │
-├── modules/
-│   ├── core/          # core setup (nix, homebrew, home-manager)
+├── 📁 modules/                  # Modular configuration components
+│   ├── 📁 core/                # Core Nix and system setup
+│   │   ├── nix.nix             # Nix configuration and settings
+│   │   ├── homebrew.nix        # Homebrew integration
+│   │   └── home-manager.nix    # Home Manager setup
 │   │
-│   ├── system/        # system configs and services managed by nix-darwin
-│   │   ├── common/    # cross-platform system-level configs
-│   │   ├── darwin/    # macOS system-level settings and applications
-│   │   └── linux/     # linux system-level settings and applications
+│   ├── 📁 system/              # System-level configurations
+│   │   ├── 📁 common/          # Cross-platform system configs
+│   │   └── 📁 darwin/          # macOS system settings
+│   │       ├── appearance.nix  # UI appearance and themes
+│   │       ├── dock.nix        # Dock configuration
+│   │       ├── finder.nix      # Finder settings
+│   │       ├── keyboard.nix    # Keyboard preferences
+│   │       ├── security/       # Security and authentication
+│   │       └── system.nix      # General system settings
 │   │
-│   └── user/          # user configs and applications managed by home-manager
-│       ├── cli/       # command line tools and utilities
-│       ├── common/    # cross-platform user configs
-│       ├── darwin/    # macOS user-level settings and applications
-│       │   └── apps/  # macOS GUI apps (iterm2, raycast, vscode)
-│       ├── linux/     # linux user-level settings and applications
-│       └── shell/     # shell runtime
+│   ├── 📁 user/                # User-level configurations
+│   │   ├── 📁 cli/             # Command-line tools (fzf, direnv, lsd)
+│   │   ├── 📁 darwin/          # macOS user applications
+│   │   │   ├── 📁 brew/        # User-specific Homebrew packages
+│   │   │   ├── 📁 iterm2/      # iTerm2 configuration
+│   │   │   ├── 📁 raycast/     # Raycast launcher setup
+│   │   │   └── 📁 vscode/      # VS Code configuration
+│   │   ├── 📁 git/             # Git and GitHub CLI setup
+│   │   └── 📁 shell/           # Shell environment (Zsh, Starship, SSH)
+│   │
+│   └── 📁 pkgs/                # Custom package definitions
 │
-└── profiles/          # user environment bundles
-    ├── emaiax.nix     # personal config and imports
-    └── work.nix       # work-specific setup
+├── 📁 profiles/                 # User environment bundles
+│   ├── emaiax.nix              # Personal configuration profile
+│   └── eduardo.maia.nix        # Work configuration profile
+│
+├── 📁 scripts/                  # Installation and management scripts
+│   ├── install.sh              # Automated installation script
+│   └── uninstall.sh            # Clean removal script
+│
+├── 📁 .github/                  # CI/CD and automation
+│   ├── workflows/              # GitHub Actions workflows
+│   └── dependabot.yml          # Automated dependency updates
+│
+├── flake.nix                   # Main Nix flake configuration
+├── flake.lock                  # Locked dependency versions
+├── vars.nix                    # Host and user variable definitions
+├── justfile                    # Task runner commands
+└── nix.conf                    # Nix daemon configuration
 ```
 
-## Installation
+## 🚀 Quick Start
 
-Paste the install command in a shell prompt to install.
+### One-Line Installation
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/emaiax/dotfiles/HEAD/scripts/install.sh)"
 ```
 
-Or you can manually run the provided installation script to set up everything:
+### Manual Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/emaiax/dotfiles.git ~/.dotfiles
+   cd ~/.dotfiles
+   ```
+
+2. **Run the installation script**:
+   ```bash
+   ./scripts/install.sh
+   ```
+
+The installation script will:
+- Install Xcode Command Line Tools (if needed)
+- Install Nix package manager
+- Apply the configuration for your system
+
+## 🔧 Usage
+
+This project uses [just][just] as a task runner for common operations:
 
 ```bash
-./scripts/install.sh
+# List all available commands
+just
+
+# Apply configuration changes
+just apply
+
+# Build configuration without applying
+just build
+
+# Update all dependencies
+just update
+
+# Clean up old generations (>7 days)
+just cleanup
+
+# Show system information
+just nix-info
+
+# Generate SSH key
+just ssh-keygen my-key "email@example.com"
 ```
 
-## Uninstallation
+### Adding a New Host
 
-Run the provided uninstallation script to clean up everything:
+1. **Define the host in `vars.nix`**:
+   ```nix
+   hosts = {
+     my-new-host = {
+       hostname = "my-new-host";
+       arch = "aarch64-darwin"; # or "x86_64-darwin"
+       user = users.emaiax;     # or users.eduardo
+     };
+   };
+   ```
+
+2. **Create host-specific configuration**:
+   ```bash
+   touch hosts/my-new-host.nix
+   ```
+
+3. **Apply the configuration**:
+   ```bash
+   just apply
+   ```
+
+## 🛠️ Included Tools & Applications
+
+### Command Line Tools
+- **Shell**: Zsh with Starship prompt
+- **File Management**: `lsd` (modern ls), `fzf` (fuzzy finder)
+- **Development**: `direnv`, Git, GitHub CLI
+- **System**: SSH configuration and key management
+
+### macOS Applications
+- **Terminal**: iTerm2 with custom configuration
+- **Launcher**: Raycast for productivity
+- **Editor**: VS Code with extensions
+- **Package Management**: Homebrew integration
+
+### System Customization
+- **Appearance**: Dark mode, accent colors, UI preferences
+- **Dock**: Auto-hide, positioning, and application management
+- **Finder**: Show hidden files, path bar, and view preferences
+- **Security**: Touch ID and Apple Watch authentication
+- **Keyboard & Trackpad**: Custom key mappings and gesture settings
+
+## 🔄 Continuous Integration
+
+The repository includes automated workflows:
+
+- **Build Validation**: Tests configuration builds on multiple architectures
+- **Dependency Updates**: Automated updates via Dependabot
+- **Flake Checking**: Validates Nix flake integrity
+
+## 🗑️ Uninstallation
+
+To completely remove the configuration:
 
 ```bash
 ./scripts/uninstall.sh
 ```
 
+This will:
+- Remove Nix and all installed packages
+- Clean up system modifications
+- Restore original system settings
+
+## 📚 Learning Resources
+
+- [Nix Manual](https://nixos.org/manual/nix/stable/)
+- [Nix-Darwin Manual](https://daiderd.com/nix-darwin/manual/)
+- [Home Manager Manual](https://nix-community.github.io/home-manager/)
+- [Nix Flakes Tutorial](https://nixos.wiki/wiki/Flakes)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test the configuration builds
+5. Submit a pull request
+
+## 📄 License
+
+This project is open source. Feel free to use and modify as needed.
+
+---
+
+*Built with ❤️ using Nix*
+
 [nix]: https://nixos.org/
 [nix-darwin]: https://github.com/LnL7/nix-darwin
-[nix-homebrew]: https://github.com/NixOS/homebrew-nix
+[nix-homebrew]: https://github.com/zhaofengli/nix-homebrew
 [home-manager]: https://nix-community.github.io/home-manager/
+[just]: https://github.com/casey/just
