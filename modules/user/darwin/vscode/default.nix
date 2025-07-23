@@ -41,27 +41,28 @@ in
           # git and github
           #
           eamodio.gitlens
-          github.copilot
-          github.copilot-chat
-          github.vscode-github-actions
+          # github.copilot
+          # github.copilot-chat
+          # github.vscode-github-actions
           github.vscode-pull-request-github
 
           # languages and formatters
           #
           brettm12345.nixfmt-vscode
           esbenp.prettier-vscode
-          golang.go
+          # golang.go
           hashicorp.hcl # Packer HCL files
           hashicorp.terraform
           jakebecker.elixir-ls
           jnoortheen.nix-ide
+          nefrob.vscode-just-syntax # justfile
           phoenixframework.phoenix
           redhat.ansible
           redhat.vscode-yaml
           samuelcolvin.jinjahtml
           shopify.ruby-lsp
-          tamasfe.even-better-toml
-          ziglang.vscode-zig
+          # tamasfe.even-better-toml
+          # ziglang.vscode-zig
 
           # markdown previews
           #
