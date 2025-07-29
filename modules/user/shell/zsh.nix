@@ -12,16 +12,30 @@
     '';
 
     shellAliases = {
+      # macOS helper to reload system settings applied from nix-darwin
       activateSettings = "/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u";
 
-      cat = "bat";
+      # goto dotfiles directory
       dotfiles = "cd ~/.config/nix";
 
-      zr = "source ~/.zshrc"; # zsh reload
-      zv = "cat ~/.zshrc"; # zsh view
+      cat = "bat"; # cat with bat
 
-      # rails apps
-      be = "bundle exec";
+      zv = "cat ~/.zshrc"; # view zshrc
+      zr = "source ~/.zshrc"; # reload zshrc
+
+      be = "bundle exec"; # rails apps
+      iexmix = "iex -S mix"; # elixir terminal
+
+      # mix tasks
+      m = "mix";
+      mt = "mix test";
+      mtt = "mix test --trace";
+      mtw = "mix test.watch";
+      mtwt = "mix test.watch --trace";
+
+      # phoenix tasks
+      phxsrv = "mix phx.server";
+      iexsrv = "iex -S mix phx.server";
     };
   };
 }
