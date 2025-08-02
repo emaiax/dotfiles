@@ -1,0 +1,14 @@
+[
+  {
+    "command": "copyRelativeFilePath",
+    "key": "cmd+shift+c"
+  },
+  {
+    "command": "workbench.action.files.saveAll",
+    "key": "cmd+shift+s"
+  },
+  {
+      "key": "cmd+i",
+      "command": "composerMode.agent"
+  }
+]
