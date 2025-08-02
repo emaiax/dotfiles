@@ -1,6 +1,9 @@
 {
   "editor.formatOnSave": true,
   "extensions.ignoreRecommendations": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
   "window.commandCenter": true,
-  "workbench.colorTheme": "Mayukai Alucard"
+  "workbench.colorTheme": "Mayukai Mirage Gruvbox Darktooth",
+  "workbench.iconTheme": "ayu"
 }
