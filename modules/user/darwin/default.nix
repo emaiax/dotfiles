@@ -1,6 +1,7 @@
 { config, ... }:
 {
   imports = [
+    ./code-cursor
     ./fonts.nix
     ./iterm2
     ./packages.nix
