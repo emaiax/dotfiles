@@ -8,6 +8,7 @@
     ./raycast
     ./vscode
     # ./zed.nix
+    ./vscode-profiles.nix
   ];
 
   # ensures ~/code folder exists.

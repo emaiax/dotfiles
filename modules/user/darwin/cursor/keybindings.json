@@ -10,5 +10,19 @@
   {
     "key": "cmd+i",
     "command": "composerMode.agent"
+  },
+  {
+    "key": "shift+cmd+b",
+    "command": "-workbench.view.backgroundAgent",
+    "when": "viewContainer.workbench.view.backgroundAgent.enabled"
+  },
+  {
+    "key": "shift+cmd+b",
+    "command": "-workbench.action.tasks.build",
+    "when": "taskCommandsRegistered"
+  },
+  {
+    "key": "shift+cmd+b",
+    "command": "workbench.action.toggleSidebarPosition"
   }
 ]

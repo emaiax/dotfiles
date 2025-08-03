@@ -23,5 +23,10 @@
   "gitlens.telemetry.enabled": false,
   "telemetry.telemetryLevel": "off",
   "workbench.colorTheme": "Ayu Mirage Bordered",
-  "workbench.iconTheme": "ayu"
+  "workbench.iconTheme": "ayu",
+  "[nix]": {
+    "editor.defaultFormatter": "jnoortheen.nix-ide"
+  },
+  "cursor.composer.textSizeScale": 1.3,
+  "cursor.composer.shouldChimeAfterChatFinishes": true
 }
