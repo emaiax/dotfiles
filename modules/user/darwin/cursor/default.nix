@@ -2,7 +2,6 @@
 {
   programs.cursor = {
     enable = true;
-    package = pkgs.code-cursor;
 
     profiles = {
       default = {
@@ -10,54 +9,6 @@
           eamodio.gitlens
           esbenp.prettier-vscode
         ];
-
-        keybindings = [
-          {
-            key = "cmd+shift+c";
-            command = "copyRelativeFilePath";
-          }
-          {
-            key = "cmd+shift+s";
-            command = "workbench.action.files.saveAll";
-          }
-          {
-            "key" = "cmd+i";
-            "command" = "composerMode.agent";
-          }
-          {
-            key = "shift+cmd+b";
-            command = "-workbench.view.backgroundAgent";
-            when = "viewContainer.workbench.view.backgroundAgent.enabled";
-          }
-          {
-            key = "shift+cmd+b";
-            command = "-workbench.action.tasks.build";
-            when = "taskCommandsRegistered";
-          }
-          {
-            key = "shift+cmd+b";
-            command = "workbench.action.toggleSidebarPosition";
-          }
-        ];
-
-        mcp = {
-          mcpServers = {
-            tidewave = {
-              command = "/path/to/mcp-proxy";
-              args = [ "http://localhost:$PORT/tidewave/mcp" ];
-            };
-
-            obsidian = {
-              command = "uvx";
-              args = [ "mcp-obsidian" ];
-              env = {
-                "OBSIDIAN_HOST" = "<your_obsidian_host>";
-                "OBSIDIAN_PORT" = "<your_obsidian_port>";
-                "OBSIDIAN_API_KEY" = "<your_api_key>";
-              };
-            };
-          };
-        };
 
         settings = {
           "breadcrumbs.filePath" = "off";
@@ -90,6 +41,54 @@
 
           "[nix]" = {
             "editor.defaultFormatter" = "jnoortheen.nix-ide";
+          };
+        };
+
+        keybindings = [
+          {
+            key = "shift+cmd+b";
+            command = "-workbench.view.backgroundAgent";
+            when = "viewContainer.workbench.view.backgroundAgent.enabled";
+          }
+          {
+            key = "shift+cmd+b";
+            command = "-workbench.action.tasks.build";
+            when = "taskCommandsRegistered";
+          }
+          {
+            key = "cmd+shift+b";
+            command = "workbench.action.toggleSidebarPosition";
+          }
+          {
+            key = "cmd+shift+c";
+            command = "copyRelativeFilePath";
+          }
+          {
+            key = "cmd+shift+s";
+            command = "workbench.action.files.saveAll";
+          }
+          {
+            key = "cmd+i";
+            command = "composerMode.agent";
+          }
+        ];
+
+        mcp = {
+          mcpServers = {
+            tidewave = {
+              command = "/path/to/mcp-proxy";
+              args = [ "http://localhost:$PORT/tidewave/mcp" ];
+            };
+
+            obsidian = {
+              command = "uvx";
+              args = [ "mcp-obsidian" ];
+              env = {
+                "OBSIDIAN_HOST" = "<your_obsidian_host>";
+                "OBSIDIAN_PORT" = "<your_obsidian_port>";
+                "OBSIDIAN_API_KEY" = "<your_api_key>";
+              };
+            };
           };
         };
       };
