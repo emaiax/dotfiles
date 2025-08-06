@@ -29,6 +29,10 @@ custom-build *FLAGS:
 cleanup:
 	@nix-collect-garbage --delete-old --delete-older-than 7d
 
+# start a nix repl with the nixpkgs flake
+repl:
+	@nix repl -f '<nixpkgs>'
+
 # print nix info
 nix-info:
 	@nix-shell -p nix-info --run "nix-info -m"

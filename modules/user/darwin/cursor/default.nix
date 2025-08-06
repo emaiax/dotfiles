@@ -5,11 +5,6 @@
 
     profiles = {
       default = {
-        extensions = with pkgs.vscode-marketplace; [
-          eamodio.gitlens
-          esbenp.prettier-vscode
-        ];
-
         settings = {
           "breadcrumbs.filePath" = "off";
           "cursor.composer.textSizeScale" = 1.15;
@@ -44,6 +39,39 @@
           };
         };
 
+        extensions = with pkgs.vscode-marketplace; [
+          edwinkofler.vscode-assorted-languages
+          teabyii.ayu
+          jnoortheen.nix-ide
+          esbenp.prettier-vscode
+          vscodevim.vim
+          nefrob.vscode-just-syntax
+          wakatime.vscode-wakatime
+          jakebecker.elixir-ls
+          phoenixframework.phoenix
+          redhat.vscode-yaml
+          shopify.ruby-lsp
+        ];
+
+        mcp = {
+          mcpServers = {
+            tidewave = {
+              command = "/path/to/mcp-proxy";
+              args = [ "http://localhost:$PORT/tidewave/mcp" ];
+            };
+
+            obsidian = {
+              command = "uvx";
+              args = [ "mcp-obsidian" ];
+              env = {
+                "OBSIDIAN_HOST" = "<your_obsidian_host>";
+                "OBSIDIAN_PORT" = "<your_obsidian_port>";
+                "OBSIDIAN_API_KEY" = "<your_api_key>";
+              };
+            };
+          };
+        };
+
         keybindings = [
           {
             key = "shift+cmd+b";
@@ -72,75 +100,56 @@
             command = "composerMode.agent";
           }
         ];
-
-        mcp = {
-          mcpServers = {
-            tidewave = {
-              command = "/path/to/mcp-proxy";
-              args = [ "http://localhost:$PORT/tidewave/mcp" ];
-            };
-
-            obsidian = {
-              command = "uvx";
-              args = [ "mcp-obsidian" ];
-              env = {
-                "OBSIDIAN_HOST" = "<your_obsidian_host>";
-                "OBSIDIAN_PORT" = "<your_obsidian_port>";
-                "OBSIDIAN_API_KEY" = "<your_api_key>";
-              };
-            };
-          };
-        };
       };
 
-      development = {
-        extensions = with pkgs.vscode-marketplace; [
-          jakebecker.elixir-ls
-          shopify.ruby-lsp
-        ];
+      # development = {
+      #   extensions = with pkgs.vscode-marketplace; [
+      #     jakebecker.elixir-ls
+      #     shopify.ruby-lsp
+      #   ];
 
-        settings = {
-          "files.autoSave" = "afterDelay";
-          "files.autoSaveDelay" = 1000;
-          "workbench.colorTheme" = "Default Dark+";
-        };
+      #   settings = {
+      #     "files.autoSave" = "afterDelay";
+      #     "files.autoSaveDelay" = 1000;
+      #     "workbench.colorTheme" = "Default Dark+";
+      #   };
 
-        mcp = {
-          mcpServers = {
-            Github = {
-              url = "https://api.githubcopilot.com/mcp/";
-            };
-            Cursor = {
-              url = "https://api.cursor.com/mcp/";
-            };
-            Tidewave = {
-              url = "https://api.tidewave.com/mcp/";
-            };
-            "Obsidian MCP" = {
-              url = "https://obsidian.md/mcp/";
-            };
-          };
-        };
-      };
+      #   mcp = {
+      #     mcpServers = {
+      #       Github = {
+      #         url = "https://api.githubcopilot.com/mcp/";
+      #       };
+      #       Cursor = {
+      #         url = "https://api.cursor.com/mcp/";
+      #       };
+      #       Tidewave = {
+      #         url = "https://api.tidewave.com/mcp/";
+      #       };
+      #       "Obsidian MCP" = {
+      #         url = "https://obsidian.md/mcp/";
+      #       };
+      #     };
+      #   };
+      # };
 
-      work = {
-        extensions = with pkgs.vscode-marketplace; [
-          jnoortheen.nix-ide
-          redhat.ansible
-          redhat.vscode-yaml
-        ];
+      # work = {
+      #   extensions = with pkgs.vscode-marketplace; [
+      #     jnoortheen.nix-ide
+      #     redhat.ansible
+      #     redhat.vscode-yaml
+      #   ];
 
-        keybindings = [
-          {
-            key = "cmd+k ctrl+p";
-            command = "workbench.action.quickOpen";
-          }
-        ];
+      #   keybindings = [
+      #     {
+      #       key = "cmd+k ctrl+p";
+      #       command = "workbench.action.quickOpen";
+      #     }
+      #   ];
 
-        settings = {
-          "workbench.colorTheme" = "Default Dark+";
-        };
-      };
+      #   settings = {
+      #     "workbench.colorTheme" = "Default Dark+";
+      #   };
+      # };
     };
   };
 }
