@@ -6,8 +6,11 @@
     profiles = {
       default = {
         settings = {
+          "[nix]" = {
+            "editor.defaultFormatter" = "jnoortheen.nix-ide";
+          };
           "breadcrumbs.filePath" = "off";
-          "cursor.composer.textSizeScale" = 1.15;
+          "crashReporting.enabled" = "off";
           "cursor.windowSwitcher.sidebarHoverCollapsed" = true;
           "editor.accessibilitySupport" = "off";
           "editor.colorDecorators" = true;
@@ -29,14 +32,8 @@
           "files.trimTrailingWhitespace" = true;
           "git.ignoreMissingGitWarning" = true;
           "git.openRepositoryInParentFolders" = "never";
-          "gitlens.telemetry.enabled" = false;
-          "telemetry.telemetryLevel" = "off";
           "workbench.colorTheme" = "Ayu Mirage Bordered";
           "workbench.iconTheme" = "ayu";
-
-          "[nix]" = {
-            "editor.defaultFormatter" = "jnoortheen.nix-ide";
-          };
         };
 
         extensions = with pkgs.vscode-marketplace; [
@@ -52,25 +49,6 @@
           redhat.vscode-yaml
           shopify.ruby-lsp
         ];
-
-        mcp = {
-          mcpServers = {
-            tidewave = {
-              command = "/path/to/mcp-proxy";
-              args = [ "http://localhost:$PORT/tidewave/mcp" ];
-            };
-
-            obsidian = {
-              command = "uvx";
-              args = [ "mcp-obsidian" ];
-              env = {
-                "OBSIDIAN_HOST" = "<your_obsidian_host>";
-                "OBSIDIAN_PORT" = "<your_obsidian_port>";
-                "OBSIDIAN_API_KEY" = "<your_api_key>";
-              };
-            };
-          };
-        };
 
         keybindings = [
           {
@@ -100,56 +78,27 @@
             command = "composerMode.agent";
           }
         ];
+
+        mcp = {
+          mcpServers = {
+            tidewave = {
+              command = "/path/to/mcp-proxy";
+              args = [ "http://localhost:$PORT/tidewave/mcp" ];
+            };
+
+            obsidian = {
+              command = "uvx";
+              args = [ "mcp-obsidian" ];
+              env = {
+                "OBSIDIAN_HOST" = "<your_obsidian_host>";
+                "OBSIDIAN_PORT" = "<your_obsidian_port>";
+                "OBSIDIAN_API_KEY" = "<your_api_key>";
+              };
+            };
+          };
+        };
+
       };
-
-      # development = {
-      #   extensions = with pkgs.vscode-marketplace; [
-      #     jakebecker.elixir-ls
-      #     shopify.ruby-lsp
-      #   ];
-
-      #   settings = {
-      #     "files.autoSave" = "afterDelay";
-      #     "files.autoSaveDelay" = 1000;
-      #     "workbench.colorTheme" = "Default Dark+";
-      #   };
-
-      #   mcp = {
-      #     mcpServers = {
-      #       Github = {
-      #         url = "https://api.githubcopilot.com/mcp/";
-      #       };
-      #       Cursor = {
-      #         url = "https://api.cursor.com/mcp/";
-      #       };
-      #       Tidewave = {
-      #         url = "https://api.tidewave.com/mcp/";
-      #       };
-      #       "Obsidian MCP" = {
-      #         url = "https://obsidian.md/mcp/";
-      #       };
-      #     };
-      #   };
-      # };
-
-      # work = {
-      #   extensions = with pkgs.vscode-marketplace; [
-      #     jnoortheen.nix-ide
-      #     redhat.ansible
-      #     redhat.vscode-yaml
-      #   ];
-
-      #   keybindings = [
-      #     {
-      #       key = "cmd+k ctrl+p";
-      #       command = "workbench.action.quickOpen";
-      #     }
-      #   ];
-
-      #   settings = {
-      #     "workbench.colorTheme" = "Default Dark+";
-      #   };
-      # };
     };
   };
 }
