@@ -35,6 +35,7 @@
 
       # Development
       #
+      "cursor-cli" # cursor ai cli
       "docker-desktop" # docker desktop for mac
       # "tableplus" # database management
       "github" # github desktop for mac
