@@ -37,17 +37,31 @@
         };
 
         extensions = with pkgs.vscode-marketplace; [
-          edwinkofler.vscode-assorted-languages
+          # themes and icons
+          #
+          gulajavaministudio.mayukaithemevsc
           teabyii.ayu
-          jnoortheen.nix-ide
+
+          # languages and formatters
+          #
+          edwinkofler.vscode-assorted-languages
           esbenp.prettier-vscode
-          vscodevim.vim
-          nefrob.vscode-just-syntax
-          wakatime.vscode-wakatime
+          golang.go
+          hashicorp.hcl # Packer HCL files
+          hashicorp.terraform
           jakebecker.elixir-ls
+          jnoortheen.nix-ide
+          nefrob.vscode-just-syntax
           phoenixframework.phoenix
           redhat.vscode-yaml
           shopify.ruby-lsp
+
+          # utilities
+          #
+          mechatroner.rainbow-csv
+          naumovs.color-highlight
+          vscodevim.vim
+          wakatime.vscode-wakatime
         ];
 
         keybindings = [
