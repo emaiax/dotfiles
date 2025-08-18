@@ -20,11 +20,11 @@
       };
 
       "homelab" = {
-        host = "*.homelab.local";
+        host = "*.local";
         user = "root";
 
         identitiesOnly = true;
-        identityFile = "~/.ssh/homelab";
+        identityFile = "~/.ssh/homelab_id_ed25519";
 
         extraOptions = {
           UserKnownHostsFile = "/dev/null";
