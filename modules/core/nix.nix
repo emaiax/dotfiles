@@ -25,8 +25,15 @@
   };
 
   nixpkgs = {
-    config.allowUnfree = true;
-    config.allowUnsupportedSystem = true;
+    config = {
+      allowBroken = false;
+      allowUnfree = true;
+      allowUnsupportedSystem = true;
+
+      # some unmaintained packages are allowed to be installed
+      #
+      permittedInsecurePackages = map (pkg: pkg.name) [ pkgs.arc-browser ];
+    };
 
     hostPlatform = host.arch;
 
