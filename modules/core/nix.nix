@@ -32,7 +32,7 @@
 
       # some unmaintained packages are allowed to be installed
       #
-      permittedInsecurePackages = lib.attrNames [ pkgs.arc-browser ];
+      permittedInsecurePackages = map (pkg: pkg.name) [ pkgs.arc-browser ];
     };
 
     hostPlatform = host.arch;
