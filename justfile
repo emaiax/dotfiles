@@ -26,8 +26,19 @@ custom-build *FLAGS:
 	@darwin-rebuild build --flake . --override-input home-manager {{FLAGS}}
 
 # cleanup old home-manager and nix generations (> 7 days)
-cleanup:
-	@nix-collect-garbage --delete-old --delete-older-than 7d
+[confirm: "Are you sure you want to cleanup old home-manager and nix generations? (y/n)"]
+nix-cleanup:
+	# delete old nix store
+	nix-store --gc
+
+	# delete old home-manager generations
+	nix-collect-garbage --delete-old --delete-older-than 7d
+
+	# delete old nix generations
+	sudo nix-collect-garbage --delete-old --delete-older-than 7d
+
+	# reshim asdf if exists
+	if command -v asdf > /dev/null; then asdf reshim; fi
 
 # start a nix repl with the nixpkgs flake
 repl:
