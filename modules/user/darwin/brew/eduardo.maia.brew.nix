@@ -53,6 +53,7 @@
       #
       "1password-cli" # 1password cli
       "1password" # 1password
+      "arc" # arc browser
       "contexts" # context menu for mac
       "docker-desktop" # docker desktop for mac
       "domzilla-caffeine" # caffeine
