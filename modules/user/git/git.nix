@@ -38,7 +38,7 @@
       dc = "diff --cached"; # staged changes
 
       # log
-      lg = "log --oneline --decorate";
+      lg = "log --oneline --decorate -20";
 
       # please = "push --force-with-lease";
 
