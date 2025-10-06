@@ -20,6 +20,11 @@ build *FLAGS:
 	@git add .
 	@darwin-rebuild build --flake . {{FLAGS}}
 
+# custom build the configuration
+custom-build *FLAGS:
+	@git add .
+	@darwin-rebuild build --flake . --override-input home-manager {{FLAGS}}
+
 # cleanup old home-manager and nix generations (> 7 days)
 cleanup:
 	@nix-collect-garbage --delete-old --delete-older-than 7d
