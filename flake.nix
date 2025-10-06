@@ -5,8 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     home-manager = {
-      # url = "github:nix-community/home-manager";
-      url = "/Users/emaiax/code/home-manager";
+      url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

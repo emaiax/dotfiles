@@ -32,8 +32,9 @@
         "type": "github"
       },
       "original": {
-        "path": "/Users/emaiax/code/home-manager",
-        "type": "path"
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "type": "github"
       }
     },
     "nix-darwin": {
