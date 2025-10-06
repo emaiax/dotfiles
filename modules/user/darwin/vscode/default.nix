@@ -40,7 +40,7 @@ in
 
           # git and github
           #
-          eamodio.gitlens
+          # eamodio.gitlens
           # github.copilot
           # github.copilot-chat
           # github.vscode-github-actions
