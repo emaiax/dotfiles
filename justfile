@@ -11,19 +11,20 @@ activate-settings:
 
 # apply the configuration
 apply *FLAGS:
-	@git add .
-	@sudo darwin-rebuild switch --flake . {{FLAGS}}
-	@just activate-settings
+	git add .
+	sudo darwin-rebuild switch --flake . {{FLAGS}}
+	just activate-settings
 
 # build the configuration
 build *FLAGS:
-	@git add .
-	@darwin-rebuild build --flake . {{FLAGS}}
+	git add .
+	darwin-rebuild build --flake . {{FLAGS}}
 
-# custom build the configuration
-custom-build *FLAGS:
-	@git add .
-	@just build "--override-input home-manager {{FLAGS}}"
+build-custom *FLAGS:
+	just build "--override-input home-manager {{FLAGS}}"
+
+apply-custom *FLAGS:
+	just apply "--override-input home-manager {{FLAGS}}"
 
 # cleanup old home-manager and nix generations (> 7 days)
 [confirm: "Are you sure you want to cleanup old home-manager and nix generations? (y/n)"]
