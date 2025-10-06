@@ -58,7 +58,7 @@
 
           # utilities
           #
-          eamodio.gitlens
+          # eamodio.gitlens
           mechatroner.rainbow-csv
           naumovs.color-highlight
           vscodevim.vim
