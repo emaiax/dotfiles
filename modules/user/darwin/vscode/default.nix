@@ -36,6 +36,7 @@ in
         extensions = with pkgs.vscode-marketplace; [
           # themes and icons
           #
+          gulajavaministudio.mayukaithemevsc
           teabyii.ayu
 
           # git and github
@@ -44,36 +45,36 @@ in
           # github.copilot
           # github.copilot-chat
           # github.vscode-github-actions
-          github.vscode-pull-request-github
+          # github.vscode-pull-request-github
 
           # languages and formatters
           #
-          brettm12345.nixfmt-vscode
-          esbenp.prettier-vscode
+          # brettm12345.nixfmt-vscode
+          # esbenp.prettier-vscode
           # golang.go
           hashicorp.hcl # Packer HCL files
           hashicorp.terraform
-          jakebecker.elixir-ls
+          # jakebecker.elixir-ls
           jnoortheen.nix-ide
           nefrob.vscode-just-syntax # justfile
-          phoenixframework.phoenix
+          # phoenixframework.phoenix
           redhat.ansible
           redhat.vscode-yaml
           samuelcolvin.jinjahtml
-          shopify.ruby-lsp
-          # tamasfe.even-better-toml
+          # shopify.ruby-lsp
+          tamasfe.even-better-toml
           # ziglang.vscode-zig
 
           # markdown previews
           #
-          bierner.github-markdown-preview
-          bierner.markdown-mermaid
-          bierner.markdown-preview-github-styles
+          # bierner.github-markdown-preview
+          # bierner.markdown-mermaid
+          # bierner.markdown-preview-github-styles
 
           # utilities
           #
-          mechatroner.rainbow-csv
-          naumovs.color-highlight
+          # mechatroner.rainbow-csv
+          # naumovs.color-highlight
           vscodevim.vim
           wakatime.vscode-wakatime
         ];
