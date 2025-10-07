@@ -45,25 +45,25 @@
 
             # languages and formatters
             #
-            # brettm12345.nixfmt-vscode
+            # golang.go
+            # hashicorp.hcl
+            # hashicorp.terraform
+            # tamasfe.even-better-toml
+            brettm12345.nixfmt-vscode
             edwinkofler.vscode-assorted-languages
             esbenp.prettier-vscode
-            # golang.go
-            # hashicorp.hcl # Packer HCL files
-            # hashicorp.terraform
-            # jakebecker.elixir-ls
+            jakebecker.elixir-ls
             jnoortheen.nix-ide
             nefrob.vscode-just-syntax
-            # phoenixframework.phoenix
+            phoenixframework.phoenix
             redhat.vscode-yaml
-            # tamasfe.even-better-toml
-            # shopify.ruby-lsp
+            shopify.ruby-lsp
 
             # utilities
             #
-            # eamodio.gitlens
             # mechatroner.rainbow-csv
             # naumovs.color-highlight
+            github.vscode-pull-request-github
             vscodevim.vim
             wakatime.vscode-wakatime
           ];
