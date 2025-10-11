@@ -109,8 +109,8 @@
                 command = "uvx";
                 args = [ "mcp-obsidian" ];
                 env = {
-                  "OBSIDIAN_HOST" = "localhost";
-                  "OBSIDIAN_PORT" = "80";
+                  "OBSIDIAN_HOST" = "https://localhost";
+                  "OBSIDIAN_PORT" = "27124";
                 };
               };
             };
