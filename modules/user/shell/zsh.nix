@@ -25,18 +25,17 @@
       zr = "source ~/.zshrc"; # reload zshrc
 
       be = "bundle exec"; # rails apps
-      iexmix = "iex -S mix"; # elixir terminal
+      miex = "iex -S mix"; # elixir terminal
 
       # mix tasks
-      m = "mix";
       mt = "mix test";
       mtt = "mix test --trace";
       mtw = "mix test.watch";
       mtwt = "mix test.watch --trace";
 
       # phoenix tasks
-      phxsrv = "mix phx.server";
-      iexsrv = "iex -S mix phx.server";
+      mphx = "mix phx.server";
+      miphx = "iex -S mix phx.server";
     };
   };
 }
