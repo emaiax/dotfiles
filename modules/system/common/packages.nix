@@ -14,6 +14,7 @@
     nixfmt-rfc-style # format nix files in RFC style
     tlrc             # command line tool for managing TL;DR pages
     unixtools.watch  # watch command for running a program periodically
+    watchexec        # run a command when files change
     wget             # command line tool for downloading files from the web
   ];
 }

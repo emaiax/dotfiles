@@ -19,6 +19,7 @@
       dotfiles = "cd ~/.config/nix";
 
       cat = "bat"; # cat with bat
+      we = "watchexec";
 
       zv = "cat ~/.zshrc"; # view zshrc
       zr = "source ~/.zshrc"; # reload zshrc
