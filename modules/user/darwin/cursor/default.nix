@@ -71,12 +71,25 @@
 
           keybindings = [
             {
-              key = "shift+cmd+b";
+              key = "alt+shift+a";
+              command = "-editor.action.blockComment";
+              when = "editorTextFocus && !editorReadonly";
+            }
+            {
+              key = "alt+shift+a";
+              command = "editor.action.sortLinesAscending";
+            }
+            {
+              key = "alt+shift+z";
+              command = "editor.action.sortLinesDescending";
+            }
+            {
+              key = "cmd+shift+b";
               command = "-workbench.view.backgroundAgent";
               when = "viewContainer.workbench.view.backgroundAgent.enabled";
             }
             {
-              key = "shift+cmd+b";
+              key = "cmd+shift+b";
               command = "-workbench.action.tasks.build";
               when = "taskCommandsRegistered";
             }
@@ -91,10 +104,6 @@
             {
               key = "cmd+shift+s";
               command = "workbench.action.files.saveAll";
-            }
-            {
-              key = "cmd+i";
-              command = "composerMode.agent";
             }
           ];
 
@@ -116,6 +125,34 @@
             };
           };
 
+          globalSnippets = {
+            fixme = {
+              prefix = [ "fixme" ];
+              body = [ "$LINE_COMMENT $CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE FIXME: $0" ];
+              description = "Insert a timestamped FIXME remark";
+            };
+            todo = {
+              prefix = [ "todo" ];
+              body = [ "$LINE_COMMENT $CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE TODO: $0" ];
+              description = "Insert a timestamped TODO remark";
+            };
+          };
+
+          languageSnippets = {
+            elixir = {
+              pry = {
+                prefix = [ "pry" ];
+                body = [ "require IEx; IEx.pry" ];
+                description = "Insert a debug Pry statement";
+              };
+
+              pryfun = {
+                prefix = [ "pryfun" ];
+                body = [ "|> tap(fn input -> IO.inspect(input); require IEx; IEx.pry(); end)" ];
+                description = "Pipe to a debug Pry statement";
+              };
+            };
+          };
         };
       };
     };
