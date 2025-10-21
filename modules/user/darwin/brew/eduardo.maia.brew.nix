@@ -58,6 +58,7 @@
       "docker-desktop" # docker desktop for mac
       "domzilla-caffeine" # caffeine
       "github" # github desktop for mac
+      "insomnia" # test apis
       "logi-options+" # logitech options
       "obsidian" # note taking
       "rectangle" # window manager
