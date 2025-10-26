@@ -2,6 +2,10 @@
 default:
 	@just --list
 
+# watch for file changes and run commands
+auto target *flags:
+    watchexec --clear --timings just {{target}} {{flags}}
+
 # activate macOS settings
 [macos]
 activate-settings:
