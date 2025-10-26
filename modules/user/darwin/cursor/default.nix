@@ -71,39 +71,68 @@
 
           keybindings = [
             {
-              key = "alt+shift+a";
-              command = "-editor.action.blockComment";
-              when = "editorTextFocus && !editorReadonly";
+              command = "-workbench.view.backgroundAgent";
+              key = "cmd+shift+b";
+              whey = "viewContainer.workbench.view.backgroundAgent.enabled";
             }
             {
-              key = "alt+shift+a";
+              command = "-workbench.action.tasks.build";
+              key = "cmd+shift+b";
+              whey = "taskCommandsRegistered";
+            }
+            {
+              command = "workbench.action.toggleSidebarPosition";
+              key = "cmd+shift+b";
+            }
+
+            # copy relative file path
+            #
+            {
+              command = "copyRelativeFilePath";
+              key = "cmd+shift+c";
+            }
+
+            # save all files
+            #
+            {
+              command = "workbench.action.files.saveAll";
+              key = "cmd+shift+s";
+            }
+
+            # FIXME: remove composer mode agent and access suggestions via cmd+i instead
+            #
+            {
+              command = "composerMode.agent";
+              key = "cmd+i";
+            }
+
+            # sort lines ascending and descending
+            #
+            {
+              key = "shift+alt+a";
+              command = "-editor.action.blockComment";
+              whey = "editorTextFocus && !editorReadonly";
+            }
+            {
+              key = "shift+alt+a";
               command = "editor.action.sortLinesAscending";
             }
             {
-              key = "alt+shift+z";
+              key = "shift+alt+z";
               command = "editor.action.sortLinesDescending";
             }
+
+            # move editor group left and right (cycle editor groups)
+            #
             {
-              key = "cmd+shift+b";
-              command = "-workbench.view.backgroundAgent";
-              when = "viewContainer.workbench.view.backgroundAgent.enabled";
+              key = "cmd+r cmd+r";
+              command = "workbench.action.moveActiveEditorGroupLeft";
+              when = "activeEditorGroupLast";
             }
             {
-              key = "cmd+shift+b";
-              command = "-workbench.action.tasks.build";
-              when = "taskCommandsRegistered";
-            }
-            {
-              key = "cmd+shift+b";
-              command = "workbench.action.toggleSidebarPosition";
-            }
-            {
-              key = "cmd+shift+c";
-              command = "copyRelativeFilePath";
-            }
-            {
-              key = "cmd+shift+s";
-              command = "workbench.action.files.saveAll";
+              key = "cmd+r cmd+r";
+              command = "workbench.action.moveActiveEditorGroupRight";
+              when = "!activeEditorGroupLast";
             }
           ];
 
