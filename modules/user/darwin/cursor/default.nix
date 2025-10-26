@@ -154,31 +154,33 @@
             };
           };
 
-          globalSnippets = {
-            fixme = {
-              prefix = [ "fixme" ];
-              body = [ "$LINE_COMMENT $CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE FIXME: $0" ];
-              description = "Insert a timestamped FIXME remark";
-            };
-            todo = {
-              prefix = [ "todo" ];
-              body = [ "$LINE_COMMENT $CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE TODO: $0" ];
-              description = "Insert a timestamped TODO remark";
-            };
-          };
-
-          languageSnippets = {
-            elixir = {
-              pry = {
-                prefix = [ "pry" ];
-                body = [ "require IEx; IEx.pry" ];
-                description = "Insert a debug Pry statement";
+          snippets = {
+            global = {
+              fixme = {
+                prefix = [ "fixme" ];
+                body = [ "$LINE_COMMENT $CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE FIXME: $0" ];
+                description = "Insert a timestamped FIXME remark";
               };
+              todo = {
+                prefix = [ "todo" ];
+                body = [ "$LINE_COMMENT $CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE TODO: $0" ];
+                description = "Insert a timestamped TODO remark";
+              };
+            };
 
-              pryfun = {
-                prefix = [ "pryfun" ];
-                body = [ "|> tap(fn input -> IO.inspect(input); require IEx; IEx.pry(); end)" ];
-                description = "Pipe to a debug Pry statement";
+            languages = {
+              elixir = {
+                pry = {
+                  prefix = [ "pry" ];
+                  body = [ "require IEx; IEx.pry" ];
+                  description = "Insert a debug Pry statement";
+                };
+
+                pryfun = {
+                  prefix = [ "pryfun" ];
+                  body = [ "|> tap(fn input -> IO.inspect(input); require IEx; IEx.pry(); end)" ];
+                  description = "Pipe to a debug Pry statement";
+                };
               };
             };
           };
