@@ -73,12 +73,12 @@
             {
               command = "-workbench.view.backgroundAgent";
               key = "cmd+shift+b";
-              whey = "viewContainer.workbench.view.backgroundAgent.enabled";
+              when = "viewContainer.workbench.view.backgroundAgent.enabled";
             }
             {
               command = "-workbench.action.tasks.build";
               key = "cmd+shift+b";
-              whey = "taskCommandsRegistered";
+              when = "taskCommandsRegistered";
             }
             {
               command = "workbench.action.toggleSidebarPosition";
@@ -111,7 +111,7 @@
             {
               key = "shift+alt+a";
               command = "-editor.action.blockComment";
-              whey = "editorTextFocus && !editorReadonly";
+              when = "editorTextFocus && !editorReadonly";
             }
             {
               key = "shift+alt+a";
