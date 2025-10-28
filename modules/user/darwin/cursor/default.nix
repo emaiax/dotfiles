@@ -138,9 +138,13 @@
 
           mcp = {
             mcpServers = {
-              tidewave = {
-                command = "/usr/local/bin/mcp-proxy";
-                args = [ "http://localhost:4000/tidewave/mcp" ];
+              atlassian = {
+                url = "https://mcp.atlassian.com/v1/sse";
+              };
+
+              notion = {
+                url = "https://mcp.notion.com/mcp";
+                headers = { };
               };
 
               obsidian = {
@@ -150,6 +154,11 @@
                   "OBSIDIAN_HOST" = "https://localhost";
                   "OBSIDIAN_PORT" = "27124";
                 };
+              };
+
+              tidewave = {
+                command = "/usr/local/bin/mcp-proxy";
+                args = [ "http://localhost:4000/tidewave/mcp" ];
               };
             };
           };
