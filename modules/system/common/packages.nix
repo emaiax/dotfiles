@@ -9,6 +9,7 @@
     curl             # command line tool for transferring data with URLs
     go               # go programming language
     jq               # command-line JSON processor
+    httpie           # command line tool for HTTP requests
     just             # command runner, similar to make
     neovim           # vim on steroids
     nixfmt-rfc-style # format nix files in RFC style
