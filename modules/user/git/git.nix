@@ -40,7 +40,7 @@
       help.autocorrect = 1;
       init.defaultBranch = "main";
       log.showSignature = true;
-      rerere.enabled = true;
+      rerere.enabled = true; # reuse recorded resolution of conflicts
       submodule.fetchJobs = 4;
 
       color = {
