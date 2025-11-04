@@ -72,3 +72,6 @@ update:
 # generate SSH key for a given name and comment
 ssh-keygen NAME COMMENT:
 	@ssh-keygen -t ed25519 -f ~/.ssh/{{NAME}} -C "{{COMMENT}}"
+
+copy-ssh-key-to-host key host:
+  ssh-copy-id -i {{key}} {{host}}
