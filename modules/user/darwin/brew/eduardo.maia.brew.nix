@@ -53,6 +53,7 @@
       #
       "1password-cli" # 1password cli
       "1password" # 1password
+      "antinote" # quick notes
       "arc" # arc browser
       "contexts" # context menu for mac
       "docker-desktop" # docker desktop for mac
