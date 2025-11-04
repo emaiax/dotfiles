@@ -64,6 +64,7 @@
             #
             # mechatroner.rainbow-csv
             # naumovs.color-highlight
+            eamodio.gitlens
             github.vscode-pull-request-github
             vscodevim.vim
             wakatime.vscode-wakatime
