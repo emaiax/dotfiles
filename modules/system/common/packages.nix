@@ -10,7 +10,6 @@
     go               # go programming language
     jq               # command-line JSON processor
     httpie           # command line tool for HTTP requests
-    just             # command runner, similar to make
     neovim           # vim on steroids
     nixfmt-rfc-style # format nix files in RFC style
     tlrc             # command line tool for managing TL;DR pages
