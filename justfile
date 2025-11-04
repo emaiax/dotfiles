@@ -1,6 +1,8 @@
-# list available options
+# justfile: https://just.systems/man/en/global-and-user-justfiles.html
+set unstable := true
+
 default:
-	@just --list
+	@just --list --unsorted
 
 # watch for file changes and run commands
 auto target *flags:
