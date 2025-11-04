@@ -24,11 +24,13 @@ build *FLAGS:
 	git add .
 	darwin-rebuild build --flake . {{FLAGS}}
 
+custom-home-manager := "--override-input home-manager ~/code/home-manager"
+
 build-custom *FLAGS:
-	just build "--override-input home-manager {{FLAGS}}"
+	just build "{{ custom-home-manager }} {{FLAGS}}"
 
 apply-custom *FLAGS:
-	just apply "--override-input home-manager {{FLAGS}}"
+	just apply "{{ custom-home-manager }} {{FLAGS}}"
 
 # cleanup old home-manager and nix generations (> 7 days)
 [confirm: "Are you sure you want to cleanup old home-manager and nix generations? (y/n)"]
