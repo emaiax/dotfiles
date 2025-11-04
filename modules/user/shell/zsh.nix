@@ -15,27 +15,31 @@
       # macOS helper to reload system settings applied from nix-darwin
       activateSettings = "/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u";
 
-      # goto dotfiles directory
-      dotfiles = "cd ~/.config/nix";
+      be = "bundle exec"; # bundle: rails apps
+      cat = "bat -pp"; # bat: cat on steroids
+      dotfiles = "cd ~/.config/nix"; # goto dotfiles directory
 
-      cat = "bat"; # cat with bat
-      we = "watchexec";
+      # just: https://just.systems/man/en/global-and-user-justfiles.html
+      j = "just";
+      jg = "just --global-justfile";
 
-      zv = "cat ~/.zshrc"; # view zshrc
-      zr = "source ~/.zshrc"; # reload zshrc
-
-      be = "bundle exec"; # rails apps
-      miex = "iex -S mix"; # elixir terminal
-
-      # mix tasks
+      # mix: elixir tests
       mt = "mix test";
       mtt = "mix test --trace";
       mtw = "mix test.watch";
       mtwt = "mix test.watch --trace";
 
-      # phoenix tasks
-      mphx = "mix phx.server";
+      # mix: elixir tasks
+      miex = "iex -S mix";
       miphx = "iex -S mix phx.server";
+      mphx = "mix phx.server";
+
+      # watchexec: watch for file changes and run commands
+      we = "watchexec";
+
+      # zsh: view and reload configuration files
+      zv = "cat ~/.zshrc"; # view zshrc
+      zr = "source ~/.zshrc"; # reload zshrc
     };
   };
 }
