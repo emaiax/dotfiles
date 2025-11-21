@@ -67,7 +67,7 @@
             # mechatroner.rainbow-csv
             # naumovs.color-highlight
             eamodio.gitlens
-            github.vscode-pull-request-github
+            # github.vscode-pull-request-github # not supported yet
             vscodevim.vim
             wakatime.vscode-wakatime
           ];
