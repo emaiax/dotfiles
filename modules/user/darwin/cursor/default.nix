@@ -49,8 +49,8 @@
             # languages and formatters
             #
             # golang.go
-            # hashicorp.hcl
-            # hashicorp.terraform
+            hashicorp.hcl
+            hashicorp.terraform
             # tamasfe.even-better-toml
             brettm12345.nixfmt-vscode
             edwinkofler.vscode-assorted-languages
