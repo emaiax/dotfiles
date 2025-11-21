@@ -12,6 +12,9 @@
     '';
 
     shellAliases = {
+      "~" = "cd ~";
+      ".." = "cd ..";
+
       # macOS helper to reload system settings applied from nix-darwin
       activateSettings = "/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u";
 
@@ -35,7 +38,7 @@
       mphx = "mix phx.server";
 
       # watchexec: watch for file changes and run commands
-      we = "watchexec";
+      we = "watchexec --clear --timings";
 
       # zsh: view and reload configuration files
       zv = "cat ~/.zshrc"; # view zshrc
