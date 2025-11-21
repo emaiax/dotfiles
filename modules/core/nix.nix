@@ -9,6 +9,31 @@
   nix = {
     package = lib.mkDefault pkgs.nix;
 
+    linux-builder = {
+      enable = host.hostname == "dudupro";
+
+      ephemeral = true;
+      maxJobs = 4;
+      systems = [ "x86_64-linux" ];
+
+      mandatoryFeatures = [
+        "kvm"
+        "benchmark"
+        "big-parallel"
+      ];
+
+      config = {
+        nixpkgs.hostPlatform = "x86_64-linux";
+
+        virtualisation = {
+          darwin-builder = {
+            # diskSize = 10 * 1024;
+            memorySize = 8 * 1024;
+          };
+        };
+      };
+    };
+
     settings = {
       experimental-features = "nix-command flakes";
 
