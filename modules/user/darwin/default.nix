@@ -1,6 +1,7 @@
 { config, ... }:
 {
   imports = [
+    ./cursor
     ./fonts.nix
     ./iterm2
     ./packages.nix

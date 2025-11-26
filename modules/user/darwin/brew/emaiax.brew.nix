@@ -25,6 +25,7 @@
       #
       "1password-cli" # 1password cli
       "1password" # 1password
+      "antinote" # quick notes
       "arc" # arc browser
       # "claude" # claude ai
       # "cleanshot" # screenshots and screen recording
@@ -35,7 +36,8 @@
 
       # Development
       #
-      "docker-desktop" # docker desktop for mac
+      "cursor-cli" # cursor ai cli
+      # "docker-desktop" # docker desktop for mac
       # "tableplus" # database management
       "github" # github desktop for mac
 

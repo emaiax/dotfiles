@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     home-manager = {
-      url = "github:nix-community/home-manager";
+      url = "github:emaiax/home-manager/create-vscode-profiles";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

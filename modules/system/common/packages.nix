@@ -9,11 +9,12 @@
     curl             # command line tool for transferring data with URLs
     go               # go programming language
     jq               # command-line JSON processor
-    just             # command runner, similar to make
+    httpie           # command line tool for HTTP requests
     neovim           # vim on steroids
     nixfmt-rfc-style # format nix files in RFC style
     tlrc             # command line tool for managing TL;DR pages
     unixtools.watch  # watch command for running a program periodically
+    watchexec        # run a command when files change
     wget             # command line tool for downloading files from the web
   ];
 }

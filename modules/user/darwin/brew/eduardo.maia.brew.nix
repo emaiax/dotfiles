@@ -53,11 +53,13 @@
       #
       "1password-cli" # 1password cli
       "1password" # 1password
+      "antinote" # quick notes
       "arc" # arc browser
       "contexts" # context menu for mac
       "docker-desktop" # docker desktop for mac
       "domzilla-caffeine" # caffeine
       "github" # github desktop for mac
+      "insomnia" # test apis
       "logi-options+" # logitech options
       "obsidian" # note taking
       "rectangle" # window manager
