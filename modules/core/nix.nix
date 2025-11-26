@@ -36,6 +36,7 @@
 
     settings = {
       experimental-features = "nix-command flakes";
+      flake-registry = ./registry.json;
 
       trusted-users = [
         "root"
