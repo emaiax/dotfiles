@@ -1,5 +1,11 @@
-{ lib, pkgs, ... }:
 {
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+{
+  # TODO: remove this once Cursor is supported
   config = lib.mkIf true {
     programs.cursor = {
       enable = true;
@@ -34,10 +40,11 @@
             "files.trimTrailingWhitespace" = true;
             "git.ignoreMissingGitWarning" = true;
             "git.openRepositoryInParentFolders" = "never";
-            "workbench.colorTheme" = "Mayukai Mirage";
+            # "workbench.colorTheme" = "Mayukai Mirage";
             # "workbench.colorTheme" = "Ayu Mirage Bordered";
-            # "workbench.colorTheme" = "Mayukai Mirage Gruvbox Darktooth";
+            "workbench.colorTheme" = "Mayukai Mirage Gruvbox Darktooth";
             "workbench.iconTheme" = "ayu";
+            "workbench.hover.delay" = 500;
           };
 
           extensions = with pkgs.vscode-marketplace; [
