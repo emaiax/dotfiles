@@ -4,12 +4,12 @@
   # They are installed via home-manager.
   #
   home.packages = with pkgs; [
-    bruno # http client for testing APIs
+    # bruno # http client for testing APIs
     docker # docker cli
     docker-compose # docker compose cli
     # lmstudio # local and open-source LLMs
-    ngrok # ngrok tunnel for local development
+    # ngrok # ngrok tunnel for local development
     # ollama # local LLMs
-    uv # python package manager
+    uv # python package manager (used for Obsidian MCP in Cursor)
   ];
 }

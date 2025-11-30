@@ -7,10 +7,10 @@
     asdf-vm          # programming languages version manager
     btop             # better top
     curl             # command line tool for transferring data with URLs
-    go               # go programming language
     jq               # command-line JSON processor
     httpie           # command line tool for HTTP requests
     neovim           # vim on steroids
+    # go               # go programming language
     nixfmt-rfc-style # format nix files in RFC style
     tlrc             # command line tool for managing TL;DR pages
     unixtools.watch  # watch command for running a program periodically
