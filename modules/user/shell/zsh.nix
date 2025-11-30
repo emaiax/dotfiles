@@ -1,5 +1,7 @@
 { config, pkgs, ... }:
 {
+  home.packages = [ pkgs.any-nix-shell ];
+
   programs.zsh = {
     enable = true;
     enableCompletion = true;
@@ -9,6 +11,8 @@
     initContent = ''
       export PATH="${config.home.homeDirectory}/.bun/bin:$PATH"
       export PATH="${config.home.homeDirectory}/.asdf/shims:$PATH"
+
+      any-nix-shell zsh --info-right | source /dev/stdin
     '';
 
     shellAliases = {
