@@ -14,17 +14,21 @@
     shellAliases = {
       "~" = "cd ~";
       ".." = "cd ..";
+      "../" = "cd ..";
+      "..." = "cd ../..";
 
       # macOS helper to reload system settings applied from nix-darwin
       activateSettings = "/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u";
 
+      # dotfiles: https://github.com/emaiax/dotfiles
+      #
+      home-config = "cd ${configDirectory}";
+      home-build = "just --justfile=${configDirectory}/justfile --working-directory=${configDirectory} build-custom";
+      home-switch = "just --justfile=${configDirectory}/justfile --working-directory=${configDirectory} apply-custom";
+
       be = "bundle exec"; # bundle: rails apps
       cat = "bat -pp"; # bat: cat on steroids
-      dotfiles = "cd ~/.config/nix"; # goto dotfiles directory
-
-      # just: https://just.systems/man/en/global-and-user-justfiles.html
-      j = "just";
-      jg = "just --global-justfile";
+      j = "just"; # just: task runner
 
       # mix: elixir tests
       mt = "mix test";
@@ -38,7 +42,7 @@
       mphx = "mix phx.server";
 
       # watchexec: watch for file changes and run commands
-      we = "watchexec --clear --timings";
+      we = "watchexec --clear=clear --timings";
 
       # zsh: view and reload configuration files
       zv = "cat ~/.zshrc"; # view zshrc
