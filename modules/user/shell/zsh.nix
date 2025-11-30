@@ -1,4 +1,7 @@
 { config, pkgs, ... }:
+let
+  configDirectory = "${config.home.homeDirectory}/.config/nix";
+in
 {
   home.packages = [ pkgs.any-nix-shell ];
 
