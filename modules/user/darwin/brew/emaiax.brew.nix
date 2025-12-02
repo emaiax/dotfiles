@@ -16,8 +16,6 @@
     brews = [
       "mas"
       "openssl"
-      "tfenv" # terraform version manager
-      "tgenv" # terragrunt version manager
     ];
 
     casks = [
