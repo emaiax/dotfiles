@@ -39,7 +39,7 @@
       format.signOff = true;
       help.autocorrect = 1;
       init.defaultBranch = "main";
-      log.showSignature = true;
+      log.showSignature = false;
       rerere.enabled = true; # reuse recorded resolution of conflicts
       submodule.fetchJobs = 4;
 
