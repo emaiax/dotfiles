@@ -10,24 +10,26 @@
     package = lib.mkDefault pkgs.nix;
 
     linux-builder = {
-      enable = host.hostname == "dudupro";
-
+      enable = true;
       ephemeral = true;
-      maxJobs = 4;
-      systems = [ "x86_64-linux" ];
 
-      mandatoryFeatures = [
+      maxJobs = 4;
+
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+      ];
+
+      supportedFeatures = [
         "kvm"
         "benchmark"
         "big-parallel"
       ];
 
       config = {
-        nixpkgs.hostPlatform = "x86_64-linux";
-
         virtualisation = {
           darwin-builder = {
-            # diskSize = 10 * 1024;
+            # diskSize = 10 * 1024; # defaults to 20G
             memorySize = 8 * 1024;
           };
         };
