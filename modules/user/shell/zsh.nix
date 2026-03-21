@@ -27,7 +27,7 @@ in
       # macOS helper to reload system settings applied from nix-darwin
       activateSettings = "/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u";
 
-      # dotfiles: https://github.com/emaiax/dotfiles
+      # dotfiles management
       #
       home-config = "cd ${configDirectory}";
       home-build = "just --justfile=${configDirectory}/justfile --working-directory=${configDirectory} build-custom";
