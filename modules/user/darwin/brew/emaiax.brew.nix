@@ -14,6 +14,7 @@
     onActivation.cleanup = "zap";
 
     brews = [
+      "gh" # github cli
       "mas"
       "openssl"
     ];
@@ -23,10 +24,11 @@
       #
       "1password-cli" # 1password cli
       "1password" # 1password
-      "antinote" # quick notes
+      # "antinote" # quick notes -> setapp
       "arc" # arc browser
-      # "claude" # claude ai
-      # "cleanshot" # screenshots and screen recording
+      "claude" # claude for mac
+      "claude-code" # claude code terminal agent
+      # "cleanshot" # screenshots and screen recording -> setapp
       "contexts" # context menu for mac
       "obsidian" # note taking
       "rectangle" # window manager
@@ -36,8 +38,8 @@
       #
       "cursor-cli" # cursor ai cli
       # "docker-desktop" # docker desktop for mac
-      # "tableplus" # database management
       "github" # github desktop for mac
+      # "tableplus" # database management -> setapp
 
       # Media
       #

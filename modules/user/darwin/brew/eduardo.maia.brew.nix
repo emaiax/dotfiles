@@ -24,6 +24,7 @@
     brews = [
       "cmake"
       "coreutils"
+      "gh" # github cli
       "gnupg"
       "gnutls"
       "hashicorp/tap/vault"
@@ -55,6 +56,8 @@
       "1password" # 1password
       "antinote" # quick notes
       "arc" # arc browser
+      "claude-code" # claude code terminal agent
+      "claude" # claude for mac
       "contexts" # context menu for mac
       "docker-desktop" # docker desktop for mac
       "domzilla-caffeine" # caffeine
