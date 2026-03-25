@@ -37,6 +37,10 @@ in
       cat = "bat -pp"; # bat: cat on steroids
       j = "just"; # just: task runner
 
+      # claude: claude ai
+      claude-local-trust = "claude --dangerously-skip-permissions";
+      claude-remote-trust = "claude remote-control --permission-mode bypassPermissions --name \"$(basename $PWD)\"";
+
       # mix: elixir tests
       mt = "mix test";
       mtt = "mix test --trace";
