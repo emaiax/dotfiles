@@ -11,7 +11,7 @@
     jq # command-line JSON processor
     httpie # command line tool for HTTP requests
     neovim # vim on steroids
-    nixfmt-rfc-style # format nix files in RFC style
+    nixfmt # format nix files
     tlrc # command line tool for managing TL;DR pages
     unixtools.watch # watch command for running a program periodically
     watchexec # run a command when files change
