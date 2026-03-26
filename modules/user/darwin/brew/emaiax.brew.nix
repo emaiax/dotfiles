@@ -14,7 +14,6 @@
     onActivation.cleanup = "zap";
 
     brews = [
-      "gh" # github cli
       "mas"
       "openssl"
     ];
@@ -27,7 +26,6 @@
       # "antinote" # quick notes -> setapp
       "arc" # arc browser
       "claude" # claude for mac
-      "claude-code" # claude code terminal agent
       # "cleanshot" # screenshots and screen recording -> setapp
       "contexts" # context menu for mac
       "obsidian" # note taking
