@@ -1,11 +1,12 @@
 # Home Manager configuration
-{ lib, host, ... }:
+{ lib, host, inputs, ... }:
 {
   home-manager = {
     backupFileExtension = "bak";
 
     useGlobalPkgs = true;
     useUserPackages = true;
+    extraSpecialArgs = { inherit inputs; };
 
     users.${host.user.username} = {
       # Used for backwards compatibility, please read the changelog before changing.
