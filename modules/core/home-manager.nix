@@ -1,5 +1,10 @@
 # Home Manager configuration
-{ lib, host, inputs, ... }:
+{
+  lib,
+  host,
+  inputs,
+  ...
+}:
 {
   home-manager = {
     backupFileExtension = "bak";
