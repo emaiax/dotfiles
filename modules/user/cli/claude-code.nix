@@ -34,6 +34,10 @@
     };
 
     settings = {
+      # set the Haiku model for the best performance and cost-efficiency initially
+      # @kb: docs/golden-principles.md
+      model = "haiku";
+
       includeCoAuthoredBy = false;
       theme = "dark";
 
