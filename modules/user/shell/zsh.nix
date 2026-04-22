@@ -41,6 +41,9 @@ in
       claude-local-trust = "claude --dangerously-skip-permissions";
       claude-remote-trust = "claude remote-control --permission-mode bypassPermissions --name \"$(basename $PWD)\"";
 
+      # claude-mem: semantic memory across sessions (see claude-mem.nix)
+      claude-mem = "bun \"$(ls -dt ~/.claude/plugins/cache/thedotmack/claude-mem/*/scripts/worker-service.cjs 2>/dev/null | head -1)\"";
+
       # mix: elixir tests
       mt = "mix test";
       mtt = "mix test --trace";

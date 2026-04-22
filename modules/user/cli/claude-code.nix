@@ -37,6 +37,11 @@
       includeCoAuthoredBy = false;
       theme = "dark";
 
+      enabledPlugins = {
+        # claude-mem: semantic memory across sessions (see claude-mem.nix).
+        "claude-mem@thedotmack" = true;
+        "superpowers@claude-plugins-official" = true;
+      };
     };
   };
 }
