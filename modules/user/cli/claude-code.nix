@@ -32,5 +32,11 @@
         - Only run commands in the devshell
       '';
     };
+
+    settings = {
+      includeCoAuthoredBy = false;
+      theme = "dark";
+
+    };
   };
 }
