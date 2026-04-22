@@ -7,7 +7,7 @@
     # bruno # http client for testing APIs
     docker # docker cli
     docker-compose # docker compose cli
-    lmstudio # local and open-source LLMs
+    # lmstudio # local and open-source LLMs
     # ngrok # ngrok tunnel for local development
     ollama # local LLMs
     uv # python package manager (used for Obsidian MCP in Cursor)
