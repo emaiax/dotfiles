@@ -9,7 +9,9 @@
     # nix-homebrew is handling homebrew updates
     global.autoUpdate = true;
 
-    onActivation.autoUpdate = true;
+    # https://github.com/zhaofengli/nix-homebrew/issues/131#issuecomment-4232502784
+    onActivation.autoUpdate = false;
+
     onActivation.upgrade = true;
     onActivation.cleanup = "zap";
 
