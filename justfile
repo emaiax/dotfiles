@@ -4,6 +4,10 @@ set unstable := true
 default:
 	@just --list --unsorted
 
+# update flake lock file
+update:
+	@nix flake update
+
 # watch for file changes and run commands
 auto target *flags:
     watchexec --clear --timings just {{target}} {{flags}}
@@ -15,24 +19,16 @@ activate-settings:
 	echo "Activating macOS settings..."
 	/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
 
-# apply the configuration
-apply *FLAGS:
+# nix-darwin switch the configuration
+switch *FLAGS:
 	git add .
 	sudo darwin-rebuild switch --flake . {{FLAGS}}
 	just activate-settings
 
-# build the configuration
+# nix-darwin build the configuration
 build *FLAGS:
 	git add .
 	darwin-rebuild build --flake . {{FLAGS}}
-
-custom-home-manager := "--override-input home-manager ~/code/home-manager"
-
-build-custom *FLAGS:
-	just build "{{ custom-home-manager }} {{FLAGS}}"
-
-apply-custom *FLAGS:
-	just apply "{{ custom-home-manager }} {{FLAGS}}"
 
 # cleanup old home-manager and nix generations (> 7 days)
 [confirm: "Are you sure you want to cleanup old home-manager and nix generations? (y/n)"]
@@ -64,10 +60,6 @@ dependency-graph:
 # list user activations
 list-user-activations:
 	@ls -la /nix/var/nix/profiles/system/activate-user
-
-# update flake lock file
-update:
-	@nix flake update
 
 # generate SSH key for a given name and comment
 ssh-keygen NAME COMMENT:
