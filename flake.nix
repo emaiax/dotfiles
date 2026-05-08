@@ -5,19 +5,22 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     home-manager = {
-      # url = "github:emaiax/home-manager/create-vscode-profiles";
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # still depending on https://github.com/LnL7/nix-darwin/pull/699 to be merged
-    # nix-darwin.url = "github:lnl7/nix-darwin/pull/699/head";
     nix-darwin = {
       url = "github:LnL7/nix-darwin/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nix-homebrew.url = "github:zhaofengli/nix-homebrew";
+    nix-homebrew = {
+      url = "github:zhaofengli/nix-homebrew";
+
+      # brew-src pinned to 5.1.7 breaks darwin-rebuild switch due to upstream regression in process_depends_on #138
+      # see: https://github.com/zhaofengli/nix-homebrew/issues/138
+      inputs.brew-src.url = "github:Homebrew/brew/master";
+    };
 
     nix-vscode-extensions.url = "github:nix-community/nix-vscode-extensions";
   };
