@@ -30,8 +30,8 @@ in
       # dotfiles management
       #
       home-config = "cd ${configDirectory}";
-      home-build = "just --justfile=${configDirectory}/justfile --working-directory=${configDirectory} build-custom";
-      home-switch = "just --justfile=${configDirectory}/justfile --working-directory=${configDirectory} apply-custom";
+      home-build = "just --justfile=${configDirectory}/justfile --working-directory=${configDirectory} build";
+      home-switch = "just --justfile=${configDirectory}/justfile --working-directory=${configDirectory} switch";
 
       be = "bundle exec"; # bundle: rails apps
       cat = "bat -pp"; # bat: cat on steroids
