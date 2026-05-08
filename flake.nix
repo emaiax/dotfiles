@@ -14,7 +14,13 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nix-homebrew.url = "github:zhaofengli/nix-homebrew";
+    nix-homebrew = {
+      url = "github:zhaofengli/nix-homebrew";
+
+      # brew-src pinned to 5.1.7 breaks darwin-rebuild switch due to upstream regression in process_depends_on #138
+      # see: https://github.com/zhaofengli/nix-homebrew/issues/138
+      inputs.brew-src.url = "github:Homebrew/brew/master";
+    };
 
     nix-vscode-extensions.url = "github:nix-community/nix-vscode-extensions";
   };
