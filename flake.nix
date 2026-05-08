@@ -5,13 +5,10 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     home-manager = {
-      # url = "github:emaiax/home-manager/create-vscode-profiles";
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # still depending on https://github.com/LnL7/nix-darwin/pull/699 to be merged
-    # nix-darwin.url = "github:lnl7/nix-darwin/pull/699/head";
     nix-darwin = {
       url = "github:LnL7/nix-darwin/master";
       inputs.nixpkgs.follows = "nixpkgs";
