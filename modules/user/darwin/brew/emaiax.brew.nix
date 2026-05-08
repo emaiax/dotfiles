@@ -47,7 +47,7 @@
       # Communication
       #
       "discord"
-      "slack"
+      # "slack"
       "telegram"
       "whatsapp"
 
