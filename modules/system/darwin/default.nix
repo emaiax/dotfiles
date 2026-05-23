@@ -9,6 +9,7 @@
   #
   imports = [
     ./appearance.nix
+    ./brew.nix
     ./dock.nix
     ./finder.nix
     ./keyboard.nix
