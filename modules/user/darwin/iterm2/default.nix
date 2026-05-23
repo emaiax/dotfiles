@@ -6,5 +6,8 @@ in
 {
   home.packages = [ pkgs.iterm2 ];
 
-  xdg.configFile."${targetPath}".source = config.lib.file.mkOutOfStoreSymlink sourcePath;
+  xdg.configFile."${targetPath}" = {
+    force = true;
+    source = config.lib.file.mkOutOfStoreSymlink sourcePath;
+  };
 }
