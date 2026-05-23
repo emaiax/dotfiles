@@ -26,6 +26,9 @@ in
           gulajavaministudio.mayukaithemevsc
           teabyii.ayu
 
+          # ai
+          anthropic.claude-code
+
           # languages and formatters
           #
           # golang.go
