@@ -1,6 +1,6 @@
 { config, pkgs, ... }:
 let
-  configDirectory = "${config.home.homeDirectory}/.config/nix";
+  configDirectory = "${config.home.homeDirectory}/code/dotfiles";
 in
 {
   home.packages = [ pkgs.any-nix-shell ];
