@@ -1,7 +1,9 @@
 {
   "breadcrumbs.filePath": "off",
+  "crashReporting.enabled": "off",
   "editor.accessibilitySupport": "off",
   "editor.colorDecorators": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.fontFamily": "FiraCode Nerd Font, Monaco, Inconsolata Nerd Font, Hack Nerd Font",
   "editor.fontLigatures": true,
   "editor.fontSize": 12,
@@ -17,6 +19,8 @@
   "elixirLS.useCurrentRootFolderAsProjectDir": true,
   "explorer.confirmDelete": false,
   "explorer.confirmDragAndDrop": false,
+  "extensions.ignoreRecommendations": true,
+  "files.insertFinalNewline": true,
   "files.trimFinalNewlines": true,
   "files.trimTrailingWhitespace": true,
   "git.ignoreMissingGitWarning": true,
@@ -29,14 +33,11 @@
   "outline.icons": false,
   "security.workspace.trust.untrustedFiles": "open",
   "telemetry.telemetryLevel": "off",
-  "typescript.updateImportsOnFileMove.enabled": "always",
-  "workbench.colorTheme": "Ayu Mirage Bordered",
-  "workbench.iconTheme": "ayu",
-
+  "workbench.hover.delay": 500,
+  "workbench.colorTheme": "Mayukai Mirage Gruvbox Darktooth",
   "files.associations": {
     "*.css": "tailwindcss"
   },
-
   "[ansible]": {
     "editor.defaultFormatter": "redhat.vscode-yaml"
   },
