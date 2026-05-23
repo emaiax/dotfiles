@@ -50,9 +50,7 @@
 
             # core modules
             #
-            ./modules/core/nix.nix # core nix settings
-            ./modules/core/homebrew.nix # homebrew settings
-            ./modules/core/home-manager.nix # home-manager settings and profiles modules
+            ./modules/core
 
             # system configurations
             #

@@ -1,4 +1,4 @@
-# Home Manager configuration
+# Home Manager framework setup
 {
   lib,
   host,
