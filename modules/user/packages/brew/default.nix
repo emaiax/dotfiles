@@ -1,0 +1,5 @@
+{
+  imports = [
+    ./emaiax.brew.nix
+  ];
+}
