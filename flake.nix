@@ -95,7 +95,7 @@
 
             # user settings and applications
             #
-            ./modules/user/darwin/brew/${host.user.username}.brew.nix # user-specific brew settings
+            ./modules/user/packages/brew/${host.user.username}.brew.nix # user-specific brew settings
             ./nix/profiles/${host.user.username}.nix # user-specific overrides
           ];
         };
