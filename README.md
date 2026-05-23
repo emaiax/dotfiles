@@ -24,10 +24,14 @@ A comprehensive, modular configuration management system built on [Nix][nix] tha
 
 ```
 dotfiles/
-├── 📁 hosts/                    # Host-specific configurations
-│   ├── dudumini.nix            # Intel Mac configuration
-│   ├── dudupro.nix             # Apple Silicon Mac configuration
-│   └── M137516.nix             # Work machine configuration
+├── 📁 nix/                      # Nix configuration inventory and overrides
+│   ├── inventory.nix            # Host and user variable definitions
+│   ├── 📁 hosts/                # Host-specific configurations
+│   │   ├── dudumini.nix         # Intel Mac configuration
+│   │   └── dudupro.nix          # Apple Silicon Mac configuration
+│   │
+│   └── 📁 profiles/             # User environment bundles
+│       └── emaiax.nix           # User configuration profile
 │
 ├── 📁 modules/                  # Modular configuration components
 │   ├── 📁 core/                # Core Nix and system setup
@@ -57,10 +61,6 @@ dotfiles/
 │   │
 │   └── 📁 pkgs/                # Custom package definitions
 │
-├── 📁 profiles/                 # User environment bundles
-│   ├── emaiax.nix              # Personal configuration profile
-│   └── eduardo.maia.nix        # Work configuration profile
-│
 ├── 📁 scripts/                  # Installation and management scripts
 │   ├── install.sh              # Automated installation script
 │   └── uninstall.sh            # Clean removal script
@@ -71,9 +71,8 @@ dotfiles/
 │
 ├── flake.nix                   # Main Nix flake configuration
 ├── flake.lock                  # Locked dependency versions
-├── vars.nix                    # Host and user variable definitions
 ├── justfile                    # Task runner commands
-└── nix.conf                    # Nix daemon configuration
+└── README.md                   # This file
 ```
 
 ## 🚀 Quick Start
@@ -131,20 +130,20 @@ just ssh-keygen my-key "email@example.com"
 
 ### Adding a New Host
 
-1. **Define the host in `vars.nix`**:
+1. **Define the host in `nix/inventory.nix`**:
    ```nix
    hosts = {
      my-new-host = {
        hostname = "my-new-host";
        arch = "aarch64-darwin"; # or "x86_64-darwin"
-       user = users.emaiax;     # or users.eduardo
+       user = users.emaiax;     # or your user key
      };
    };
    ```
 
 2. **Create host-specific configuration**:
    ```bash
-   touch hosts/my-new-host.nix
+   touch nix/hosts/my-new-host.nix
    ```
 
 3. **Apply the configuration**:
