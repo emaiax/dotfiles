@@ -35,7 +35,7 @@
       nix-vscode-extensions,
     }:
     let
-      vars = import ./vars.nix;
+      inventory = import ./nix/inventory.nix;
 
       mkDarwinHost =
         host:
@@ -61,16 +61,16 @@
 
             # host configurations
             #
-            ./hosts/${host.hostname}.nix # host-specific overrides
+            ./nix/hosts/${host.hostname}.nix # host-specific overrides
 
             # user settings and applications
             #
             ./modules/user/darwin/brew/${host.user.username}.brew.nix # user-specific brew settings
-            ./profiles/${host.user.username}.nix # user-specific overrides
+            ./nix/profiles/${host.user.username}.nix # user-specific overrides
           ];
         };
     in
     {
-      darwinConfigurations = builtins.mapAttrs (name: host: mkDarwinHost host) vars.hosts;
+      darwinConfigurations = builtins.mapAttrs (name: host: mkDarwinHost host) inventory.hosts;
     };
 }
