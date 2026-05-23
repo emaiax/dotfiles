@@ -89,6 +89,12 @@
             ./modules/system/common # shared system settings
             ./modules/system/darwin # darwin-specific settings
 
+            # user-specific system configurations
+            #
+          ] ++ nixpkgs.lib.optionals (host.user.username == "emaiax") [
+            ./modules/system/darwin/brew.nix
+          ] ++ [
+
             # host configurations
             #
             ./nix/hosts/${host.hostname}.nix # host-specific overrides
