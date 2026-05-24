@@ -1,5 +1,17 @@
 {
+  "[ansible]": { "editor.defaultFormatter": "redhat.vscode-yaml" },
+  "[elixir]": { "editor.defaultFormatter": "JakeBecker.elixir-ls" },
+  "[go]": {
+    "editor.codeActionsOnSave": { "source.organizeImports": "explicit" },
+    "editor.defaultFormatter": "golang.go"
+  },
+  "[html]": { "editor.defaultFormatter": "vscode.html-language-features" },
+  "[nix]": { "editor.defaultFormatter": "brettm12345.nixfmt-vscode" },
+  "[phoenix-heex]": { "editor.defaultFormatter": "JakeBecker.elixir-ls" },
+  "[yaml]": { "editor.defaultFormatter": "redhat.vscode-yaml" },
+  "files.associations": { "*.css": "tailwindcss" },
   "breadcrumbs.filePath": "off",
+  "claudeCode.preferredLocation": "panel",
   "crashReporting.enabled": "off",
   "editor.accessibilitySupport": "off",
   "editor.colorDecorators": true,
@@ -33,33 +45,6 @@
   "outline.icons": false,
   "security.workspace.trust.untrustedFiles": "open",
   "telemetry.telemetryLevel": "off",
-  "workbench.hover.delay": 500,
   "workbench.colorTheme": "Mayukai Mirage Gruvbox Darktooth",
-  "files.associations": {
-    "*.css": "tailwindcss"
-  },
-  "[ansible]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml"
-  },
-  "[elixir]": {
-    "editor.defaultFormatter": "JakeBecker.elixir-ls"
-  },
-  "[phoenix-heex]": {
-    "editor.defaultFormatter": "JakeBecker.elixir-ls"
-  },
-  "[go]": {
-    "editor.codeActionsOnSave": {
-      "source.organizeImports": "explicit"
-    },
-    "editor.defaultFormatter": "golang.go"
-  },
-  "[html]": {
-    "editor.defaultFormatter": "vscode.html-language-features"
-  },
-  "[nix]": {
-    "editor.defaultFormatter": "brettm12345.nixfmt-vscode"
-  },
-  "[yaml]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml"
-  }
+  "workbench.hover.delay": 500
 }

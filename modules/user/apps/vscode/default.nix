@@ -5,7 +5,7 @@
   ...
 }:
 let
-  sourcePath = "${config.home.homeDirectory}/code/dotfiles/modules/user/darwin/vscode/settings.json";
+  sourcePath = "${config.home.homeDirectory}/code/dotfiles/modules/user/apps/vscode/settings.json";
 
   targetDir = "${config.home.homeDirectory}/Library/Application Support/Code/User";
   targetPath = "${targetDir}/settings.json";
@@ -83,13 +83,6 @@ in
           {
             command = "workbench.action.files.saveAll";
             key = "cmd+shift+s";
-          }
-
-          # FIXME: remove composer mode agent and access suggestions via cmd+i instead
-          #
-          {
-            command = "composerMode.agent";
-            key = "cmd+i";
           }
 
           # sort lines ascending and descending

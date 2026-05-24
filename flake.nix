@@ -37,6 +37,34 @@
     let
       inventory = import ./nix/inventory.nix;
 
+      homeManagerSetup =
+        {
+          lib,
+          host,
+          inputs,
+          ...
+        }:
+        {
+          home-manager = {
+            backupFileExtension = "bak";
+
+            useGlobalPkgs = true;
+            useUserPackages = true;
+            extraSpecialArgs = { inherit inputs; };
+
+            users.${host.user.username} = {
+              # Used for backwards compatibility, please read the changelog before changing.
+              home.stateVersion = "25.05";
+
+              home.username = lib.mkForce host.user.username;
+              home.homeDirectory = lib.mkForce host.user.homeDirectory;
+
+              # let home-manager manage itself
+              programs.home-manager.enable = true;
+            };
+          };
+        };
+
       mkDarwinHost =
         host:
         nix-darwin.lib.darwinSystem {
@@ -50,22 +78,20 @@
 
             # core modules
             #
-            ./modules/core/nix.nix # core nix settings
-            ./modules/core/homebrew.nix # homebrew settings
-            ./modules/core/home-manager.nix # home-manager settings and profiles modules
+            ./modules/core
+
+            # home manager configuration
+            #
+            homeManagerSetup
 
             # system configurations
             #
             ./modules/system/common # shared system settings
             ./modules/system/darwin # darwin-specific settings
 
-            # host configurations
+            # custom configurations
             #
             ./nix/hosts/${host.hostname}.nix # host-specific overrides
-
-            # user settings and applications
-            #
-            ./modules/user/darwin/brew/${host.user.username}.brew.nix # user-specific brew settings
             ./nix/profiles/${host.user.username}.nix # user-specific overrides
           ];
         };

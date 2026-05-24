@@ -30,34 +30,45 @@ dotfiles/
 │   │   ├── dudumini.nix         # Intel Mac configuration
 │   │   └── dudupro.nix          # Apple Silicon Mac configuration
 │   │
-│   └── 📁 profiles/             # User environment bundles
-│       └── emaiax.nix           # User configuration profile
+│   └── 📁 profiles/             # User environment bundles and overrides
+│       ├── emaiax.nix           # User configuration profile (emaiax)
+│       └── brew.nix             # User-specific Homebrew packages
 │
 ├── 📁 modules/                  # Modular configuration components
 │   ├── 📁 core/                # Core Nix and system setup
-│   │   ├── nix.nix             # Nix configuration and settings
-│   │   ├── homebrew.nix        # Homebrew integration
-│   │   └── home-manager.nix    # Home Manager setup
+│   │   ├── nix-daemon.nix      # Nix runtime and experimental features
+│   │   ├── nixpkgs.nix         # Nixpkgs config and overlays
+│   │   ├── system.nix          # System-level core config
+│   │   ├── home-manager-setup.nix # Home Manager framework
+│   │   └── default.nix         # Core module imports
 │   │
 │   ├── 📁 system/              # System-level configurations
 │   │   ├── 📁 common/          # Cross-platform system configs
+│   │   │   └── default.nix     # Environment variables and common settings
+│   │   │
 │   │   └── 📁 darwin/          # macOS system settings
-│   │       ├── appearance.nix  # UI appearance and themes
+│   │       ├── 📁 appearance/  # UI appearance and themes
 │   │       ├── dock.nix        # Dock configuration
 │   │       ├── finder.nix      # Finder settings
 │   │       ├── keyboard.nix    # Keyboard preferences
+│   │       ├── login-window.nix # Login window settings
 │   │       ├── security/       # Security and authentication
-│   │       └── system.nix      # General system settings
+│   │       ├── system.nix      # General system settings
+│   │       ├── trackpad.nix    # Trackpad preferences
+│   │       └── default.nix     # Darwin module imports
 │   │
 │   ├── 📁 user/                # User-level configurations
-│   │   ├── 📁 cli/             # Command-line tools (fzf, direnv, lsd)
-│   │   ├── 📁 darwin/          # macOS user applications
-│   │   │   ├── 📁 brew/        # User-specific Homebrew packages
+│   │   ├── 📁 apps/            # User applications
 │   │   │   ├── 📁 iterm2/      # iTerm2 configuration
 │   │   │   ├── 📁 raycast/     # Raycast launcher setup
 │   │   │   └── 📁 vscode/      # VS Code configuration
+│   │   ├── 📁 cli/             # Command-line tools (fzf, direnv, lsd)
 │   │   ├── 📁 git/             # Git and GitHub CLI setup
-│   │   └── 📁 shell/           # Shell environment (Zsh, Starship, SSH)
+│   │   ├── 📁 packages/        # Packages and package management
+│   │   │   ├── fonts.nix       # Font configurations
+│   │   │   └── default.nix     # User packages definition
+│   │   ├── 📁 shell/           # Shell environment (Zsh, Starship, SSH)
+│   │   └── default.nix         # User module imports
 │   │
 │   └── 📁 pkgs/                # Custom package definitions
 │
