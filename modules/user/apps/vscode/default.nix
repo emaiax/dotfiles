@@ -85,13 +85,6 @@ in
             key = "cmd+shift+s";
           }
 
-          # FIXME: remove composer mode agent and access suggestions via cmd+i instead
-          #
-          {
-            command = "composerMode.agent";
-            key = "cmd+i";
-          }
-
           # sort lines ascending and descending
           #
           {

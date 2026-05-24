@@ -89,16 +89,9 @@
             ./modules/system/common # shared system settings
             ./modules/system/darwin # darwin-specific settings
 
-            # user-specific system configurations
-            #
-            ./modules/system/darwin/brew.nix
-
-            # host configurations
+            # custom configurations
             #
             ./nix/hosts/${host.hostname}.nix # host-specific overrides
-
-            # user settings and applications
-            #
             ./nix/profiles/${host.user.username}.nix # user-specific overrides
           ];
         };
