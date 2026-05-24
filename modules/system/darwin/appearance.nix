@@ -40,6 +40,11 @@ in
   };
 
   config = {
+    system.defaults.appearance = {
+      mode = "dark";
+      accent = "green";
+    };
+
     environment.systemPackages = [ sendUIEvents ];
 
     system.defaults =

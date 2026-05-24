@@ -91,9 +91,7 @@
 
             # user-specific system configurations
             #
-          ] ++ nixpkgs.lib.optionals (host.user.username == "emaiax") [
             ./modules/system/darwin/brew.nix
-          ] ++ [
 
             # host configurations
             #
