@@ -8,13 +8,18 @@
   # https://developer.apple.com/documentation/devicemanagement/profile-specific-payload-keys
   #
   imports = [
-    ./appearance.nix
+    ./appearance
     ./dock.nix
     ./finder.nix
     ./keyboard.nix
     ./login-window.nix
     ./system.nix
   ];
+
+  system.defaults.appearance = {
+    mode = "dark";
+    accent = "green";
+  };
 
   # Close any open System Preferences panes, to prevent them from overriding settings we’re about to change
   #
