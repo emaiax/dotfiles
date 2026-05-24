@@ -40,14 +40,14 @@ in
   };
 
   config = {
-    system.defaults.appearance = {
-      mode = "dark";
-      accent = "green";
-    };
-
     environment.systemPackages = [ sendUIEvents ];
 
-    system.defaults =
+    system.defaults = {
+      appearance = {
+        mode = "dark";
+        accent = "green";
+      };
+    } // (
       let
         currentMode = interfaceModes.${config.system.defaults.appearance.mode};
         currentAccent = accentColors.${config.system.defaults.appearance.accent};
@@ -68,7 +68,8 @@ in
           AppleHighlightColor = lib.mkDefault (toString currentAccent.AppleHighlightColor);
           AppleAquaColorVariant = lib.mkDefault (toString currentAccent.AppleAquaColorVariant);
         };
-      };
+      }
+    );
 
     system.activationScripts = {
       setupInterfaceMode.text =
