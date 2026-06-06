@@ -36,7 +36,7 @@ in
           hashicorp.terraform
           # tamasfe.even-better-toml
           brettm12345.nixfmt-vscode
-          # edwinkofler.vscode-assorted-languages
+          edwinkofler.vscode-assorted-languages
           esbenp.prettier-vscode
           # jakebecker.elixir-ls
           jnoortheen.nix-ide
