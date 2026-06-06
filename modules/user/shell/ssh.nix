@@ -10,7 +10,7 @@
       UseKeyChain = "yes";
     };
 
-    matchBlocks = {
+    settings = {
       "*" = {
         addKeysToAgent = "yes";
         forwardAgent = true;
@@ -29,10 +29,8 @@
         identitiesOnly = true;
         identityFile = "~/.ssh/homelab_id_ed25519";
 
-        extraOptions = {
-          UserKnownHostsFile = "/dev/null";
-          StrictHostKeyChecking = "false";
-        };
+        userKnownHostsFile = "/dev/null";
+        strictHostKeyChecking = "no";
       };
     };
   };
