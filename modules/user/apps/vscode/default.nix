@@ -38,10 +38,10 @@ in
           brettm12345.nixfmt-vscode
           edwinkofler.vscode-assorted-languages
           esbenp.prettier-vscode
-          # jakebecker.elixir-ls
+          jakebecker.elixir-ls
           jnoortheen.nix-ide
           nefrob.vscode-just-syntax
-          # phoenixframework.phoenix
+          phoenixframework.phoenix
           redhat.vscode-yaml
           # shopify.ruby-lsp
 
