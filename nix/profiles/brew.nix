@@ -51,6 +51,7 @@
 
       # Utilities
       #
+      "bambu-studio" # bambu studio for mac
       "logi-options+" # logitech options
       "setapp" # setapp for mac
       "the-unarchiver" # unarchiver
