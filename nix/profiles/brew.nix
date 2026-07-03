@@ -52,8 +52,8 @@
       # Utilities
       #
       "logi-options+" # logitech options
-      "the-unarchiver" # unarchiver
       "setapp" # setapp for mac
+      "the-unarchiver" # unarchiver
     ];
 
     masApps = {
