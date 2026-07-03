@@ -33,7 +33,6 @@
 
       # Development
       #
-      "cursor-cli" # cursor ai cli
       # "docker-desktop" # docker desktop for mac
       "github" # github desktop for mac
       # "tableplus" # database management -> setapp

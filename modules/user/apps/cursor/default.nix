@@ -1,7 +1,7 @@
 { pkgs, ... }:
 {
   programs.cursor = {
-    enable = true;
+    enable = false;
 
     profiles = {
       default = {
