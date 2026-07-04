@@ -2,7 +2,6 @@
 {
   imports = [
     ./bat.nix
-    ./claude-code.nix
     ./direnv.nix
     ./fd.nix
     ./fzf.nix
