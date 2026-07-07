@@ -1,4 +1,4 @@
-{ pkgs, lib, config, ... }:
+{ pkgs, lib, ... }:
 {
   home.file.".ssh/allowed_signers".text = ''
     * ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMTbZW/l0UNEFLwDKrEQGyc+pZGDCq85Nyy7P1JV9S2o
