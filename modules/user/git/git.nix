@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, config, ... }:
 {
   home.file.".ssh/allowed_signers".text = ''
     * ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMTbZW/l0UNEFLwDKrEQGyc+pZGDCq85Nyy7P1JV9S2o
@@ -14,7 +14,6 @@
   programs.git = {
     enable = true;
 
-    lfs.enable = true;
     ignores = lib.splitString "\n" (builtins.readFile ./gitignore-global);
 
     settings = {
@@ -89,6 +88,13 @@
 
         undo = "reset --soft HEAD^1"; # undo last commit
         unstage = "restore --staged"; # unstage changes
+      };
+
+      filter.lfs = {
+        clean = "git-lfs clean -- %f";
+        smudge = "git-lfs smudge -- %f";
+        process = "git-lfs filter-process";
+        required = true;
       };
     };
   };
