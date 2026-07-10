@@ -13,6 +13,7 @@
     onActivation.cleanup = "zap";
 
     brews = [
+      "container" # apple containers
       "mas"
       "openssl"
     ];
