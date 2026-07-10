@@ -1,6 +1,7 @@
 { ... }:
 {
-  home.file.".claude/CLAUDE.md".source = ../../../../CLAUDE.md;
+  # Personal agent operating context, not the dotfiles project docs.
+  home.file.".claude/CLAUDE.md".source = ./AGENTS.md;
 
   programs.claude-code = {
     enable = true;
