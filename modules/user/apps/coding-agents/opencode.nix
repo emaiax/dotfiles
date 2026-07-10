@@ -4,7 +4,12 @@
     enable = true;
 
     # Publish project-wide conventions as the global AGENTS.md context.
-    context = ../../../CLAUDE.md;
+    context = ../../../../CLAUDE.md;
+
+    skills = {
+      # Shared vendored skills dir; same source as programs.claude-code.skills.
+      nixpkgs-pr-checklist = ./skills/nixpkgs-pr-checklist;
+    };
 
     settings = {
       # The package is managed by Nix; disable self-updates.

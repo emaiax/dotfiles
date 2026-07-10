@@ -1,6 +1,6 @@
 { ... }:
 {
-  home.file.".claude/CLAUDE.md".source = ../../../CLAUDE.md;
+  home.file.".claude/CLAUDE.md".source = ../../../../CLAUDE.md;
 
   programs.claude-code = {
     enable = true;
@@ -31,6 +31,11 @@
         - Use nix develop to enter a devshell
         - Only run commands in the devshell
       '';
+    };
+
+    skills = {
+      # Shared vendored skills dir; same source as programs.opencode.skills.
+      nixpkgs-pr-checklist = ./skills/nixpkgs-pr-checklist;
     };
 
     settings = {
