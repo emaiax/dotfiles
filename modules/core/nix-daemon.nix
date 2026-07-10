@@ -52,4 +52,15 @@
       keep-derivations = true
     '';
   };
+
+  # nix-darwin's linux-builder VM has a deterministic SSH host key (stored in
+  # /var/lib/linux-builder/keys, persisted across `ephemeral = true` disk wipes),
+  # matching the `publicHostKey` nix-darwin embeds in /etc/nix/machines. It is
+  # never added to any known_hosts file automatically, so both root (nix-daemon,
+  # for real distributed builds) and interactive users get "Host key verification
+  # failed" until it's trusted once. Provisioning it declaratively here covers
+  # both, instead of a manual `ssh-keyscan`/known_hosts edit.
+  environment.etc."ssh/ssh_known_hosts".text = ''
+    linux-builder ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJBWcxb/Blaqt1auOtE+F8QUWrUotiC5qBJ+UuEWdVCb
+  '';
 }
