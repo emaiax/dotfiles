@@ -34,9 +34,7 @@
     };
 
     settings = {
-      # set the Haiku model for the best performance and cost-efficiency initially
-      # @kb: docs/golden-principles.md
-      model = "haiku";
+      model = "sonnet";
 
       includeCoAuthoredBy = false;
       theme = "dark";
