@@ -3,8 +3,14 @@
   programs.opencode = {
     enable = true;
 
-    # Publish project-wide conventions as the global AGENTS.md context.
-    context = ../../../CLAUDE.md;
+    # Personal agent operating context as the global AGENTS.md; same source as
+    # programs.claude-code's ~/.claude/CLAUDE.md.
+    context = ./AGENTS.md;
+
+    skills = {
+      # Shared vendored skills dir; same source as programs.claude-code.skills.
+      nixpkgs-pr-checklist = ./skills/nixpkgs-pr-checklist;
+    };
 
     settings = {
       # The package is managed by Nix; disable self-updates.
