@@ -28,6 +28,7 @@
       "obsidian" # note taking
       "rectangle" # window manager
       "todoist-app" # task manager
+      "zen" # zen browser
       # "antinote" # installed via setapp
       # "cleanshot" # installed via setapp
 
