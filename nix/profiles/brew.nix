@@ -22,20 +22,20 @@
       #
       "1password-cli" # 1password cli
       "1password" # 1password
-      # "antinote" # quick notes -> setapp
       "arc" # arc browser
       "claude" # claude for mac
-      # "cleanshot" # screenshots and screen recording -> setapp
       "contexts" # context menu for mac
       "obsidian" # note taking
       "rectangle" # window manager
       "todoist-app" # task manager
+      # "antinote" # installed via setapp
+      # "cleanshot" # installed via setapp
 
       # Development
       #
-      # "docker-desktop" # docker desktop for mac
       "github" # github desktop for mac
-      # "tableplus" # database management -> setapp
+      # "docker-desktop" # docker desktop for mac
+      # "tableplus" # installed via setapp
 
       # Media
       #
