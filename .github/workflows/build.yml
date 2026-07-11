@@ -11,30 +11,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  flake:
-    strategy:
-      matrix:
-        runners:
-          # - runner: ubuntu-latest
-          #   name: default
-          #   platform: ARM64
-          - runner: macos-latest
-            name: dudumini
-            arch: X64
-          - runner: macos-latest
-            name: dudupro
-            arch: ARM64
-
-    runs-on: ${{ matrix.runners.runner }}
-    permissions:
-      id-token: "write"
-      contents: "read"
+  # Arch-independent checks run once on Linux, where the Determinate
+  # tooling ships binaries (flake-checker has no x86_64-darwin build).
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: cachix/install-nix-action@v31
       - uses: DeterminateSystems/flake-checker-action@v12
-      - uses: DeterminateSystems/flakehub-cache-action@v3
+
+      - run: git ls-files -z '*.nix' | xargs -0 nix fmt -- --check
 
       - run: nix flake check --show-trace
 
-      - run: nix build .#darwinConfigurations.${{ matrix.runners.name }}.system
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # x86_64-darwin must build on a native Intel runner
+          - host: dudumini
+            runner: macos-15-intel
+          - host: dudupro
+            runner: macos-15
+
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    permissions:
+      contents: "read"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+
+      - run: nix build .#darwinConfigurations.${{ matrix.host }}.system

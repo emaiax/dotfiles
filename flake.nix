@@ -91,5 +91,12 @@
     in
     {
       darwinConfigurations = builtins.mapAttrs (name: host: mkDarwinHost host) inventory.hosts;
+
+      formatter = nixpkgs.lib.genAttrs [
+        "x86_64-darwin"
+        "aarch64-darwin"
+        "x86_64-linux"
+        "aarch64-linux"
+      ] (system: nixpkgs.legacyPackages.${system}.nixfmt);
     };
 }
