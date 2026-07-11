@@ -11,21 +11,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+
+      - run: git ls-files -z '*.nix' | xargs -0 nix fmt -- --check
+
   flake:
     strategy:
+      fail-fast: false
       matrix:
-        runners:
-          # - runner: ubuntu-latest
-          #   name: default
-          #   platform: ARM64
-          - runner: macos-latest
-            name: dudumini
-            arch: X64
-          - runner: macos-latest
-            name: dudupro
-            arch: ARM64
+        include:
+          # x86_64-darwin must build on a native Intel runner
+          - host: dudumini
+            runner: macos-15-intel
+          - host: dudupro
+            runner: macos-15
 
-    runs-on: ${{ matrix.runners.runner }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
     permissions:
       id-token: "write"
       contents: "read"
@@ -37,4 +44,4 @@ jobs:
 
       - run: nix flake check --show-trace
 
-      - run: nix build .#darwinConfigurations.${{ matrix.runners.name }}.system
+      - run: nix build .#darwinConfigurations.${{ matrix.host }}.system

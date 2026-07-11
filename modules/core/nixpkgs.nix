@@ -24,13 +24,11 @@
       # Remove after nixpkgs includes that postPatch (nix flake update).
       (_final: prev: {
         direnv = prev.direnv.overrideAttrs (old: {
-          postPatch =
-            (old.postPatch or "")
-            + ''
-              if grep -q -- ' -linkmode=external' GNUmakefile 2>/dev/null; then
-                substituteInPlace GNUmakefile --replace-fail " -linkmode=external" ""
-              fi
-            '';
+          postPatch = (old.postPatch or "") + ''
+            if grep -q -- ' -linkmode=external' GNUmakefile 2>/dev/null; then
+              substituteInPlace GNUmakefile --replace-fail " -linkmode=external" ""
+            fi
+          '';
         });
       })
     ];
