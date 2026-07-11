@@ -5,6 +5,7 @@
     ./shell
     ./git
     ./packages
+    ./sops
   ];
 
   # ensures ~/code folder exists

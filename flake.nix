@@ -16,6 +16,11 @@
 
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
     nix-vscode-extensions.url = "github:nix-community/nix-vscode-extensions";
+
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -26,6 +31,7 @@
       nix-homebrew,
       nixpkgs,
       nix-vscode-extensions,
+      ...
     }:
     let
       inventory = import ./nix/inventory.nix;
