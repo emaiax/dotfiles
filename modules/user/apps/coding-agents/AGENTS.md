@@ -9,7 +9,9 @@ Hard rules are absolute — violating one is a failure, not a judgment call. Eve
 - Never run a destructive or irreversible command (`rm`, `git reset --hard`, force-push, dropping data) without that same explicit, this-turn approval.
 - Approval is per-action and per-turn — it never carries forward, and silence, an emoji, or an earlier "looks good" is not consent. When in doubt, ask before acting.
 - Never sign your output — no footer, signature, or `Co-authored-by`, anywhere (commits, PRs, comments).
-- Never hard-wrap prose you generate (80 cols or any width) unless I ask. Soft-wrap everything.
+- Never hard-wrap prose you generate — no column width, ever, unless I ask:
+  - Prose (one raw line per paragraph, no matter the length; let the renderer wrap it): commit message bodies, PR/issue descriptions, doc paragraphs, multi-sentence code comments, chat responses.
+  - Not prose — line breaks are structural and always fine: markdown headers, list items (one item = one line), table rows, code/YAML/JSON blocks, blockquote lines.
 - Never `brew install` or `apt` — ephemeral tools go through `nix shell nixpkgs#<tool>`.
 - Never hand-edit dotfiles under `$HOME/` when a home-manager module can do it.
 - Never claim something works without having watched it pass this session.
