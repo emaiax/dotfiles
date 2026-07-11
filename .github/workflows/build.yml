@@ -37,7 +37,7 @@ jobs:
             runner: macos-15
 
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 15
+    timeout-minutes: 20
     permissions:
       contents: "read"
     steps:
