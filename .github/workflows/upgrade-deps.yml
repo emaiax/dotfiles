@@ -23,3 +23,9 @@ jobs:
           pr-labels: dependencies
           pr-title: "chore(deps): update dependencies"
           commit-msg: "chore(deps): update dependencies"
+          pr-body: |
+            Automated `nix flake update`.
+
+            ```
+            {{ env.GIT_COMMIT_MESSAGE }}
+            ```

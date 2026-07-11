@@ -28,6 +28,8 @@
 
       config = {
         virtualisation = {
+          cores = 4;
+
           darwin-builder = {
             # diskSize = 10 * 1024; # defaults to 20G
             memorySize = 8 * 1024;

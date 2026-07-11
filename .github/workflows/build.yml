@@ -37,17 +37,11 @@ jobs:
             runner: macos-15
 
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 60
+    timeout-minutes: 15
     permissions:
-      id-token: "write"
       contents: "read"
     steps:
       - uses: actions/checkout@v7
       - uses: cachix/install-nix-action@v31
-
-      # FlakeHub Cache ships no x86_64-darwin binary; native cache.nixos.org
-      # substitution covers the Intel host.
-      - uses: DeterminateSystems/flakehub-cache-action@v3
-        if: runner.arch == 'ARM64'
 
       - run: nix build .#darwinConfigurations.${{ matrix.host }}.system
