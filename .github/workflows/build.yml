@@ -11,16 +11,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  format:
+  # Arch-independent checks run once on Linux, where the Determinate
+  # tooling ships binaries (flake-checker has no x86_64-darwin build).
+  lint:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: cachix/install-nix-action@v31
+      - uses: DeterminateSystems/flake-checker-action@v12
 
       - run: git ls-files -z '*.nix' | xargs -0 nix fmt -- --check
 
-  flake:
+      - run: nix flake check --show-trace
+
+  build:
     strategy:
       fail-fast: false
       matrix:
@@ -39,9 +44,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: cachix/install-nix-action@v31
-      - uses: DeterminateSystems/flake-checker-action@v12
-      - uses: DeterminateSystems/flakehub-cache-action@v3
 
-      - run: nix flake check --show-trace
+      # FlakeHub Cache ships no x86_64-darwin binary; native cache.nixos.org
+      # substitution covers the Intel host.
+      - uses: DeterminateSystems/flakehub-cache-action@v3
+        if: runner.arch == 'ARM64'
 
       - run: nix build .#darwinConfigurations.${{ matrix.host }}.system
