@@ -30,9 +30,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # x86_64-darwin must build on a native Intel runner
-          - host: dudumini
-            runner: macos-15-intel
+          # dudumini (x86_64-darwin) dropped from CI: nixpkgs-unstable no
+          # longer supports the architecture as of the 26.11 cycle.
           - host: dudupro
             runner: macos-15
 
