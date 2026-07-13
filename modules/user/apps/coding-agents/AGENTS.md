@@ -12,6 +12,7 @@ Hard rules are absolute — violating one is a failure, not a judgment call. Eve
 - Never hard-wrap prose you generate — no column width, ever, unless I ask:
   - Prose (one raw line per paragraph, no matter the length; let the renderer wrap it): commit message bodies, PR/issue descriptions, doc paragraphs, multi-sentence code comments, chat responses.
   - Not prose — line breaks are structural and always fine: markdown headers, list items (one item = one line), table rows, code/YAML/JSON blocks, blockquote lines.
+  - This applies even when the prose is generated indirectly — inside a script, heredoc, template, or CI workflow that assembles a commit/PR/doc body at runtime. Judge by the rendered artifact the prose ends up in, not by how the generating source looks in an editor.
 - Never `brew install` or `apt` — ephemeral tools go through `nix shell nixpkgs#<tool>`.
 - Never hand-edit dotfiles under `$HOME/` when a home-manager module can do it.
 - Never claim something works without having watched it pass this session.
