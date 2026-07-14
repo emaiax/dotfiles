@@ -61,6 +61,7 @@
 
     masApps = {
       "Amphetamine" = 937984704;
+      "Outlook" = 985367838;
       "Tailscale" = 1475387142;
     };
   };
