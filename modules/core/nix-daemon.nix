@@ -20,8 +20,13 @@
         "aarch64-linux"
       ];
 
+      # kvm is intentionally not listed: the VM boots via QEMU+HVF
+      # (accel=hvf:tcg) and does not expose /dev/kvm to the guest, so
+      # nested-virtualization builds (nixosTest) cannot actually run here.
+      # Declaring kvm anyway lets Nix schedule such builds onto this
+      # machine, where they fail with a garbled exec error instead of a
+      # clean "missing system features" rejection. See dotfiles#82.
       supportedFeatures = [
-        "kvm"
         "benchmark"
         "big-parallel"
       ];
