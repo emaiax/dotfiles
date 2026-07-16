@@ -22,16 +22,43 @@
 
       # kvm is intentionally not listed: the VM boots via QEMU+HVF
       # (accel=hvf:tcg) and does not expose /dev/kvm to the guest, so
-      # nested-virtualization builds (nixosTest) cannot actually run here.
-      # Declaring kvm anyway lets Nix schedule such builds onto this
-      # machine, where they fail with a garbled exec error instead of a
-      # clean "missing system features" rejection. See dotfiles#82.
+      # nested-virtualization builds (nixosTest with a VM backend) cannot
+      # actually run here. Declaring kvm anyway lets Nix schedule such
+      # builds onto this machine, where they fail with a garbled exec
+      # error instead of a clean "missing system features" rejection.
+      # See dotfiles#82.
+      #
+      # nixos-test and uid-range are listed so container-backed nixosTest
+      # derivations (systemd-nspawn, e.g. most prometheus exporter tests)
+      # can schedule here. uid-range requires auto-allocate-uids below —
+      # without it the build sandbox keeps the real single build uid
+      # (no root inside the container), and systemd-nspawn refuses to run.
       supportedFeatures = [
         "benchmark"
         "big-parallel"
+        "nixos-test"
+        "uid-range"
       ];
 
       config = {
+        nix.settings = {
+          # cgroups is required alongside auto-allocate-uids/uid-range for
+          # container-backed nixosTest derivations (systemd-nspawn) to
+          # actually spawn on this builder.
+          extra-experimental-features = [
+            "auto-allocate-uids"
+            "cgroups"
+          ];
+          auto-allocate-uids = true;
+
+          # NixOS's own `nix.settings.system-features` default
+          # (nixos/modules/config/nix.nix) is a static list that predates
+          # auto-allocate-uids and does not add "uid-range" for it, unlike
+          # plain Nix's dynamic default. `extra-system-features` appends to
+          # that static list instead of replacing it.
+          extra-system-features = [ "uid-range" ];
+        };
+
         virtualisation = {
           cores = 4;
 
