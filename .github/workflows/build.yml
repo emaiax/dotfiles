@@ -33,6 +33,7 @@ jobs:
           # dudumini (x86_64-darwin) dropped from CI: nixpkgs-unstable no
           # longer supports the architecture as of the 26.11 cycle.
           - host: dudupro
+            system: aarch64-darwin
             runner: macos-15
 
     runs-on: ${{ matrix.runner }}
@@ -43,4 +44,9 @@ jobs:
       - uses: actions/checkout@v7
       - uses: cachix/install-nix-action@v31
 
-      - run: nix build .#darwinConfigurations.${{ matrix.host }}.system
+      # Builds flake.nix's checks.<system>.build-<host> instead of
+      # darwinConfigurations.<host>.system directly: that check mirrors the
+      # real host but with nix.linux-builder disabled, since this runner has
+      # no way to build its aarch64-linux VM image and no guarantee
+      # cache.nixos.org already has it substituted for the pinned nixpkgs rev.
+      - run: nix build .#checks.${{ matrix.system }}.build-${{ matrix.host }}
