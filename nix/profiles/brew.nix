@@ -35,8 +35,8 @@
 
       # Development
       #
+      "docker-desktop" # docker desktop for mac
       "github" # github desktop for mac
-      # "docker-desktop" # docker desktop for mac
       # "tableplus" # installed via setapp
 
       # Media
