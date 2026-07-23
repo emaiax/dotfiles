@@ -18,6 +18,18 @@ let
     agent: lib.concatStringsSep " \\\n              " (map mkAgentMount agent.mounts);
   mkAgentCmd = agent: lib.concatStringsSep " " agent.cmd;
 
+  # docker run doesn't inherit the host shell's environment — without these,
+  # the container sees no TERM/COLORTERM/TERM_PROGRAM at all, which is why
+  # TUIs (Claude Code, opencode) lose color and terminal-capability-gated
+  # input handling like Shift+Enter for newlines.
+  termEnvArgs = lib.concatStringsSep " \\\n          " [
+    ''-e TERM="$TERM"''
+    ''-e COLORTERM="$COLORTERM"''
+    ''-e TERM_PROGRAM="$TERM_PROGRAM"''
+    ''-e LANG="$LANG"''
+    ''-e LC_ALL="$LC_ALL"''
+  ];
+
   mkAssistantArm =
     profileName: agentName:
     let
@@ -30,6 +42,7 @@ let
         ensure_docker
         docker volume create ${agent.cacheVolume} >/dev/null 2>&1 || true
         exec docker run -it --rm \
+          ${termEnvArgs} \
           "''${mount_args[@]}" \
           ${mkAgentMountArgs agent} \
           --volume ${agent.cacheVolume}:/root/.npm \
@@ -61,6 +74,7 @@ let
               build_mount_args "${profileName}"
               ensure_docker
               exec docker run -it --rm \
+                ${termEnvArgs} \
                 "''${mount_args[@]}" \
                 --workdir "/jail/$workdir" \
                 ${image} \
