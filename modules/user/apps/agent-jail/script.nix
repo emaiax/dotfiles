@@ -83,6 +83,10 @@ let
 
   mkAgentFunction = agentName: ''
     ${agentName}-jail() {
+      if [ $# -eq 0 ]; then
+        echo "usage: ${agentName}-jail <profile> [args...]" >&2
+        return 1
+      fi
       local profile="$1"
       shift
       agent-jail "$profile" ${agentName} "$@"
