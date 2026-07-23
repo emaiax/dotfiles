@@ -6,3 +6,7 @@ creation_rules:
     key_groups:
       - age:
           - *emaiax
+  - path_regex: secrets/agent-jail-profiles\.enc\.json$
+    key_groups:
+      - age:
+          - *emaiax
