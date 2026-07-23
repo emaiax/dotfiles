@@ -26,8 +26,9 @@ let
     ''
       ${agentName})
         shift
-        docker volume create ${agent.cacheVolume} >/dev/null 2>&1 || true
         build_mount_args "${profileName}"
+        ensure_docker
+        docker volume create ${agent.cacheVolume} >/dev/null 2>&1 || true
         exec docker run -it --rm \
           "''${mount_args[@]}" \
           ${mkAgentMountArgs agent} \
@@ -58,6 +59,7 @@ let
       ${assistantArms}
             shell)
               build_mount_args "${profileName}"
+              ensure_docker
               exec docker run -it --rm \
                 "''${mount_args[@]}" \
                 --workdir "/jail/$workdir" \
@@ -106,6 +108,26 @@ in
           echo "profiles: ${lib.concatStringsSep ", " profileNames}"
         }
 
+        ensure_docker() {
+          if ! command -v docker >/dev/null 2>&1; then
+            echo "error: Docker not installed (should be provisioned via nix-homebrew — check nix/profiles/brew.nix)" >&2
+            exit 1
+          fi
+
+          if ! docker info >/dev/null 2>&1; then
+            echo "agent-jail: starting Docker Desktop..." >&2
+            open --background -a Docker
+            for _ in $(seq 1 30); do
+              docker info >/dev/null 2>&1 && break
+              sleep 1
+            done
+            if ! docker info >/dev/null 2>&1; then
+              echo "error: Docker Desktop did not become ready in time" >&2
+              exit 1
+            fi
+          fi
+        }
+
         build_mount_args() {
           local profile="$1"
           local data
@@ -130,29 +152,15 @@ in
         }
 
         case "''${1:-}" in
-          -h|--help|help|"")
+          -h|--help|help)
             usage
             exit 0
             ;;
-        esac
-
-        if ! command -v docker >/dev/null 2>&1; then
-          echo "error: Docker not installed (should be provisioned via nix-homebrew — check nix/profiles/brew.nix)" >&2
-          exit 1
-        fi
-
-        if ! docker info >/dev/null 2>&1; then
-          echo "agent-jail: starting Docker Desktop..." >&2
-          open --background -a Docker
-          for _ in $(seq 1 30); do
-            docker info >/dev/null 2>&1 && break
-            sleep 1
-          done
-          if ! docker info >/dev/null 2>&1; then
-            echo "error: Docker Desktop did not become ready in time" >&2
+          "")
+            usage >&2
             exit 1
-          fi
-        fi
+            ;;
+        esac
 
         workdir="."
         mount_args=()
