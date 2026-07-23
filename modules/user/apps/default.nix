@@ -1,5 +1,6 @@
 {
   imports = [
+    ./agent-jail
     ./coding-agents
     ./cursor
     ./iterm2
