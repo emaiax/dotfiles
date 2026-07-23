@@ -1,16 +1,12 @@
+let
+  agents = [
+    "claude"
+    "opencode"
+  ];
+in
 {
   programs.agent-jail.profiles = {
-    emx = {
-      agents = [
-        "claude"
-        "opencode"
-      ];
-    };
-    work = {
-      agents = [
-        "claude"
-        "opencode"
-      ];
-    };
+    emx = { inherit agents; };
+    work = { inherit agents; };
   };
 }

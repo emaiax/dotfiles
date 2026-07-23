@@ -81,17 +81,18 @@ let
 
   profileArms = lib.concatStringsSep "\n" (map mkProfileArm profileNames);
 
-  mkAlias = profileName: agentName: {
-    name = "${profileName}-${agentName}";
-    value = "agent-jail ${profileName} ${agentName}";
-  };
+  mkAgentFunction = agentName: ''
+    ${agentName}-jail() {
+      local profile="$1"
+      shift
+      agent-jail "$profile" ${agentName} "$@"
+    }
+  '';
 
-  aliases = lib.listToAttrs (
-    lib.concatMap (profileName: map (mkAlias profileName) profiles.${profileName}.agents) profileNames
-  );
+  agentFunctions = lib.concatStringsSep "\n" (map mkAgentFunction (builtins.attrNames agentCatalog));
 in
 {
-  programs.zsh.shellAliases = aliases;
+  programs.zsh.initContent = agentFunctions;
 
   home.packages = [
     (pkgs.writeShellApplication {
