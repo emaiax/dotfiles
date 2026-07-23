@@ -25,6 +25,7 @@ let
     in
     ''
       ${agentName})
+        shift
         docker volume create ${agent.cacheVolume} >/dev/null 2>&1 || true
         build_mount_args "${profileName}"
         exec docker run -it --rm \
