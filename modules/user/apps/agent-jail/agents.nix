@@ -4,6 +4,8 @@
       "npx"
       "-y"
       "@anthropic-ai/claude-code"
+      "--permission-mode"
+      "auto"
     ];
     cacheVolume = "agent-jail-npm-cache-claude";
     mounts = [
@@ -22,6 +24,7 @@
       "npx"
       "-y"
       "opencode-ai"
+      "--auto"
     ];
     cacheVolume = "agent-jail-npm-cache-opencode";
     mounts = [
