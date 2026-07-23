@@ -1,8 +1,5 @@
 let
-  agents = [
-    "claude"
-    "opencode"
-  ];
+  agents = (builtins.attrNames (import ./agents.nix));
 in
 {
   programs.agent-jail.profiles = {
