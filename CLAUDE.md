@@ -8,7 +8,8 @@ Declarative macOS configuration built on Nix flakes: nix-darwin + home-manager +
 - `nix/hosts/` — per-host overrides: `dudumini` (Intel), `dudupro` (Apple Silicon).
 - `nix/profiles/` — user bundles (`emaiax.nix`) and host Homebrew (`brew.nix`).
 - `modules/` — `core/`, `system/` (`common` + `darwin`), `pkgs/`, and `user/` (home-manager: `apps/`, `cli/`, `git/`, `shell/`, `packages/`).
-- `modules/user/apps/coding-agents/` — Claude Code, OpenCode, agent-jail, and the shared agent `skills/`.
+- `modules/user/apps/coding-agents/` — Claude Code, OpenCode, and the shared agent `skills/`.
+- `modules/user/apps/agent-jail/` — generic multi-profile Docker jail for running coding agents against an allowlisted directory (profile structure is public; real paths live in an encrypted secret).
 
 ## Working in this repo
 
