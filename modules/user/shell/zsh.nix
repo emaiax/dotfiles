@@ -29,7 +29,7 @@ in
 
       # dotfiles management
       #
-      home-config = "cd ${configDirectory}";
+      dotfiles = "cd ${configDirectory}";
       home-build = "just --justfile=${configDirectory}/justfile --working-directory=${configDirectory} build";
       home-switch = "just --justfile=${configDirectory}/justfile --working-directory=${configDirectory} switch";
 
