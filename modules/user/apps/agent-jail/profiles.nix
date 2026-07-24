@@ -4,6 +4,11 @@ in
 {
   programs.agent-jail.profiles = {
     emx = { inherit agents; };
-    work = { inherit agents; };
+    work = {
+      inherit agents;
+      cwd = {
+        rw = false;
+      };
+    };
   };
 }
