@@ -177,6 +177,10 @@ in
             fi
           done < <(jq -c '.mounts[]' <<<"$data")
           if [ -n "$cwd_rw" ]; then
+            if [ "$PWD" = "$HOME" ] || [ "$PWD" = "/" ]; then
+              echo "error: refusing to mount \$PWD ('$PWD') into the jail — too broad" >&2
+              exit 1
+            fi
             pwd_base="$(basename "$PWD")"
             for m in "''${mount_args[@]}"; do
               case "$m" in
