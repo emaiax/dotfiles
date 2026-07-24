@@ -17,6 +17,18 @@ in
           type = lib.types.listOf (lib.types.enum (builtins.attrNames agentCatalog));
           description = "Assistant names this profile may be launched with.";
         };
+        options.cwd = lib.mkOption {
+          type = lib.types.nullOr (
+            lib.types.submodule {
+              options.rw = lib.mkOption {
+                type = lib.types.bool;
+                description = "Whether the $(PWD) mount is read-write.";
+              };
+            }
+          );
+          default = null;
+          description = "If set, also mounts the invocation-time $(PWD) into the jail at /jail/<basename>.";
+        };
       }
     );
     default = { };

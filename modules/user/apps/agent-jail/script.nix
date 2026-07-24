@@ -18,6 +18,13 @@ let
     agent: lib.concatStringsSep " \\\n              " (map mkAgentMount agent.mounts);
   mkAgentCmd = agent: lib.concatStringsSep " " agent.cmd;
 
+  mkCwdRwArg =
+    profileName:
+    let
+      cwd = profiles.${profileName}.cwd;
+    in
+    if cwd == null then "" else if cwd.rw then "true" else "false";
+
   # docker run doesn't inherit the host shell's environment — without these,
   # the container sees no TERM/COLORTERM/TERM_PROGRAM at all, which is why
   # TUIs (Claude Code, opencode) lose color and terminal-capability-gated
@@ -38,7 +45,7 @@ let
     ''
       ${agentName})
         shift
-        build_mount_args "${profileName}"
+        build_mount_args "${profileName}" "${mkCwdRwArg profileName}"
         ensure_docker
         docker volume create ${agent.cacheVolume} >/dev/null 2>&1 || true
         exec docker run -it --rm \
@@ -71,7 +78,7 @@ let
           case "''${1:-}" in
       ${assistantArms}
             shell)
-              build_mount_args "${profileName}"
+              build_mount_args "${profileName}" "${mkCwdRwArg profileName}"
               ensure_docker
               exec docker run -it --rm \
                 ${termEnvArgs} \
@@ -81,7 +88,7 @@ let
                 bash
               ;;
             mounts)
-              build_mount_args "${profileName}"
+              build_mount_args "${profileName}" "${mkCwdRwArg profileName}"
               echo "profile: ${profileName} (image: ${image})"
               printf '%s\n' "''${mount_args[@]}"
               ;;
@@ -149,13 +156,14 @@ in
 
         build_mount_args() {
           local profile="$1"
+          local cwd_rw="$2"
           local data
           data="$(jq -e --arg p "$profile" '.[$p] // empty' "${secretsPath}")" || data=""
           if [ -z "$data" ]; then
             echo "error: profile '$profile' not found in decrypted secrets — check secrets/agent-jail-profiles.enc.json" >&2
             exit 1
           fi
-          local root m path rw
+          local root m path rw pwd_base
           root="$(jq -r '.root' <<<"$data")"
           workdir="$(jq -r '.workingDir // "."' <<<"$data")"
           mount_args=()
@@ -168,6 +176,22 @@ in
               mount_args+=(--mount "type=bind,source=$root/$path,target=/jail/$path,readonly")
             fi
           done < <(jq -c '.mounts[]' <<<"$data")
+          if [ -n "$cwd_rw" ]; then
+            pwd_base="$(basename "$PWD")"
+            for m in "''${mount_args[@]}"; do
+              case "$m" in
+                *":/jail/$pwd_base"|*",target=/jail/$pwd_base,"*)
+                  echo "error: cwd mount '/jail/$pwd_base' collides with an existing mount in profile '$profile'" >&2
+                  exit 1
+                  ;;
+              esac
+            done
+            if [ "$cwd_rw" = "true" ]; then
+              mount_args+=(--volume "$PWD:/jail/$pwd_base")
+            else
+              mount_args+=(--mount "type=bind,source=$PWD,target=/jail/$pwd_base,readonly")
+            fi
+          fi
         }
 
         case "''${1:-}" in
