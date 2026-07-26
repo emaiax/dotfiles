@@ -23,7 +23,12 @@ let
     let
       cwd = profiles.${profileName}.cwd;
     in
-    if cwd == null then "" else if cwd.rw then "true" else "false";
+    if cwd == null then
+      ""
+    else if cwd.rw then
+      "true"
+    else
+      "false";
 
   # docker run doesn't inherit the host shell's environment — without these,
   # the container sees no TERM/COLORTERM/TERM_PROGRAM at all, which is why
