@@ -21,7 +21,7 @@ jobs:
       - uses: cachix/install-nix-action@v31
       - uses: DeterminateSystems/flake-checker-action@v13
 
-      - run: git ls-files -z '*.nix' | xargs -0 nix fmt -- --check
+      - run: nix fmt -- --ci
 
       - run: nix flake check --show-trace
 
