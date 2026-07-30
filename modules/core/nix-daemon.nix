@@ -85,6 +85,13 @@
       keep-outputs = true
       keep-derivations = true
     '';
+
+    gc = {
+      automatic = true;
+      options = "--delete-older-than 7d";
+    };
+
+    optimise.automatic = true;
   };
 
   # nix-darwin's linux-builder VM has a deterministic SSH host key (stored in
