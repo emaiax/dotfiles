@@ -85,6 +85,27 @@
       keep-outputs = true
       keep-derivations = true
     '';
+
+    gc = {
+      automatic = true;
+      # no Weekday set — StartCalendarInterval treats an omitted field as
+      # "every", so this fires daily instead of nix-darwin's weekly default.
+      # 10am (not the middle of the night) so it's more likely to catch the
+      # Mac already awake instead of relying on the sleep/wake catch-up.
+      interval = {
+        Hour = 10;
+        Minute = 0;
+      };
+      options = "--delete-older-than 7d";
+    };
+
+    optimise = {
+      automatic = true;
+      interval = {
+        Hour = 10;
+        Minute = 15;
+      };
+    };
   };
 
   # nix-darwin's linux-builder VM has a deterministic SSH host key (stored in
