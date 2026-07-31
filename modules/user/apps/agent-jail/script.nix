@@ -13,6 +13,11 @@ let
   image = "docker.io/library/node:22";
   secretsPath = config.sops.secrets."agent-jail-profiles".path;
 
+  # cached across runs so only the first `docker run` per host pays for the download
+  nvimCacheVolume = "agent-jail-apt-cache";
+  # the `vi` symlink is what actually fixes agents that shell out to a literal `vi`
+  nvimSetupCmd = "apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y --no-install-recommends neovim >/dev/null && ln -sf \"$(command -v nvim)\" /usr/local/bin/vi";
+
   mkAgentMount = { host, container }: ''--volume "${host}:${container}"'';
   mkAgentMountArgs =
     agent: lib.concatStringsSep " \\\n              " (map mkAgentMount agent.mounts);
@@ -40,6 +45,8 @@ let
     ''-e TERM_PROGRAM="$TERM_PROGRAM"''
     ''-e LANG="$LANG"''
     ''-e LC_ALL="$LC_ALL"''
+    ''-e EDITOR=nvim''
+    ''-e VISUAL=nvim''
   ];
 
   mkAssistantArm =
@@ -53,14 +60,16 @@ let
         build_mount_args "${profileName}" "${mkCwdRwArg profileName}"
         ensure_docker
         docker volume create ${agent.cacheVolume} >/dev/null 2>&1 || true
+        docker volume create ${nvimCacheVolume} >/dev/null 2>&1 || true
         exec docker run -it --rm \
           ${termEnvArgs} \
           "''${mount_args[@]}" \
           ${mkAgentMountArgs agent} \
           --volume ${agent.cacheVolume}:/root/.npm \
+          --volume ${nvimCacheVolume}:/var/cache/apt/archives \
           --workdir "/jail/$workdir" \
           ${image} \
-          ${mkAgentCmd agent} "$@"
+          bash -lc '${nvimSetupCmd} || echo "agent-jail: nvim setup failed, continuing without it" >&2; exec ${mkAgentCmd agent} "$@"' bash "$@"
         ;;
     '';
 
@@ -85,12 +94,14 @@ let
             shell)
               build_mount_args "${profileName}" "${mkCwdRwArg profileName}"
               ensure_docker
+              docker volume create ${nvimCacheVolume} >/dev/null 2>&1 || true
               exec docker run -it --rm \
                 ${termEnvArgs} \
                 "''${mount_args[@]}" \
+                --volume ${nvimCacheVolume}:/var/cache/apt/archives \
                 --workdir "/jail/$workdir" \
                 ${image} \
-                bash
+                bash -lc '${nvimSetupCmd} || echo "agent-jail: nvim setup failed, continuing without it" >&2; exec bash' bash
               ;;
             mounts)
               build_mount_args "${profileName}" "${mkCwdRwArg profileName}"
