@@ -1,0 +1,28 @@
+name: OIDC auth spike
+
+on:
+  workflow_dispatch:
+
+enable-openid-connect: true
+
+jobs:
+  spike:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch JWT and probe Forgejo API with it
+        env:
+          AUD: dotfiles-oidc-spike
+        run: |
+          jwt=$( \
+            curl --fail -s \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUD" \
+            | jq -r ".value" \
+          )
+          echo "::add-mask::$jwt"
+
+          status=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer $jwt" \
+            "${{ github.api_url }}/repos/${{ github.repository }}")
+
+          echo "Bearer-JWT auth against Forgejo API returned HTTP $status"
