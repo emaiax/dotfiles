@@ -45,8 +45,8 @@ let
     ''-e TERM_PROGRAM="$TERM_PROGRAM"''
     ''-e LANG="$LANG"''
     ''-e LC_ALL="$LC_ALL"''
-    ''-e EDITOR=nvim''
-    ''-e VISUAL=nvim''
+    "-e EDITOR=nvim"
+    "-e VISUAL=nvim"
   ];
 
   mkAssistantArm =
@@ -62,6 +62,7 @@ let
         docker volume create ${agent.cacheVolume} >/dev/null 2>&1 || true
         docker volume create ${nvimCacheVolume} >/dev/null 2>&1 || true
         exec docker run -it --rm \
+          --name agent-jail \
           ${termEnvArgs} \
           "''${mount_args[@]}" \
           ${mkAgentMountArgs agent} \
@@ -96,6 +97,7 @@ let
               ensure_docker
               docker volume create ${nvimCacheVolume} >/dev/null 2>&1 || true
               exec docker run -it --rm \
+                --name agent-jail \
                 ${termEnvArgs} \
                 "''${mount_args[@]}" \
                 --volume ${nvimCacheVolume}:/var/cache/apt/archives \
