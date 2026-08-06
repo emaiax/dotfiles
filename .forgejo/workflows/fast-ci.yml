@@ -1,0 +1,25 @@
+name: fast-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: nix-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  nix-checks:
+    runs-on: docker
+    container:
+      image: ${{ vars.CI_IMAGE_REGISTRY }}/homelab/dudumox-ci:latest
+      volumes:
+        - /var/lib/forgejo-runner-nix-store:/nix
+    env:
+      NIX_CONFIG: "experimental-features = nix-command flakes"
+    steps:
+      - uses: actions/checkout@v7
+      - run: ./scripts/nix-locked.sh nix fmt -- --ci
+      - run: ./scripts/nix-locked.sh nix flake check --show-trace
