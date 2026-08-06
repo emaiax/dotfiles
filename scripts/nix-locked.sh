@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Copied from emaiax/dudumox:scripts/nix-locked.sh — keep in sync with the source.
 set -uo pipefail
 
 lockfile="/nix/.ci-lock"
