@@ -72,7 +72,7 @@ let
         docker volume create ${agent.cacheVolume} >/dev/null 2>&1 || true
         docker volume create ${nvimCacheVolume} >/dev/null 2>&1 || true
         exec docker run -it --rm \
-          --name ${agentName}-agent-jail \
+          --name ${agentName}-agent-jail-$$ \
           ${termEnvArgs} \
           "''${mount_args[@]}" \
           ${mkAgentMountArgs agent} \
@@ -107,7 +107,7 @@ let
               ensure_docker
               docker volume create ${nvimCacheVolume} >/dev/null 2>&1 || true
               exec docker run -it --rm \
-                --name agent-jail \
+                --name agent-jail-$$ \
                 ${termEnvArgs} \
                 "''${mount_args[@]}" \
                 --volume ${nvimCacheVolume}:/var/cache/apt/archives \
