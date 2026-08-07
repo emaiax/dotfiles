@@ -17,7 +17,7 @@ A comprehensive, modular configuration management system built on [Nix][nix] tha
 - **🍺 Homebrew Integration**: Declarative Homebrew package management through Nix
 - **⚡ Development Tools**: Pre-configured CLI tools, shell environment, and development applications
 - **🎨 macOS Customization**: System appearance, dock, finder, and security settings
-- **🔄 Automated Updates**: GitHub Actions for dependency management and build validation
+- **🔄 Automated Updates**: Renovate for dependency management, Forgejo Actions for cheap checks, GitHub Actions for the aarch64-darwin build
 - **📦 Flake-based**: Modern Nix flakes for reproducible and composable configurations
 
 ## 🏗️ Architecture
@@ -76,10 +76,10 @@ dotfiles/
 │   ├── install.sh              # Automated installation script
 │   └── uninstall.sh            # Clean removal script
 │
-├── 📁 .github/                  # CI/CD and automation
-│   ├── workflows/              # GitHub Actions workflows
-│   └── dependabot.yml          # Automated dependency updates
+├── 📁 .forgejo/workflows/        # Self-hosted CI (fmt, flake check, darwin eval)
+├── 📁 .github/workflows/         # aarch64-darwin build (needs a real macOS runner)
 │
+├── renovate.json                # Dependency update automation (cross-repo, runs elsewhere)
 ├── flake.nix                   # Main Nix flake configuration
 ├── flake.lock                  # Locked dependency versions
 ├── justfile                    # Task runner commands
@@ -185,11 +185,11 @@ just ssh-keygen my-key "email@example.com"
 
 ## 🔄 Continuous Integration
 
-The repository includes automated workflows:
+Development happens on a self-hosted Forgejo instance, which push-mirrors to GitHub:
 
-- **Build Validation**: Tests configuration builds on multiple architectures
-- **Dependency Updates**: Automated updates via Dependabot
-- **Flake Checking**: Validates Nix flake integrity
+- **Forgejo (`.forgejo/workflows/fast-ci.yml`)**: `nix fmt`, `nix flake check`, and an eval-only check of the aarch64-darwin closure — cheap, runs on every push/PR
+- **GitHub (`.github/workflows/build.yml`)**: the actual aarch64-darwin build, on a real `macos-15` runner — Forgejo has no macOS runner and can't do this itself; its result is reported back to the Forgejo commit/PR via Forgejo's commit-status API
+- **Dependency Updates**: Renovate, cross-repo automation that runs from a sibling repo, not a workflow in this one
 
 ## 🗑️ Uninstallation
 

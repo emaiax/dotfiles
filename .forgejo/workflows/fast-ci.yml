@@ -1,3 +1,7 @@
+# Requires, all external to this repo (see docs/superpowers/specs/2026-08-03-ci-forgejo-cutover-design.md):
+#   - repo variable CI_IMAGE_REGISTRY = forgejo.emx.casa (Settings > Actions > Variables)
+#   - the homelab/dudumox-ci:latest image (built from emaiax/dudumox's homelab/images sibling)
+#   - /var/lib/forgejo-runner-nix-store allow-listed for the `docker` runner label
 name: fast-ci
 
 on:
@@ -13,6 +17,7 @@ concurrency:
 jobs:
   nix-checks:
     runs-on: docker
+    timeout-minutes: 15
     container:
       image: ${{ vars.CI_IMAGE_REGISTRY }}/homelab/dudumox-ci:latest
       volumes:
@@ -23,3 +28,13 @@ jobs:
       - uses: actions/checkout@v7
       - run: ./scripts/nix-locked.sh nix fmt -- --ci
       - run: ./scripts/nix-locked.sh nix flake check --show-trace
+      # Evaluates (does not build) the aarch64-darwin closure — catches module
+      # regressions (bad option types, failed assertions, missing attrs) that
+      # `nix flake check` misses on this system (only checks.aarch64-darwin
+      # exists, and `nix flake check` here only checks the current, Linux
+      # system's outputs). Verified live: this succeeds on a Linux runner
+      # with no macOS builder involved, since evaluation is architecture-
+      # independent — only *building* the closure needs the real system.
+      # Genuine build-time failures (bad fetches, hash mismatches) still only
+      # surface on GitHub's macos-15 runner; see build.yml.
+      - run: ./scripts/nix-locked.sh nix eval .#darwinConfigurations.dudupro.config.system.build.toplevel.drvPath --show-trace
