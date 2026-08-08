@@ -19,7 +19,9 @@ concurrency:
 jobs:
   relay:
     runs-on: docker
-    timeout-minutes: 30
+    # build.yml's own build job times out at 20m; this needs enough margin
+    # above that for mirror-sync + queueing lag, not a separate budget.
+    timeout-minutes: 25
     permissions:
       statuses: write
     container:
@@ -32,7 +34,7 @@ jobs:
           sha="${{ github.sha }}"
           gh_repo="emaiax/dotfiles"
           poll_interval=20
-          max_wait=1500 # 25m, under this job's own 30m timeout
+          max_wait=1260 # 21m: build.yml's own 20m timeout, plus a little slack
 
           echo "polling GitHub for a build.yml run at $sha"
 
@@ -41,17 +43,27 @@ jobs:
           run_url=""
           elapsed=0
           while [ "$elapsed" -lt "$max_wait" ]; do
-            response="$(curl -sf "https://api.github.com/repos/$gh_repo/actions/workflows/build.yml/runs?head_sha=$sha&per_page=1" || echo '{}')"
-            # node, not jq: guaranteed present in this image, jq isn't.
-            fields="$(node -e '
-              const d = JSON.parse(require("fs").readFileSync(0, "utf8"));
-              const run = d.workflow_runs && d.workflow_runs[0];
-              if (run) console.log([run.status, run.conclusion || "", run.html_url].join("|"));
-            ' <<<"$response")"
+            raw="$(curl -s -w '\n%{http_code}' "https://api.github.com/repos/$gh_repo/actions/workflows/build.yml/runs?head_sha=$sha&per_page=1")"
+            http_code="${raw##*$'\n'}"
+            body="${raw%$'\n'*}"
 
-            if [ -n "$fields" ]; then
-              IFS='|' read -r status conclusion run_url <<<"$fields"
-              [ "$status" = "completed" ] && break
+            if [ "$http_code" = "200" ]; then
+              # node, not jq: guaranteed present in this image, jq isn't.
+              fields="$(node -e '
+                const d = JSON.parse(require("fs").readFileSync(0, "utf8"));
+                const run = d.workflow_runs && d.workflow_runs[0];
+                if (run) console.log([run.status, run.conclusion || "", run.html_url].join("|"));
+              ' <<<"$body")"
+
+              if [ -n "$fields" ]; then
+                IFS='|' read -r status conclusion run_url <<<"$fields"
+                [ "$status" = "completed" ] && break
+              fi
+            else
+              # Distinct from "no matching run yet" (200, empty workflow_runs):
+              # a non-200 here (rate limit, GitHub outage, etc.) was previously
+              # silently swallowed and indistinguishable from "not found yet".
+              echo "poll attempt got HTTP $http_code from GitHub, retrying in ${poll_interval}s: $(echo "$body" | head -c 200)"
             fi
 
             sleep "$poll_interval"
@@ -66,8 +78,16 @@ jobs:
           state="failure"
           [ "$conclusion" = "success" ] && state="success"
 
-          curl -sf -X POST \
+          post_raw="$(curl -s -w '\n%{http_code}' -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d "{\"context\":\"github/build-aarch64-darwin\",\"description\":\"aarch64-darwin build\",\"state\":\"$state\",\"target_url\":\"$run_url\"}" \
-            "${{ github.server_url }}/api/v1/repos/${{ github.repository }}/statuses/$sha"
+            "${{ github.server_url }}/api/v1/repos/${{ github.repository }}/statuses/$sha")"
+          post_code="${post_raw##*$'\n'}"
+          post_body="${post_raw%$'\n'*}"
+
+          if [ "$post_code" -lt 200 ] || [ "$post_code" -ge 300 ]; then
+            echo "::error::posting status to this instance's own API failed with HTTP $post_code: $(echo "$post_body" | head -c 300)"
+            exit 1
+          fi
+          echo "posted state=$state for $sha (HTTP $post_code)"
