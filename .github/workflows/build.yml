@@ -51,23 +51,11 @@ jobs:
       # cache.nixos.org already has it substituted for the pinned nixpkgs rev.
       - run: nix build .#checks.${{ matrix.system }}.build-${{ matrix.host }}
 
-      # dotfiles' real development happens on Forgejo (this repo is only a
-      # push-mirror target) — without this, the one check GitHub can run that
-      # Forgejo structurally can't (an actual aarch64-darwin build, not just
-      # an eval) never shows up where PRs are reviewed. Uses Forgejo's own
-      # commit-status API, verified live to work and to appear combined with
-      # fast-ci's native Forgejo Actions status on the same commit/PR.
-      # continue-on-error: a broken status relay (e.g. FORGEJO_STATUS_TOKEN
-      # not set up yet) must never make this job report the build itself as
-      # failed.
-      - name: report status to Forgejo
-        if: always()
-        continue-on-error: true
-        run: |
-          state="failure"
-          if [ "${{ job.status }}" = "success" ]; then state="success"; fi
-          curl -sf -X POST \
-            -H "Authorization: token ${{ secrets.FORGEJO_STATUS_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d "{\"context\":\"github/build-aarch64-darwin\",\"description\":\"aarch64-darwin build\",\"state\":\"$state\",\"target_url\":\"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
-            "https://forgejo.emx.casa/api/v1/repos/emaiax/dotfiles/statuses/${{ github.sha }}"
+      # The status relay used to live here as a step that curl'd Forgejo's
+      # commit-status API directly. Doesn't work: forgejo.emx.casa is
+      # LAN-only, and this runner is on the public internet with no path to
+      # it — every attempt timed out (curl exit 28), silently swallowed by
+      # continue-on-error. Relay now runs from the other direction instead:
+      # .forgejo/workflows/gh-build-status.yml, on a self-hosted runner that
+      # has both outbound internet (to poll this run via GitHub's public API)
+      # and LAN access to Forgejo's own API.

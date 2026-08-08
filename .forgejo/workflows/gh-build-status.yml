@@ -1,0 +1,73 @@
+# GitHub's macos-15 runner can't reach this instance to report its own
+# build.yml result back (forgejo.emx.casa is LAN-only, not internet-exposed),
+# so this runs the relay from the other side instead: a self-hosted runner
+# here has outbound internet *and* local access to this instance's own API,
+# so it polls GitHub's (public) Actions API for the matching run and posts
+# the result to this repo's commit status itself.
+name: gh-build-status
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: gh-build-status-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  relay:
+    runs-on: docker
+    timeout-minutes: 30
+    permissions:
+      statuses: write
+    container:
+      image: ${{ vars.CI_IMAGE_REGISTRY }}/homelab/dudumox-ci:latest
+    steps:
+      - name: poll GitHub's build.yml run and relay its result here
+        run: |
+          set -euo pipefail
+
+          sha="${{ github.sha }}"
+          gh_repo="emaiax/dotfiles"
+          poll_interval=20
+          max_wait=1500 # 25m, under this job's own 30m timeout
+
+          echo "polling GitHub for a build.yml run at $sha"
+
+          status=""
+          conclusion=""
+          run_url=""
+          elapsed=0
+          while [ "$elapsed" -lt "$max_wait" ]; do
+            response="$(curl -sf "https://api.github.com/repos/$gh_repo/actions/workflows/build.yml/runs?head_sha=$sha&per_page=1" || echo '{}')"
+            # node, not jq: guaranteed present in this image, jq isn't.
+            fields="$(node -e '
+              const d = JSON.parse(require("fs").readFileSync(0, "utf8"));
+              const run = d.workflow_runs && d.workflow_runs[0];
+              if (run) console.log([run.status, run.conclusion || "", run.html_url].join("|"));
+            ' <<<"$response")"
+
+            if [ -n "$fields" ]; then
+              IFS='|' read -r status conclusion run_url <<<"$fields"
+              [ "$status" = "completed" ] && break
+            fi
+
+            sleep "$poll_interval"
+            elapsed=$((elapsed + poll_interval))
+          done
+
+          if [ "$status" != "completed" ]; then
+            echo "::error::timed out waiting for GitHub's build.yml run to complete for $sha"
+            exit 1
+          fi
+
+          state="failure"
+          [ "$conclusion" = "success" ] && state="success"
+
+          curl -sf -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"context\":\"github/build-aarch64-darwin\",\"description\":\"aarch64-darwin build\",\"state\":\"$state\",\"target_url\":\"$run_url\"}" \
+            "${{ github.server_url }}/api/v1/repos/${{ github.repository }}/statuses/$sha"
