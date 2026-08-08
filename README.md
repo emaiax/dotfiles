@@ -1,5 +1,9 @@
 # 🏠 Dotfiles
 
+[![fast-ci](https://forgejo.emx.casa/emaiax/dotfiles/badges/workflows/fast-ci.yml/badge.svg?branch=main)](https://forgejo.emx.casa/emaiax/dotfiles/actions?workflow=fast-ci.yml)
+[![gh-build-status](https://forgejo.emx.casa/emaiax/dotfiles/badges/workflows/gh-build-status.yml/badge.svg?branch=main)](https://forgejo.emx.casa/emaiax/dotfiles/actions?workflow=gh-build-status.yml)
+[![Build](https://github.com/emaiax/dotfiles/actions/workflows/build.yml/badge.svg)](https://github.com/emaiax/dotfiles/actions/workflows/build.yml)
+
 > Declarative system configuration using Nix with cross-platform support for macOS
 
 A comprehensive, modular configuration management system built on [Nix][nix] that provides:
@@ -188,7 +192,8 @@ just ssh-keygen my-key "email@example.com"
 Development happens on a self-hosted Forgejo instance, which push-mirrors to GitHub:
 
 - **Forgejo (`.forgejo/workflows/fast-ci.yml`)**: `nix fmt`, `nix flake check`, and an eval-only check of the aarch64-darwin closure — cheap, runs on every push/PR
-- **GitHub (`.github/workflows/build.yml`)**: the actual aarch64-darwin build, on a real `macos-15` runner — Forgejo has no macOS runner and can't do this itself; its result is reported back to the Forgejo commit/PR via Forgejo's commit-status API
+- **GitHub (`.github/workflows/build.yml`)**: the actual aarch64-darwin build, on a real `macos-15` runner and only on push to `main` — Forgejo has no macOS runner and can't do this itself
+- **Forgejo (`.forgejo/workflows/gh-build-status.yml`)**: relays `build.yml`'s result back onto the Forgejo commit status. The Forgejo instance is LAN-only, so GitHub's runner can't report back directly — this runs the other way instead, polling GitHub's Actions API from a self-hosted runner that has both outbound internet and local access to Forgejo's own API
 - **Dependency Updates**: Renovate, cross-repo automation that runs from a sibling repo, not a workflow in this one
 
 ## 🗑️ Uninstallation
