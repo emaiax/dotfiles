@@ -12,11 +12,17 @@
 # in dudumox (forgejo-dotfiles-ci unit); see dudumox issue #505.
 name: gh-build-status
 
+# push-only, matching build.yml's own trigger (PR #112): that workflow only
+# ever builds on a push to main, so a pull_request trigger here just burns a
+# full poll timeout waiting for a GitHub run that will never exist (observed
+# live — a PR push timed out after 17m for exactly this reason).
+# workflow_dispatch: manual re-run, e.g. after a runner-infra hiccup killed a
+# relay mid-poll (observed live: a Docker socket-proxy blip on this instance
+# killed this job and an unrelated one in the same second).
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: gh-build-status-${{ github.ref }}
