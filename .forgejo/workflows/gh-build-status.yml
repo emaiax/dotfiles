@@ -4,6 +4,12 @@
 # here has outbound internet *and* local access to this instance's own API,
 # so it polls GitHub's (public) Actions API for the matching run and posts
 # the result to this repo's commit status itself.
+#
+# GH_ACTIONS_READ_TOKEN: a fine-grained GitHub PAT (this repo only, Actions:
+# Read-only) for the poll requests below — unauthenticated GitHub API reads
+# are capped at 60 req/h *per IP*, shared with everything else on this
+# network, and were observed exhausting that quota mid-poll. Terraform-managed
+# in dudumox (forgejo-dotfiles-ci unit); see dudumox issue #505.
 name: gh-build-status
 
 on:
@@ -43,7 +49,9 @@ jobs:
           run_url=""
           elapsed=0
           while [ "$elapsed" -lt "$max_wait" ]; do
-            raw="$(curl -s -w '\n%{http_code}' "https://api.github.com/repos/$gh_repo/actions/workflows/build.yml/runs?head_sha=$sha&per_page=1")"
+            raw="$(curl -s -w '\n%{http_code}' \
+              -H "Authorization: Bearer ${{ secrets.GH_ACTIONS_READ_TOKEN }}" \
+              "https://api.github.com/repos/$gh_repo/actions/workflows/build.yml/runs?head_sha=$sha&per_page=1")"
             http_code="${raw##*$'\n'}"
             body="${raw%$'\n'*}"
 
