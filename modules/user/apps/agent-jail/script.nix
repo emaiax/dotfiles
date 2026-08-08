@@ -16,7 +16,12 @@ let
   # cached across runs so only the first `docker run` per host pays for the download
   nvimCacheVolume = "agent-jail-apt-cache";
   # the `vi` symlink is what actually fixes agents that shell out to a literal `vi`
-  nvimSetupCmd = "apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y --no-install-recommends neovim >/dev/null && ln -sf \"$(command -v nvim)\" /usr/local/bin/vi";
+  #
+  # the node:22 image has no apt-utils, so the very first `apt-get install` in
+  # any container always logs "debconf: delaying package configuration, since
+  # apt-utils is not installed" — harmless (verified: real apt errors still
+  # surface through the filter), but noisy on every launch, so it's dropped.
+  nvimSetupCmd = "{ apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y --no-install-recommends neovim >/dev/null; } 2> >(grep -v \"^debconf: delaying package configuration\" >&2) && ln -sf \"$(command -v nvim)\" /usr/local/bin/vi";
 
   mkAgentMount = { host, container }: ''--volume "${host}:${container}"'';
   mkAgentMountArgs =
@@ -39,14 +44,19 @@ let
   # the container sees no TERM/COLORTERM/TERM_PROGRAM at all, which is why
   # TUIs (Claude Code, opencode) lose color and terminal-capability-gated
   # input handling like Shift+Enter for newlines.
+  #
+  # LANG/LC_ALL are hardcoded to C.UTF-8 rather than forwarded from the host:
+  # the host's locale (e.g. en_US.UTF-8) isn't generated in the node:22 image,
+  # which only ships C, C.utf8 and POSIX (verified via `locale -a`), so
+  # forwarding it makes bash/perl warn and fall back to C anyway.
   termEnvArgs = lib.concatStringsSep " \\\n          " [
     ''-e TERM="$TERM"''
     ''-e COLORTERM="$COLORTERM"''
     ''-e TERM_PROGRAM="$TERM_PROGRAM"''
-    ''-e LANG="$LANG"''
-    ''-e LC_ALL="$LC_ALL"''
-    ''-e EDITOR=nvim''
-    ''-e VISUAL=nvim''
+    "-e LANG=C.UTF-8"
+    "-e LC_ALL=C.UTF-8"
+    "-e EDITOR=nvim"
+    "-e VISUAL=nvim"
   ];
 
   mkAssistantArm =
@@ -62,6 +72,7 @@ let
         docker volume create ${agent.cacheVolume} >/dev/null 2>&1 || true
         docker volume create ${nvimCacheVolume} >/dev/null 2>&1 || true
         exec docker run -it --rm \
+          --name ${agentName}-agent-jail-$$ \
           ${termEnvArgs} \
           "''${mount_args[@]}" \
           ${mkAgentMountArgs agent} \
@@ -96,6 +107,7 @@ let
               ensure_docker
               docker volume create ${nvimCacheVolume} >/dev/null 2>&1 || true
               exec docker run -it --rm \
+                --name agent-jail-$$ \
                 ${termEnvArgs} \
                 "''${mount_args[@]}" \
                 --volume ${nvimCacheVolume}:/var/cache/apt/archives \

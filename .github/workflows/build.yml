@@ -1,9 +1,13 @@
 name: Build
 
+# push-only: this repo's real PR review happens on Forgejo (fast-ci.yml
+# there already covers nix fmt/flake check on every push and PR). Only main
+# ever needs the one thing Forgejo structurally can't do — an actual
+# aarch64-darwin build — so a pull_request trigger here would just burn
+# GitHub Actions minutes on checks Forgejo already ran, with no PR on GitHub
+# to attach the result to anyway (nothing here opens GitHub-side PRs).
 on:
   push:
-    branches: [main]
-  pull_request:
     branches: [main]
 
 concurrency:
@@ -11,20 +15,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Arch-independent checks run once on Linux, where the Determinate
-  # tooling ships binaries (flake-checker has no x86_64-darwin build).
-  lint:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v7
-      - uses: cachix/install-nix-action@v31
-      - uses: DeterminateSystems/flake-checker-action@v13
-
-      - run: nix fmt -- --ci
-
-      - run: nix flake check --show-trace
-
   build:
     strategy:
       fail-fast: false
@@ -50,3 +40,12 @@ jobs:
       # no way to build its aarch64-linux VM image and no guarantee
       # cache.nixos.org already has it substituted for the pinned nixpkgs rev.
       - run: nix build .#checks.${{ matrix.system }}.build-${{ matrix.host }}
+
+      # The status relay used to live here as a step that curl'd Forgejo's
+      # commit-status API directly. Doesn't work: forgejo.emx.casa is
+      # LAN-only, and this runner is on the public internet with no path to
+      # it — every attempt timed out (curl exit 28), silently swallowed by
+      # continue-on-error. Relay now runs from the other direction instead:
+      # .forgejo/workflows/gh-build-status.yml, on a self-hosted runner that
+      # has both outbound internet (to poll this run via GitHub's public API)
+      # and LAN access to Forgejo's own API.
