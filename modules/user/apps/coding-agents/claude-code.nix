@@ -1,10 +1,27 @@
 { ... }:
+let
+  # Invoked through `bash` rather than executed: the home-manager module writes
+  # hooksDir files as plain symlinks, so the executable bit is not guaranteed to
+  # survive. A hook that is not executable fails silently.
+  terminalTitleHook = {
+    hooks = [
+      {
+        type = "command";
+        command = ''bash "$HOME/.claude/hooks/terminal-title.sh"'';
+      }
+    ];
+  };
+in
 {
   # Personal agent operating context, not the dotfiles project docs.
   home.file.".claude/CLAUDE.md".source = ./AGENTS.md;
 
   programs.claude-code = {
     enable = true;
+
+    # Symlinked to ~/.claude/hooks/. Wired into settings.hooks below — dropping a
+    # script here does nothing on its own.
+    hooksDir = ./claude-hooks;
 
     rules = {
       git-and-pr-conventions = ''
@@ -44,6 +61,15 @@
 
       includeCoAuthoredBy = false;
       theme = "dark";
+
+      # Keep the terminal tab labelled with the repo and branch Claude Code is
+      # working in, so a stack of tabs is readable at a glance. UserPromptSubmit
+      # covers branch switches mid-session; SessionStart covers the initial state
+      # and a resumed session.
+      hooks = {
+        UserPromptSubmit = [ terminalTitleHook ];
+        SessionStart = [ terminalTitleHook ];
+      };
 
       enabledPlugins = {
         # claude-mem: semantic memory across sessions (see claude-mem.nix).
