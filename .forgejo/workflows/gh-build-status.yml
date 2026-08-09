@@ -56,6 +56,7 @@ jobs:
 
             sleep "$poll_interval"
             elapsed=$((elapsed + poll_interval))
+            echo "waiting for status... elapsed ${elapsed}s/${max_wait}s (last seen: ${status:-none})"
           done
 
           if [ "$status" != "completed" ]; then
