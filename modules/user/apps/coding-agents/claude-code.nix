@@ -11,6 +11,17 @@ let
       }
     ];
   };
+
+  rtkHook = {
+    matcher = "Bash";
+    hooks = [
+      {
+        type = "command";
+        command = ''bash "$HOME/.claude/hooks/rtk-hook.sh"'';
+        statusMessage = "Applying rtk token-reduction filter...";
+      }
+    ];
+  };
 in
 {
   # Personal agent operating context, not the dotfiles project docs.
@@ -69,6 +80,7 @@ in
       hooks = {
         UserPromptSubmit = [ terminalTitleHook ];
         SessionStart = [ terminalTitleHook ];
+        PreToolUse = [ rtkHook ];
       };
 
       enabledPlugins = {

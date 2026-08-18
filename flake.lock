@@ -133,7 +133,24 @@
         "nix-homebrew": "nix-homebrew",
         "nix-vscode-extensions": "nix-vscode-extensions",
         "nixpkgs": "nixpkgs_2",
+        "rtk-src": "rtk-src",
         "sops-nix": "sops-nix"
+      }
+    },
+    "rtk-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1786928621,
+        "narHash": "sha256-PI9ENOoSmVaij35txrI8ytYVYcoL3bch3QsXz2fr93U=",
+        "owner": "rtk-ai",
+        "repo": "rtk",
+        "rev": "ba7a9ce0d92a46f2458b82b1fcdd000f887f651a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "rtk-ai",
+        "repo": "rtk",
+        "type": "github"
       }
     },
     "sops-nix": {
