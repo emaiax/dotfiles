@@ -21,6 +21,13 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # rtk isn't in nixpkgs; build it from upstream source, mirroring
+    # dudumox's `rtk-src` input.
+    rtk-src = {
+      url = "github:rtk-ai/rtk";
+      flake = false;
+    };
   };
 
   outputs =
