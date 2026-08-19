@@ -1,6 +1,6 @@
 { lib, ... }:
 let
-  # Shared with claude-code.nix — see gates.nix for why this list is centralised.
+  # Shared with claude-code.nix.
   gates = import ./gates.nix;
 
   # last-matching-rule-wins, evaluated in *declaration* order — Nix attrsets don't preserve that order when serialized to JSON (keys come out alphabetical), so every rule after the "*" catch-all has to be pinned with entryAfter or it can silently reorder ahead of it.
@@ -14,7 +14,7 @@ let
   };
   gateRules = builtins.listToAttrs (
     map (prefixRule "ask") gates.ask
-    # Both tiers: OpenCode has no classifier, so the soft tier has nowhere else to live and would otherwise silently vanish for this agent.
+    # Both tiers: OpenCode has no classifier for the soft tier to live in.
     ++ map (prefixRule "deny") (gates.denyHard ++ gates.denySoft)
     ++ map (exactRule "ask") gates.askExact
   );
