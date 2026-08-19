@@ -56,8 +56,16 @@ let
       PreToolUse = [ rtkHook ];
     };
 
-    # Pre-registers the marketplace so `obsidian@obsidian-skills` below resolves without an interactive `/plugin marketplace add` first.
+    # Pre-registers each third-party marketplace so its plugin below resolves without an
+    # interactive `/plugin marketplace add` first. claude-plugins-official needs no entry
+    # here — it's the built-in Anthropic marketplace, known to Claude Code by name alone.
     extraKnownMarketplaces = {
+      thedotmack = {
+        source = {
+          source = "github";
+          repo = "thedotmack/claude-mem";
+        };
+      };
       obsidian-skills = {
         source = {
           source = "github";
