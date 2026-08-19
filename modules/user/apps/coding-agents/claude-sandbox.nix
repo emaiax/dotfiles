@@ -87,6 +87,11 @@ in
     # Docker does not compose with the sandbox. Excluded commands run entirely unwrapped, so this is a hole rather than a containment.
     excludedCommands = [ "docker" ];
 
+    # Without this, `open -a <App>` fails with kLSUnknownErr ("couldn't communicate
+    # with a helper application"): the sandbox blocks the mach-lookup to
+    # RunningBoard/launchservicesd that launching another app's process requires.
+    allowAppleEvents = true;
+
     network = {
       # Without this every nix subcommand fails to reach its daemon.
       allowUnixSockets = [ "/nix/var/nix/daemon-socket/socket" ];
