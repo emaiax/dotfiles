@@ -67,17 +67,15 @@ let
       };
 
       network = {
-        # "Local only" means nothing leaves via the shell. WebSearch, WebFetch
-        # and MCP servers are in-process or separate processes and do NOT pass
-        # through the sandbox, so deep research still works — that is intended,
-        # not a gap. strictAllowlist removes the prompt fallback so an empty
-        # allowlist really means empty.
-        allowedDomains = [ ];
-        strictAllowlist = true;
+        # Deliberately NOT locked down. An earlier draft set allowedDomains = []
+        # with strictAllowlist, which broke ordinary work for no security gain:
+        # the thing to contain here is *published presence* (PRs, issue
+        # comments), and that is a permission-gate problem, not a packet
+        # problem. Cutting egress only breaks fetching things.
 
         # obsidian-cli speaks to Obsidian.app over this socket rather than over
-        # HTTP or the obsidian:// scheme, so the profile needs it even with all
-        # network denied.
+        # HTTP or the obsidian:// scheme. Unix sockets are governed separately
+        # from domains, so this entry is needed either way.
         allowUnixSockets = [ "${home}/.obsidian-cli.sock" ];
       };
     };

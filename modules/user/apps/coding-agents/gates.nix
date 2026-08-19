@@ -8,18 +8,22 @@
 # security posture. This file removes that asymmetry.
 #
 # Shaped after Claude's `permissions` block: `ask` and `deny` hold command
-# prefixes, so anything starting with the string matches. The two escape
-# hatches below exist only because a couple of rules can't be derived from a
-# prefix without widening them.
+# prefixes, so anything starting with the string matches.
 #
-# Note that under the sandbox these gates are mostly *legibility* rather than
-# security for anything network-shaped — a denied `git push` fails at the
-# network boundary anyway, but as a gate it fails with a clear reason instead
-# of a timeout. Don't grow this list to chase security; the network and
-# filesystem boundaries are the real controls.
+# ONE-WAY: these land in the user layer, and a higher-precedence layer cannot
+# loosen them. An `allow` passed via `--settings` does NOT override an `ask` or
+# `deny` from below — verified directly, both stayed blocked. So every entry
+# here binds `claude`, `claudio` and `claudio-thebot` alike, and a profile can
+# only ever add restrictions. Think twice before adding: whatever goes here is
+# the *loosest* any profile will ever be.
+#
+# What is deliberately NOT here: `git commit`. Committing is local and
+# reversible, so it stays ungated; what matters is what leaves the machine.
 {
   ask = [
-    "git commit"
+    # The moment work leaves the machine. Local commits are free; this is the
+    # gate that matters.
+    "git push"
 
     # Destructive and hard to undo — worth a beat before running.
     "git reset --hard"
@@ -30,13 +34,20 @@
     "rm -rf"
   ];
 
+  # Published presence is the operator's, not the agent's: anything that puts a
+  # visible artefact under their name on a forge is denied outright rather than
+  # asked, because approving it in the moment is exactly how it slips.
   deny = [
-    "git push"
-
     "gh pr create"
     "gh pr ready"
     "gh pr merge"
     "gh pr review"
+    "gh pr comment"
+    "gh pr close"
+    "gh issue create"
+    "gh issue edit"
+    "gh issue comment"
+    "gh release"
 
     # This repo's Forgejo equivalents of the gh gates above.
     "fj pr create"
@@ -44,6 +55,10 @@
     "fj pr review"
     "fj pr close"
     "fj pr comment"
+    "fj issue create"
+    "fj issue edit"
+    "fj issue comment"
+    "fj release"
   ];
 
   # Matched literally rather than as a prefix.

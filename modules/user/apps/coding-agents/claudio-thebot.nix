@@ -38,18 +38,9 @@ let
         allowWrite = [ publishTarget ];
       };
 
-      network = {
-        # Narrow allowlist rather than claudio's total denial: claudio-core is a
-        # GitHub remote, so fetch/status need to resolve it. Publishing still
-        # goes through the gates — `git push` is denied and `git commit` asks,
-        # from gates.nix — so reachability here is not permission to publish.
-        #
-        # Set directly rather than via a WebFetch allow rule: those leak into
-        # this same allowlist, so keeping them separate means the network scope
-        # stays legible in one place.
-        allowedDomains = [ "github.com" ];
-        strictAllowlist = true;
-      };
+      # Network is deliberately unrestricted, same as claudio: the boundary that
+      # matters for a publishing bot is which *actions* it may take, not which
+      # hosts it may reach. An allowlist here would only break fetching.
     };
   };
 
