@@ -56,18 +56,31 @@ let
       PreToolUse = [ rtkHook ];
     };
 
+    # Pre-registers the marketplace so `obsidian@obsidian-skills` below resolves without an interactive `/plugin marketplace add` first.
+    extraKnownMarketplaces = {
+      obsidian-skills = {
+        source = {
+          source = "github";
+          repo = "kepano/obsidian-skills";
+        };
+      };
+    };
+
     enabledPlugins = {
       # claude-mem: semantic memory across sessions (see claude-mem.nix).
       "claude-mem@thedotmack" = true;
       "superpowers@claude-plugins-official" = true;
+      # Obsidian Flavored Markdown, Bases, JSON Canvas and the `obsidian` CLI: https://github.com/kepano/obsidian-skills
+      "obsidian@obsidian-skills" = true;
     };
   };
 
   # config.programs.claude-code.settings, not the local claudeSettings above: claude-sandbox.nix
   # and claude-automode.nix each merge their own keys (sandbox, autoMode) into the same option,
   # and the generated file needs all of it, not just what this module contributes. Doesn't
-  # replicate the upstream module's extraKnownMarketplaces/disabledMcpjsonServers injection —
-  # this repo doesn't use marketplaces or programs.mcp, so cfg.settings alone matches today.
+  # replicate the upstream module's disabledMcpjsonServers injection — this repo doesn't use
+  # programs.mcp, so cfg.settings alone matches today. extraKnownMarketplaces is set directly
+  # in claudeSettings above, so that one does flow through here like everything else.
   claudeSettingsJson = (pkgs.formats.json { }).generate "claude-code-settings.json" (
     config.programs.claude-code.settings
     // {
