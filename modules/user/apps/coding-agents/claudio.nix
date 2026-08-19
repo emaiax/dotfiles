@@ -1,8 +1,8 @@
-# The `claudio` profile: Obsidian vault work, layered over claude-sandbox.nix via `--settings`
-# (see #121). Also used for general ~/code work now — `code/work` is the one carve-out kept
-# denied (see denyWrite below).
+# The `claudio` profile: Obsidian vault work, layered over claude-sandbox.nix via `--settings` (see #121).
 #
 # No vault path appears below on purpose. The vault is reached only through obsidian-cli, which means Obsidian.app does the file access and nothing here can scope it. Needs Obsidian running.
+#
+# Otherwise identical to the default profile: full read/write in ~/code, same ask/deny gates. This profile only adds the vault socket.
 {
   config,
   pkgs,
@@ -19,9 +19,6 @@ let
       filesystem = {
         # allowUnixSockets covers connecting, not stat'ing the path.
         allowRead = [ "${home}/.obsidian-cli.sock" ];
-
-        # `--settings` concatenates arrays, so a profile can only widen the inherited scope. denyWrite is the one exception. Everything else under ~/code inherits write access from claude-sandbox.nix's base allowWrite; this one subtree stays out of reach even from this profile.
-        denyWrite = [ "${home}/code/work" ];
       };
     };
   };
