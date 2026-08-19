@@ -5,6 +5,7 @@
 }:
 {
   imports = [
+    ./claude-automode.nix
     ./claude-code.nix
     ./claude-sandbox.nix
     ./claudio.nix
