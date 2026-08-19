@@ -64,6 +64,13 @@
   # Matched literally rather than as a prefix.
   askExact = [ "git checkout ." ];
 
+  # No allowlist here on purpose. `default` mode plus an allowlist would fence
+  # better than a blocklist, but it is unusable in this environment: `ls`, `cat`
+  # and friends are shell aliases that resolve to absolute nix store paths, and
+  # no name-based rule matches those — allowing `ls`, `lsd` and `bat` together
+  # still left every one of them blocked. The paths also change on every update.
+  # So the profiles stay in `auto` and containment comes from the denies above.
+
   # OpenCode globs where the derived `<cmd>*` would widen the rule. Deriving
   # `git checkout --` gives `git checkout --*`, which also swallows `--track`
   # and `--force`; only the pathspec form is meant.
