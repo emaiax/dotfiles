@@ -4,7 +4,7 @@
 #
 # Two ways to write a rule that silently does nothing: a trailing slash voids the entry on 2.1.222 (fixed in 2.1.224), and a glob like `$HOME/*` matches nothing and fails open.
 #
-# 2026-08-19: writes to ${home}/.claude and ${home}/Library/Application Support/rtk are denied outright despite both being allowWrite entries, on 2.1.234 — well past the 2.1.224 the previous note here blamed. That theory is disproven; the real cause is still open. sandbox-runtime's README documents allowRead/allowWrite as independent axes with no built-in coupling (https://github.com/anthropic-experimental/sandbox-runtime/blob/main/README.md), and its mandatory always-denied-write list only covers .claude/commands/ and .claude/agents/, not .claude broadly (same source) — neither explains this. Diagnose with `claude --debug` on the actual failing write before touching this again.
+# 2026-08-19: writes to ${home}/.claude and ${home}/Library/Application Support/rtk were denied outright despite both being allowWrite entries, on 2.1.234 — well past the 2.1.224 a previous note here blamed (that theory was disproven; sandbox-runtime docs describe allowRead/allowWrite as independent axes, and its mandatory always-denied-write list only covers .claude/commands/ and .claude/agents/, not .claude broadly — https://github.com/anthropic-experimental/sandbox-runtime/blob/main/README.md). Unverified hypothesis, untested against source: every allowWrite entry that worked also had allowRead covering it; these two didn't. Both are now also in allowRead below to test that. If writes still fail after this, the hypothesis is wrong and the real cause is still open.
 { config, ... }:
 let
   home = config.home.homeDirectory;
@@ -40,9 +40,13 @@ let
     "${home}/.nix-profile"
     "${home}/.nix-defexpr"
 
-    # rtk's own reference doc, not the rest of ~/.claude — that stays denied by the
-    # $HOME-wide denyRead below even though it's now writable (see allowWrite).
-    "${home}/.claude/RTK.md"
+    # Whole directory, not just RTK.md: allowWrite alone wasn't enough to make ~/.claude
+    # actually writable (see the 2026-08-19 note above), so read access is granted too.
+    # .credentials.json stays denied regardless — narrower wins for reads, same as writes.
+    "${home}/.claude"
+
+    # Same story as ~/.claude above: allowWrite alone didn't make this writable.
+    "${home}/Library/Application Support/rtk"
   ];
 
   # `commit.gpgSign = true` with `gpg.format = "ssh"` (modules/user/git/git.nix), so denying ~/.ssh outright breaks every commit. The other four private keys stay denied.
@@ -87,10 +91,17 @@ in
       # Without this every nix subcommand fails to reach its daemon.
       allowUnixSockets = [ "/nix/var/nix/daemon-socket/socket" ];
 
-      # github.com is public, so it's a plain literal here. The forgejo host
-      # is private (this repo mirrors publicly) and gets patched into
-      # settings.json at runtime instead — see claude-hooks/rtk-hook.sh.
-      allowedDomains = [ "github.com" ];
+      # github.com covers plain git-over-https; the gh CLI talks to a separate host for
+      # its REST/GraphQL API, and without it every gh command that isn't a hard deny still
+      # dies on a network-outbound block instead of reaching the permission gates in
+      # gates.nix (ask/soft_deny/hard_deny) that were meant to be what actually governs it.
+      # Both are public, so they're plain literals here. The forgejo host is private (this
+      # repo mirrors publicly) and gets patched into settings.json at runtime instead —
+      # see claude-hooks/rtk-hook.sh.
+      allowedDomains = [
+        "github.com"
+        "api.github.com"
+      ];
     };
 
     filesystem = {
