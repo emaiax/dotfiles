@@ -42,7 +42,7 @@ let
     autoMode.allow = [
       "$defaults"
 
-      "This session is the claudio-thebot publishing agent, working in ~/code/claudio-thebot/claudio-core, whose remote is github.com/claudio-thebot/claudio-core. Publishing there — opening pull requests, creating and editing issues, and commenting on them — is this agent's own purpose and posts under the claudio-thebot identity rather than the operator's, so it is exempt from the rule reserving published presence to the operator. That exemption covers this repository only; anywhere else the rule still applies."
+      "This session is a publishing agent working in ${publishTarget} and posting under its own bot identity rather than the operator's. Opening pull requests, creating and editing issues, and commenting on them are its purpose there, so the rule reserving published presence to the operator does not apply to that repository. It still applies everywhere else."
     ];
 
     sandbox = {
