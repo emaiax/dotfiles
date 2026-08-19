@@ -17,7 +17,9 @@ let
   };
   gateRules = builtins.listToAttrs (
     map (prefixRule "ask") gates.ask
-    ++ map (prefixRule "deny") gates.deny
+    # Both tiers: OpenCode has no classifier, so the soft tier has nowhere
+    # else to live and would otherwise silently vanish for this agent.
+    ++ map (prefixRule "deny") (gates.denyHard ++ gates.denySoft)
     ++ map (exactRule "ask") gates.askExact
   );
 in

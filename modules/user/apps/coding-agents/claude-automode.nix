@@ -44,5 +44,19 @@
 
       "Additional context: this machine is a personal workstation, not a shared or production host. Home lab servers run NixOS and are reached over Tailscale or the LAN."
     ];
+
+    # The counterpart of gates.nix's `denySoft`. Phrased as a category with room
+    # for an exception, because that is what a profile can override: a rule
+    # worded as absolute ("under any circumstances") was honoured as absolute
+    # and no allow entry could clear it. claudio-thebot depends on being able
+    # to clear this one.
+    #
+    # Merging and releasing are deliberately absent — those stay in
+    # permissions.deny, where nothing overrides them.
+    soft_deny = [
+      "$defaults"
+
+      "Published presence on a forge belongs to the operator, not to the agent. Opening or closing pull requests, submitting reviews, creating or editing issues, and commenting on either — on GitHub or on the Forgejo instance — are the operator's own voice under their own name, so do not do these on your own initiative. This is about authorship rather than risk: the actions are reversible, and the operator asking for one directly is enough to clear it."
+    ];
   };
 }

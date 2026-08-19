@@ -34,31 +34,46 @@
     "rm -rf"
   ];
 
-  # Published presence is the operator's, not the agent's: anything that puts a
-  # visible artefact under their name on a forge is denied outright rather than
-  # asked, because approving it in the moment is exactly how it slips.
-  deny = [
+  # Irreversible publication: merging and releasing cannot be walked back, so
+  # these stay command patterns in `permissions.deny`, which nothing overrides.
+  denyHard = [
+    "gh pr merge"
+    "gh release"
+    "fj pr merge"
+    "fj release"
+  ];
+
+  # Reversible publication — a PR or comment can be closed or deleted. Both
+  # agents deny these, but by different means, because only one of them has a
+  # classifier:
+  #
+  #   OpenCode  — rendered as command denies, same as denyHard.
+  #   Claude    — expressed as prose in claude-automode.nix's `soft_deny`, so a
+  #               profile can carve out an exception. claudio-thebot exists to
+  #               publish and needs exactly that; `permissions.deny` offers no
+  #               way to grant it.
+  #
+  # The trade is real: a soft deny also clears when you state the intent
+  # directly in conversation. That matches "publishing is mine to authorise",
+  # but it is weaker than the hard list above, which is why merge and release
+  # are not in here.
+  denySoft = [
     "gh pr create"
     "gh pr ready"
-    "gh pr merge"
     "gh pr review"
     "gh pr comment"
     "gh pr close"
     "gh issue create"
     "gh issue edit"
     "gh issue comment"
-    "gh release"
 
-    # This repo's Forgejo equivalents of the gh gates above.
     "fj pr create"
-    "fj pr merge"
     "fj pr review"
     "fj pr close"
     "fj pr comment"
     "fj issue create"
     "fj issue edit"
     "fj issue comment"
-    "fj release"
   ];
 
   # Matched literally rather than as a prefix.

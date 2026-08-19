@@ -32,6 +32,19 @@ let
   ];
 
   settings = {
+    # The whole reason the presence rules live in `soft_deny` rather than
+    # `permissions.deny`: this is the one profile whose job is publishing, and
+    # a permissions deny could not be carved out for it from here — a
+    # higher-precedence layer cannot loosen a lower one.
+    #
+    # Scoped to claudio-core specifically, and to the bot's own identity, so it
+    # does not become a general licence to post as the operator.
+    autoMode.allow = [
+      "$defaults"
+
+      "This session is the claudio-thebot publishing agent, working in ~/code/claudio-thebot/claudio-core, whose remote is github.com/claudio-thebot/claudio-core. Publishing there — opening pull requests, creating and editing issues, and commenting on them — is this agent's own purpose and posts under the claudio-thebot identity rather than the operator's, so it is exempt from the rule reserving published presence to the operator. That exemption covers this repository only; anywhere else the rule still applies."
+    ];
+
     sandbox = {
       filesystem = {
         allowRead = reads;

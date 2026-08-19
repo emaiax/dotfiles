@@ -55,7 +55,12 @@ let
     "${home}/.aws"
     "${home}/.claude/.credentials.json"
     "${home}/.config/1Password"
-    "${home}/.config/gh"
+    # hosts.yml only, not the whole directory: denying the directory stops gh
+    # from reading config.yml too, and it then fails to start at all rather
+    # than failing to authenticate — `gh` became entirely unusable, read-only
+    # commands included. Note the token being unreadable still means anything
+    # authenticated fails; that is the intended half.
+    "${home}/.config/gh/hosts.yml"
     "${home}/.config/opencode"
     "${home}/.config/sops"
     "${home}/.docker/config.json"

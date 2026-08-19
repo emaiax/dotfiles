@@ -96,7 +96,10 @@ in
         # allow rules go inert there — so these gates survive `claude-remote`
         # too. Rendered from the same list opencode.nix uses.
         ask = map prefixRule gates.ask ++ map exactRule gates.askExact;
-        deny = map prefixRule gates.deny;
+        # Only the hard tier. The reversible publication commands live in
+        # claude-automode.nix's soft_deny instead, so claudio-thebot can carve
+        # out an exception — permissions.deny offers no way to grant one.
+        deny = map prefixRule gates.denyHard;
       };
 
       # Keep the terminal tab labelled with the repo and branch Claude Code is
