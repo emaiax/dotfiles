@@ -69,9 +69,11 @@ in
       name = "claudio-thebot";
       runtimeInputs = [ config.programs.claude-code.package ];
       text = ''
-        # Dedicated empty cwd, for the same reason as claudio: cwd is writable
-        # by default, so launching from the publish target or from $HOME would
-        # widen the write scope without any visible sign.
+        # cwd is writable by default and nothing here overrides that, since
+        # this profile cannot denyWrite ~/code without losing its own target.
+        # An empty scratch directory keeps the writable set to the publish
+        # target plus somewhere that holds nothing, rather than also including
+        # whatever directory the command happened to be typed in.
         scratch="''${XDG_CACHE_HOME:-$HOME/.cache}/claudio-thebot/cwd"
         mkdir -p "$scratch"
         cd "$scratch"

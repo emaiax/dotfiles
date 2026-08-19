@@ -73,9 +73,15 @@ in
       name = "claudio";
       runtimeInputs = [ config.programs.claude-code.package ];
       text = ''
-        # cwd is writable by default, so it has to be a dedicated empty dir:
-        # launching from a repo would expose that repo, and from $HOME the
-        # whole home directory. Both were verified to widen the scope silently.
+        # cwd is writable by default and only an explicit denyWrite overrides
+        # that. The rule above already covers ~/code, so launching from a repo
+        # there is safe — but nowhere else in $HOME is covered, and launching
+        # from, say, ~/Documents would quietly make that directory writable.
+        # Verified: a write in cwd succeeds under an uncovered path and is
+        # denied under ~/code.
+        #
+        # Forcing an empty scratch directory means the only writable place is
+        # one that holds nothing, whatever directory the command was typed in.
         scratch="''${XDG_CACHE_HOME:-$HOME/.cache}/claudio/cwd"
         mkdir -p "$scratch"
         cd "$scratch"
