@@ -7,11 +7,19 @@ let
   # don't preserve that order when serialized to JSON (keys come out
   # alphabetical), so every rule after the "*" catch-all has to be pinned with
   # entryAfter or it can silently reorder ahead of it.
-  renderGate = g: {
-    name = g.opencodePattern or (if g.exact or false then g.cmd else "${g.cmd}*");
-    value = lib.hm.dag.entryAfter [ "*" ] g.action;
+  prefixRule = action: cmd: {
+    name = gates.opencodePatterns.${cmd} or "${cmd}*";
+    value = lib.hm.dag.entryAfter [ "*" ] action;
   };
-  gateRules = builtins.listToAttrs (map renderGate gates);
+  exactRule = action: cmd: {
+    name = cmd;
+    value = lib.hm.dag.entryAfter [ "*" ] action;
+  };
+  gateRules = builtins.listToAttrs (
+    map (prefixRule "ask") gates.ask
+    ++ map (prefixRule "deny") gates.deny
+    ++ map (exactRule "ask") gates.askExact
+  );
 in
 {
   programs.opencode = {

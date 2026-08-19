@@ -5,8 +5,8 @@ let
 
   # Claude's Bash rules are prefix matches: `Bash(git push:*)` covers any
   # arguments, `Bash(git checkout .)` matches only that literal invocation.
-  renderGate = g: if g.exact or false then "Bash(${g.cmd})" else "Bash(${g.cmd}:*)";
-  gatesWith = action: map renderGate (builtins.filter (g: g.action == action) gates);
+  prefixRule = cmd: "Bash(${cmd}:*)";
+  exactRule = cmd: "Bash(${cmd})";
 
   # Invoked through `bash` rather than executed: the home-manager module writes
   # hooksDir files as plain symlinks, so the executable bit is not guaranteed to
@@ -95,8 +95,8 @@ in
         # Deny rules hold in every mode, including `bypassPermissions` — only
         # allow rules go inert there — so these gates survive `claude-remote`
         # too. Rendered from the same list opencode.nix uses.
-        ask = gatesWith "ask";
-        deny = gatesWith "deny";
+        ask = map prefixRule gates.ask ++ map exactRule gates.askExact;
+        deny = map prefixRule gates.deny;
       };
 
       # Keep the terminal tab labelled with the repo and branch Claude Code is

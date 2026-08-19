@@ -7,97 +7,52 @@
 # in one agent and prose-only in the other. Switching agents silently changed
 # security posture. This file removes that asymmetry.
 #
-# `cmd` is the command prefix. `exact = true` means match only that literal
-# invocation; otherwise anything starting with `cmd` matches. `opencodePattern`
-# overrides the derived glob where OpenCode's syntax needs a shape the generic
-# derivation would widen — see `git checkout --` below.
+# Shaped after Claude's `permissions` block: `ask` and `deny` hold command
+# prefixes, so anything starting with the string matches. The two escape
+# hatches below exist only because a couple of rules can't be derived from a
+# prefix without widening them.
 #
 # Note that under the sandbox these gates are mostly *legibility* rather than
 # security for anything network-shaped — a denied `git push` fails at the
-# network boundary anyway, but as a gate it fails with a clear reason instead of
-# a timeout. Don't grow the pattern list to chase security; the network and
+# network boundary anyway, but as a gate it fails with a clear reason instead
+# of a timeout. Don't grow this list to chase security; the network and
 # filesystem boundaries are the real controls.
-[
-  # Anything that publishes, or that I have to approve per my own rules.
-  {
-    cmd = "git commit";
-    action = "ask";
-  }
-  {
-    cmd = "git push";
-    action = "deny";
-  }
+{
+  ask = [
+    "git commit"
 
-  {
-    cmd = "gh pr create";
-    action = "deny";
-  }
-  {
-    cmd = "gh pr ready";
-    action = "deny";
-  }
-  {
-    cmd = "gh pr merge";
-    action = "deny";
-  }
-  {
-    cmd = "gh pr review";
-    action = "deny";
-  }
+    # Destructive and hard to undo — worth a beat before running.
+    "git reset --hard"
+    "git checkout --"
+    "git restore"
+    "git clean"
+    "git rebase"
+    "rm -rf"
+  ];
 
-  # This repo's Forgejo equivalents of the gh gates above.
-  {
-    cmd = "fj pr create";
-    action = "deny";
-  }
-  {
-    cmd = "fj pr merge";
-    action = "deny";
-  }
-  {
-    cmd = "fj pr review";
-    action = "deny";
-  }
-  {
-    cmd = "fj pr close";
-    action = "deny";
-  }
-  {
-    cmd = "fj pr comment";
-    action = "deny";
-  }
+  deny = [
+    "git push"
 
-  # Destructive and hard to undo — worth a beat before running.
-  {
-    cmd = "git reset --hard";
-    action = "ask";
-  }
-  {
-    cmd = "git checkout --";
-    action = "ask";
-    # Deriving this would give `git checkout --*`, which also swallows
-    # `--track`, `--force` and friends. Only the pathspec form is meant here.
-    opencodePattern = "git checkout -- *";
-  }
-  {
-    cmd = "git checkout .";
-    action = "ask";
-    exact = true;
-  }
-  {
-    cmd = "git restore";
-    action = "ask";
-  }
-  {
-    cmd = "git clean";
-    action = "ask";
-  }
-  {
-    cmd = "git rebase";
-    action = "ask";
-  }
-  {
-    cmd = "rm -rf";
-    action = "ask";
-  }
-]
+    "gh pr create"
+    "gh pr ready"
+    "gh pr merge"
+    "gh pr review"
+
+    # This repo's Forgejo equivalents of the gh gates above.
+    "fj pr create"
+    "fj pr merge"
+    "fj pr review"
+    "fj pr close"
+    "fj pr comment"
+  ];
+
+  # Matched literally rather than as a prefix.
+  askExact = [ "git checkout ." ];
+
+  # OpenCode globs where the derived `<cmd>*` would widen the rule. Deriving
+  # `git checkout --` gives `git checkout --*`, which also swallows `--track`
+  # and `--force`; only the pathspec form is meant.
+  opencodePatterns = {
+    "git checkout --" = "git checkout -- *";
+  };
+}

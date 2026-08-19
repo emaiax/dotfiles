@@ -8,6 +8,7 @@
     ./claude-code.nix
     ./claude-sandbox.nix
     ./claudio.nix
+    ./claudio-thebot.nix
     ./opencode.nix
   ];
 
