@@ -5,12 +5,43 @@
   ...
 }:
 let
+  home = config.home.homeDirectory;
+
   # Shared with opencode.nix.
   gates = import ./gates.nix;
 
   # `Bash(x:*)` matches any arguments; `Bash(x)` matches only that literal invocation.
   prefixRule = cmd: "Bash(${cmd}:*)";
   exactRule = cmd: "Bash(${cmd})";
+
+  # The other half of the credential policy (see #126): sandbox.filesystem.denyRead/denyWrite in
+  # claude-sandbox.nix only confines the Bash subprocess. Read and Edit go through the permission
+  # system instead, and Claude Code only consults Edit(path)/Read(path) rules — a Write(path) rule
+  # is accepted but silently never checked, so Edit covers Write too here.
+  #
+  # `//path` is filesystem-root-absolute; a bare `/path` would anchor at the settings source
+  # instead and match nothing. Directories need a `/**` suffix to reach files nested inside; a
+  # bare file path doesn't.
+  credentialPaths = import ./credential-paths.nix home;
+  absRule = path: lib.removePrefix "/" path;
+  fileDenyRules = path: [
+    "Read(//${absRule path})"
+    "Edit(//${absRule path})"
+  ];
+  dirDenyRules = path: [
+    "Read(//${absRule path}/**)"
+    "Edit(//${absRule path}/**)"
+  ];
+  credentialDenyRules =
+    lib.concatMap fileDenyRules (
+      credentialPaths.files
+      ++ [
+        # Same reasoning as the sandbox half: the only credentialDenies entry nested under a
+        # readable/writable directory, so the only one a sibling .bak could ride in on.
+        "${home}/.claude/.credentials.json.bak"
+      ]
+    )
+    ++ lib.concatMap dirDenyRules credentialPaths.dirs;
 
   # Invoked through `bash` rather than executed: the home-manager module writes hooksDir files as plain symlinks, so the executable bit is not guaranteed to survive. A hook that is not executable fails silently.
   terminalTitleHook = {
@@ -45,8 +76,9 @@ let
 
       # These hold in every mode, unlike allow rules and unlike autoMode.
       ask = map prefixRule gates.ask ++ map exactRule gates.askExact;
-      # Hard tier only; the reversible ones are soft_deny in claude-automode.nix.
-      deny = map prefixRule gates.denyHard;
+      # Hard tier only; the reversible ones are soft_deny in claude-automode.nix. credentialDenyRules
+      # is the Read/Edit half of the credential policy — see its definition above.
+      deny = map prefixRule gates.denyHard ++ credentialDenyRules;
     };
 
     # Keep the terminal tab labelled with the repo and branch Claude Code is working in, so a stack of tabs is readable at a glance. UserPromptSubmit covers branch switches mid-session; SessionStart covers the initial state and a resumed session.

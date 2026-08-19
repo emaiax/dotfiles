@@ -1,6 +1,6 @@
 # Default sandbox layer for every Claude Code session (see #121).
 #
-# Confines Bash and its children only. Read/Edit/Write go through the permission system, so a path policy covering both has to be written twice; this is the Bash half. Profiles layer on top via `--settings`, which merges, so they inherit every deny here.
+# Confines Bash and its children only. Read/Edit/Write go through the permission system instead — that's the other half of the credential policy, in claude-code.nix's permissions.deny, both halves built from credential-paths.nix so they can't drift apart (see #126). Profiles layer on top via `--settings`, which merges, so they inherit every deny here.
 #
 # Two ways to write a rule that silently does nothing: a trailing slash voids the entry on 2.1.222 (fixed in 2.1.224), and a glob like `$HOME/*` matches nothing and fails open.
 #
@@ -59,20 +59,8 @@ let
   ];
 
   # Nested inside the allowRead trees above, which works because reads honour narrower-wins. Writes do not: denyWrite beats allowWrite unconditionally, so never pair the two.
-  credentialDenies = [
-    "${home}/.aws"
-    "${home}/.claude/.credentials.json"
-    "${home}/.config/1Password"
-    "${home}/.config/sops"
-
-    # Deny the credential file, never the config directory around it: denying ~/.config/gh stopped gh starting at all, and ~/.config/opencode holds only config while opencode keeps its tokens under ~/.local/share.
-    "${home}/.local/share/opencode/auth.json"
-    "${home}/.local/share/opencode/mcp-auth.json"
-    "${home}/.docker/config.json"
-    "${home}/.gnupg"
-    "${home}/.netrc"
-    "${home}/.npmrc"
-  ];
+  credentialPaths = import ./credential-paths.nix home;
+  credentialDenies = credentialPaths.dirs ++ credentialPaths.files;
 in
 {
   programs.claude-code.settings.sandbox = {
@@ -111,7 +99,10 @@ in
 
     filesystem = {
       # Reads are allow-everything by default upstream. Denying $HOME and allowing back the toolchain recovers most of what agent-jail gave.
-      denyRead = [ home ] ++ credentialDenies;
+      # .credentials.json.bak: same reasoning as the denyWrite carve-out below — the only
+      # credentialDenies entry nested under an allowRead path, so the only one a sibling .bak
+      # could ride the reallow back in on.
+      denyRead = [ home ] ++ credentialDenies ++ [ "${home}/.claude/.credentials.json.bak" ];
       allowRead = toolchainReads ++ nixReads ++ sshSigningReads;
 
       # Writes are already deny-by-default, and cwd is writable implicitly. Package managers need to write where they install.
@@ -135,9 +126,13 @@ in
       ];
 
       # denyWrite beats allowWrite unconditionally (see credentialDenies above) — this
-      # is that same carve-out for writes, needed now that ~/.claude is allowWrite.
+      # is that same carve-out for writes, needed now that ~/.claude is allowWrite. Only
+      # .credentials.json needs this: it's the only credentialDenies entry nested under an
+      # allowWrite path, so it's the only one a sibling .bak (e.g. home-manager's
+      # backupFileExtension) could smuggle onto the same allowWrite grant (see #126).
       denyWrite = [
         "${home}/.claude/.credentials.json"
+        "${home}/.claude/.credentials.json.bak"
       ];
     };
   };
