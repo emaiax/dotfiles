@@ -39,6 +39,10 @@ let
     "${home}/.terraform.d"
     "${home}/.nix-profile"
     "${home}/.nix-defexpr"
+
+    # rtk's own reference doc, not the rest of ~/.claude — that stays denied by the
+    # $HOME-wide denyRead below even though it's now writable (see allowWrite).
+    "${home}/.claude/RTK.md"
   ];
 
   # `commit.gpgSign = true` with `gpg.format = "ssh"` (modules/user/git/git.nix), so denying ~/.ssh outright breaks every commit. The other four private keys stay denied.
