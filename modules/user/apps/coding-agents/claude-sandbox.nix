@@ -25,8 +25,14 @@ let
     "${home}/.local/state/nix"
   ];
 
-  # treefmt (what `nix fmt` runs) caches under the macOS-native location, not
-  # XDG — missing this is what made `nix fmt` the last command to go green.
+  # Denying all of $HOME and allowing back a short list turned out to cost far
+  # more than expected: language toolchains live scattered across dotfiles at
+  # the top level, so `npm` disappeared behind an unreadable ~/.asdf shim and
+  # took every asdf-managed runtime with it. What is worth denying is personal
+  # data — Documents, the vaults, other people's things — not the toolchain.
+  #
+  # treefmt (what `nix fmt` runs) caches under the macOS-native location rather
+  # than XDG, which is why Library/Caches is here.
   toolchainReads = [
     "${home}/code"
     "${home}/.cache"
@@ -34,6 +40,23 @@ let
     "${home}/.local"
     "${home}/Library/Caches"
     "${home}/.gitconfig"
+
+    # Shell startup: the Bash tool runs commands through the login shell.
+    "${home}/.zshrc"
+    "${home}/.zshenv"
+
+    # Runtime and package managers, and where they put their binaries.
+    "${home}/.asdf"
+    "${home}/.bun"
+    "${home}/.npm"
+    "${home}/.gem"
+    "${home}/.bundle"
+    "${home}/.mix"
+    "${home}/.hex"
+    "${home}/go"
+    "${home}/.terraform.d"
+    "${home}/.nix-profile"
+    "${home}/.nix-defexpr"
   ];
 
   # `commit.gpgSign = true` with `gpg.format = "ssh"` (modules/user/git/git.nix)
@@ -55,12 +78,6 @@ let
     "${home}/.aws"
     "${home}/.claude/.credentials.json"
     "${home}/.config/1Password"
-    # hosts.yml only, not the whole directory: denying the directory stops gh
-    # from reading config.yml too, and it then fails to start at all rather
-    # than failing to authenticate — `gh` became entirely unusable, read-only
-    # commands included. Note the token being unreadable still means anything
-    # authenticated fails; that is the intended half.
-    "${home}/.config/gh/hosts.yml"
     "${home}/.config/opencode"
     "${home}/.config/sops"
     "${home}/.docker/config.json"
@@ -107,6 +124,15 @@ in
         "${home}/.cache"
         "${home}/.local/state"
         "${home}/Library/Caches"
+
+        # Package managers write here as a matter of course — installs, shims,
+        # lockfile caches. Read-only would break them just as thoroughly as
+        # denying them outright.
+        "${home}/.asdf"
+        "${home}/.bun"
+        "${home}/.npm"
+        "${home}/.gem"
+        "${home}/go"
       ];
     };
   };
