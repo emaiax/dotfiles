@@ -32,3 +32,5 @@ Hard rules are absolute: violating one is a failure, not a judgment call. Everyt
 
 - macOS locally, Linux (NixOS) on homelab servers. Never cross their tooling assumptions.
 - Stack: nix-darwin + home-manager (flakes), nix-homebrew for casks.
+
+@RTK.md
