@@ -6,6 +6,7 @@
 {
   imports = [
     ./claude-code.nix
+    ./claude-sandbox.nix
     ./opencode.nix
   ];
 

@@ -38,7 +38,14 @@ in
       j = "just"; # just: task runner
 
       # claude: claude ai
-      claude-trust = "claude --dangerously-skip-permissions";
+      #
+      # Was `claude --dangerously-skip-permissions`, which upstream documents as
+      # requiring an outer boundary (container, VM, or the sandbox runtime) —
+      # the Bash-only Seatbelt sandbox explicitly does not satisfy that, and it
+      # ran with no boundary at all. Plain `claude` now carries the sandbox and
+      # auto mode (see coding-agents/claude-sandbox.nix), so this alias is kept
+      # only so muscle memory lands on the safe path instead of erroring.
+      claude-trust = "claude";
       claude-remote = "claude remote-control --permission-mode bypassPermissions --name \"$(basename $PWD)\"";
 
       # claude-mem: semantic memory across sessions (see claude-mem.nix)
