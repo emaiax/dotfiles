@@ -53,8 +53,11 @@ let
     "${home}/.aws"
     "${home}/.claude/.credentials.json"
     "${home}/.config/1Password"
-    "${home}/.config/opencode"
     "${home}/.config/sops"
+
+    # Deny the credential file, never the config directory around it: denying ~/.config/gh stopped gh starting at all, and ~/.config/opencode holds only config while opencode keeps its tokens under ~/.local/share.
+    "${home}/.local/share/opencode/auth.json"
+    "${home}/.local/share/opencode/mcp-auth.json"
     "${home}/.docker/config.json"
     "${home}/.gnupg"
     "${home}/.netrc"
