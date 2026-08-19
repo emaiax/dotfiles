@@ -34,11 +34,6 @@ in
       name = "claudio";
       runtimeInputs = [ config.programs.claude-code.package ];
       text = ''
-        # cwd is always writable, so launching from anywhere in $HOME that no denyWrite covers would quietly make that directory writable. An empty scratch dir is the fix.
-        scratch="''${XDG_CACHE_HOME:-$HOME/.cache}/claudio/cwd"
-        mkdir -p "$scratch"
-        cd "$scratch"
-
         exec claude --settings ${settingsFile} "$@"
       '';
     })
