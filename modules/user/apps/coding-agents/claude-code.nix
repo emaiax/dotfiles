@@ -3,14 +3,11 @@ let
   # Shared with opencode.nix — see gates.nix for why this list is centralised.
   gates = import ./gates.nix;
 
-  # Claude's Bash rules are prefix matches: `Bash(git push:*)` covers any
-  # arguments, `Bash(git checkout .)` matches only that literal invocation.
+  # Claude's Bash rules are prefix matches: `Bash(git push:*)` covers any arguments, `Bash(git checkout .)` matches only that literal invocation.
   prefixRule = cmd: "Bash(${cmd}:*)";
   exactRule = cmd: "Bash(${cmd})";
 
-  # Invoked through `bash` rather than executed: the home-manager module writes
-  # hooksDir files as plain symlinks, so the executable bit is not guaranteed to
-  # survive. A hook that is not executable fails silently.
+  # Invoked through `bash` rather than executed: the home-manager module writes hooksDir files as plain symlinks, so the executable bit is not guaranteed to survive. A hook that is not executable fails silently.
   terminalTitleHook = {
     hooks = [
       {
@@ -38,8 +35,7 @@ in
   programs.claude-code = {
     enable = true;
 
-    # Symlinked to ~/.claude/hooks/. Wired into settings.hooks below — dropping a
-    # script here does nothing on its own.
+    # Symlinked to ~/.claude/hooks/. Wired into settings.hooks below — dropping a script here does nothing on its own.
     hooksDir = ./claude-hooks;
 
     rules = {
@@ -82,30 +78,16 @@ in
       theme = "dark";
 
       permissions = {
-        # `auto` replaces the human prompt with a classifier that reviews each
-        # non-trivial action. Chosen over `bypassPermissions` for two reasons
-        # beyond the obvious: entering auto mode *drops* broad allow rules that
-        # grant arbitrary code execution (`Bash(*)`, `Bash(python*)`, package
-        # runners) and restores them on exit, so a careless allow in some repo's
-        # committed settings can't escalate; and the classifier never sees tool
-        # results, so hostile content in a file or web page can't address it.
-        # See issue #121 for the full comparison against today's `claude-trust`.
+        # `auto` replaces the human prompt with a classifier that reviews each non-trivial action. Chosen over `bypassPermissions` for two reasons beyond the obvious: entering auto mode *drops* broad allow rules that grant arbitrary code execution (`Bash(*)`, `Bash(python*)`, package runners) and restores them on exit, so a careless allow in some repo's committed settings can't escalate; and the classifier never sees tool results, so hostile content in a file or web page can't address it. See issue #121 for the full comparison against today's `claude-trust`.
         defaultMode = "auto";
 
-        # Deny rules hold in every mode, including `bypassPermissions` — only
-        # allow rules go inert there — so these gates survive `claude-remote`
-        # too. Rendered from the same list opencode.nix uses.
+        # Deny rules hold in every mode, including `bypassPermissions` — only allow rules go inert there — so these gates survive `claude-remote` too. Rendered from the same list opencode.nix uses.
         ask = map prefixRule gates.ask ++ map exactRule gates.askExact;
-        # Only the hard tier. The reversible publication commands live in
-        # claude-automode.nix's soft_deny instead, so claudio-thebot can carve
-        # out an exception — permissions.deny offers no way to grant one.
+        # Only the hard tier. The reversible publication commands live in claude-automode.nix's soft_deny instead, so claudio-thebot can carve out an exception — permissions.deny offers no way to grant one.
         deny = map prefixRule gates.denyHard;
       };
 
-      # Keep the terminal tab labelled with the repo and branch Claude Code is
-      # working in, so a stack of tabs is readable at a glance. UserPromptSubmit
-      # covers branch switches mid-session; SessionStart covers the initial state
-      # and a resumed session.
+      # Keep the terminal tab labelled with the repo and branch Claude Code is working in, so a stack of tabs is readable at a glance. UserPromptSubmit covers branch switches mid-session; SessionStart covers the initial state and a resumed session.
       hooks = {
         UserPromptSubmit = [ terminalTitleHook ];
         SessionStart = [ terminalTitleHook ];

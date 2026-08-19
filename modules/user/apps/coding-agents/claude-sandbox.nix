@@ -1,38 +1,23 @@
 # Default sandbox layer for every Claude Code session (see issue #121).
 #
-# Replaces the `claude-trust` posture (`claude --dangerously-skip-permissions`,
-# no boundary at all) with Seatbelt confinement plus a deny-by-default read
-# scope. Named profiles land on top of this via `--settings`, which merges
-# rather than replaces, so they inherit every deny below.
+# Replaces the `claude-trust` posture (`claude --dangerously-skip-permissions`, no boundary at all) with Seatbelt confinement plus a deny-by-default read scope. Named profiles land on top of this via `--settings`, which merges rather than replaces, so they inherit every deny below.
 #
-# Only Bash and its child processes are confined; Read/Edit/Write go through the
-# permission system instead. Any path policy that must cover both has to be
-# written twice — this file is the Bash half.
+# Only Bash and its child processes are confined; Read/Edit/Write go through the permission system instead. Any path policy that must cover both has to be written twice — this file is the Bash half.
 #
-# Every path is absolute and carries NO trailing slash: on 2.1.222 a trailing
-# slash silently voids the entry (fixed upstream in 2.1.224). Globs are worse
-# than useless here — `denyRead = [ "$HOME/*" ]` matches nothing and fails
-# *open*, verified live on this machine.
+# Every path is absolute and carries NO trailing slash: on 2.1.222 a trailing slash silently voids the entry (fixed upstream in 2.1.224). Globs are worse than useless here — `denyRead = [ "$HOME/*" ]` matches nothing and fails *open*, verified live on this machine.
 { config, ... }:
 let
   home = config.home.homeDirectory;
 
-  # Nix is the whole point of this repo and breaks in three separate ways under
-  # the sandbox: the fetcher cache, the eval/state dirs, and the daemon socket.
-  # All three were found by running `nix eval` until it stopped erroring.
+  # Nix is the whole point of this repo and breaks in three separate ways under the sandbox: the fetcher cache, the eval/state dirs, and the daemon socket. All three were found by running `nix eval` until it stopped erroring.
   nixReads = [
     "${home}/.cache/nix"
     "${home}/.local/state/nix"
   ];
 
-  # Denying all of $HOME and allowing back a short list turned out to cost far
-  # more than expected: language toolchains live scattered across dotfiles at
-  # the top level, so `npm` disappeared behind an unreadable ~/.asdf shim and
-  # took every asdf-managed runtime with it. What is worth denying is personal
-  # data — Documents, the vaults, other people's things — not the toolchain.
+  # Denying all of $HOME and allowing back a short list turned out to cost far more than expected: language toolchains live scattered across dotfiles at the top level, so `npm` disappeared behind an unreadable ~/.asdf shim and took every asdf-managed runtime with it. What is worth denying is personal data — Documents, the vaults, other people's things — not the toolchain.
   #
-  # treefmt (what `nix fmt` runs) caches under the macOS-native location rather
-  # than XDG, which is why Library/Caches is here.
+  # treefmt (what `nix fmt` runs) caches under the macOS-native location rather than XDG, which is why Library/Caches is here.
   toolchainReads = [
     "${home}/code"
     "${home}/.cache"
@@ -59,10 +44,7 @@ let
     "${home}/.nix-defexpr"
   ];
 
-  # `commit.gpgSign = true` with `gpg.format = "ssh"` (modules/user/git/git.nix)
-  # means denying ~/.ssh outright breaks every commit the agent makes. Allow the
-  # signing key and the connection plumbing by name; the other four private keys
-  # (claudio-codes, homelab_id_ed25519, id_ed25519, workM137516) stay denied.
+  # `commit.gpgSign = true` with `gpg.format = "ssh"` (modules/user/git/git.nix) means denying ~/.ssh outright breaks every commit the agent makes. Allow the signing key and the connection plumbing by name; the other four private keys (claudio-codes, homelab_id_ed25519, id_ed25519, workM137516) stay denied.
   sshSigningReads = [
     "${home}/.ssh/allowed_signers"
     "${home}/.ssh/config"
@@ -71,9 +53,7 @@ let
     "${home}/.ssh/known_hosts"
   ];
 
-  # Carved back out of the allowRead entries above — reads honour narrower-wins,
-  # so a nested deny inside an allowed tree holds. (Writes do NOT work this way:
-  # denyWrite beats allowWrite unconditionally, so never pair the two.)
+  # Carved back out of the allowRead entries above — reads honour narrower-wins, so a nested deny inside an allowed tree holds. (Writes do NOT work this way: denyWrite beats allowWrite unconditionally, so never pair the two.)
   credentialDenies = [
     "${home}/.aws"
     "${home}/.claude/.credentials.json"
@@ -90,44 +70,34 @@ in
   programs.claude-code.settings.sandbox = {
     enabled = true;
 
-    # Without these two the boundary is advisory: Claude may otherwise retry a
-    # blocked command unsandboxed, or silently continue if Seatbelt is missing.
+    # Without these two the boundary is advisory: Claude may otherwise retry a blocked command unsandboxed, or silently continue if Seatbelt is missing.
     allowUnsandboxedCommands = false;
     failIfUnavailable = true;
 
-    # Sandboxed Bash is already OS-confined, so re-asking per command buys
-    # nothing but friction.
+    # Sandboxed Bash is already OS-confined, so re-asking per command buys nothing but friction.
     autoAllowBashIfSandboxed = true;
 
-    # Docker and the sandbox do not compose (upstream states this outright).
-    # Excluded commands run entirely unwrapped — no Seatbelt, no network fence —
-    # so this is a hole in the boundary, not a containment of it.
+    # Docker and the sandbox do not compose (upstream states this outright). Excluded commands run entirely unwrapped — no Seatbelt, no network fence — so this is a hole in the boundary, not a containment of it.
     excludedCommands = [ "docker" ];
 
     network = {
-      # `nix` talks to its daemon over this socket; without it every nix
-      # subcommand fails with "cannot connect to socket".
+      # `nix` talks to its daemon over this socket; without it every nix subcommand fails with "cannot connect to socket".
       allowUnixSockets = [ "/nix/var/nix/daemon-socket/socket" ];
     };
 
     filesystem = {
-      # Reads are allow-everything-by-default upstream, which is how the jail's
-      # deny-by-default property was lost. Denying $HOME wholesale and allowing
-      # back only what the toolchain needs recovers most of it.
+      # Reads are allow-everything-by-default upstream, which is how the jail's deny-by-default property was lost. Denying $HOME wholesale and allowing back only what the toolchain needs recovers most of it.
       denyRead = [ home ] ++ credentialDenies;
       allowRead = toolchainReads ++ nixReads ++ sshSigningReads;
 
-      # Writes are already deny-by-default; these are the dirs the toolchain
-      # needs to mutate. cwd is writable implicitly and is NOT listed here.
+      # Writes are already deny-by-default; these are the dirs the toolchain needs to mutate. cwd is writable implicitly and is NOT listed here.
       allowWrite = [
         "${home}/code"
         "${home}/.cache"
         "${home}/.local/state"
         "${home}/Library/Caches"
 
-        # Package managers write here as a matter of course — installs, shims,
-        # lockfile caches. Read-only would break them just as thoroughly as
-        # denying them outright.
+        # Package managers write here as a matter of course — installs, shims, lockfile caches. Read-only would break them just as thoroughly as denying them outright.
         "${home}/.asdf"
         "${home}/.bun"
         "${home}/.npm"

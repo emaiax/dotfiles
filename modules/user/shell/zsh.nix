@@ -39,13 +39,7 @@ in
 
       # claude: aliases dropped in favour of the profiles.
       #
-      # `claude-trust` was `claude --dangerously-skip-permissions`, which
-      # upstream documents as requiring an outer boundary (container, VM, or the
-      # sandbox runtime) and which ran with none; plain `claude` now carries the
-      # sandbox and auto mode. `claude-remote` pinned bypassPermissions on top
-      # of `claude remote-control` — that subcommand still exists, it just isn't
-      # aliased to a weaker posture any more.
-      # See coding-agents/claude-sandbox.nix and issue #121.
+      # `claude-trust` was `claude --dangerously-skip-permissions`, which upstream documents as requiring an outer boundary (container, VM, or the sandbox runtime) and which ran with none; plain `claude` now carries the sandbox and auto mode. `claude-remote` pinned bypassPermissions on top of `claude remote-control` — that subcommand still exists, it just isn't aliased to a weaker posture any more. See coding-agents/claude-sandbox.nix and issue #121.
 
       # claude-mem: semantic memory across sessions (see claude-mem.nix)
       claude-mem = "bun \"$(ls -dt ~/.claude/plugins/cache/thedotmack/claude-mem/*/scripts/worker-service.cjs 2>/dev/null | head -1)\"";
