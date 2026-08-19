@@ -20,6 +20,13 @@
 #
 # Note the classifier deliberately does NOT read autoMode from a repo's
 # .claude/settings.json, so a checked-in repo cannot widen its own trust.
+#
+# Everything here applies to every session — this is the user layer — but ONLY
+# while that session is in auto mode. Outside it the classifier is never
+# consulted and the whole block stops applying: verified by running the same
+# command under both modes, blocked in `auto` and straight through under
+# `bypassPermissions`. `permissions.deny` has no such condition, which is the
+# other reason merge and release live there rather than here.
 {
   programs.claude-code.settings.autoMode = {
     # Without this the classifier trusts only the working directory and the
