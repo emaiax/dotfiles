@@ -37,9 +37,7 @@ in
       cat = "bat -pp"; # bat: cat on steroids
       j = "just"; # just: task runner
 
-      # claude: claude ai
-      claude-trust = "claude --dangerously-skip-permissions";
-      claude-remote = "claude remote-control --permission-mode bypassPermissions --name \"$(basename $PWD)\"";
+      # claude: `claude-trust` and `claude-remote` dropped, both pinned a weaker posture than the default now provides. See coding-agents/claude-sandbox.nix.
 
       # claude-mem: semantic memory across sessions (see claude-mem.nix)
       claude-mem = "bun \"$(ls -dt ~/.claude/plugins/cache/thedotmack/claude-mem/*/scripts/worker-service.cjs 2>/dev/null | head -1)\"";

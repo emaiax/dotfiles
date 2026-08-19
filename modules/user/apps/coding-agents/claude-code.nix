@@ -1,8 +1,13 @@
-{ ... }:
+{ lib, ... }:
 let
-  # Invoked through `bash` rather than executed: the home-manager module writes
-  # hooksDir files as plain symlinks, so the executable bit is not guaranteed to
-  # survive. A hook that is not executable fails silently.
+  # Shared with opencode.nix.
+  gates = import ./gates.nix;
+
+  # `Bash(x:*)` matches any arguments; `Bash(x)` matches only that literal invocation.
+  prefixRule = cmd: "Bash(${cmd}:*)";
+  exactRule = cmd: "Bash(${cmd})";
+
+  # Invoked through `bash` rather than executed: the home-manager module writes hooksDir files as plain symlinks, so the executable bit is not guaranteed to survive. A hook that is not executable fails silently.
   terminalTitleHook = {
     hooks = [
       {
@@ -30,8 +35,7 @@ in
   programs.claude-code = {
     enable = true;
 
-    # Symlinked to ~/.claude/hooks/. Wired into settings.hooks below — dropping a
-    # script here does nothing on its own.
+    # Symlinked to ~/.claude/hooks/. Wired into settings.hooks below — dropping a script here does nothing on its own.
     hooksDir = ./claude-hooks;
 
     rules = {
@@ -73,10 +77,17 @@ in
       includeCoAuthoredBy = false;
       theme = "dark";
 
-      # Keep the terminal tab labelled with the repo and branch Claude Code is
-      # working in, so a stack of tabs is readable at a glance. UserPromptSubmit
-      # covers branch switches mid-session; SessionStart covers the initial state
-      # and a resumed session.
+      permissions = {
+        # Chosen over bypassPermissions because entering auto mode drops broad allow rules granting arbitrary code execution, and because the classifier never sees tool results.
+        defaultMode = "auto";
+
+        # These hold in every mode, unlike allow rules and unlike autoMode.
+        ask = map prefixRule gates.ask ++ map exactRule gates.askExact;
+        # Hard tier only; the reversible ones are soft_deny in claude-automode.nix.
+        deny = map prefixRule gates.denyHard;
+      };
+
+      # Keep the terminal tab labelled with the repo and branch Claude Code is working in, so a stack of tabs is readable at a glance. UserPromptSubmit covers branch switches mid-session; SessionStart covers the initial state and a resumed session.
       hooks = {
         UserPromptSubmit = [ terminalTitleHook ];
         SessionStart = [ terminalTitleHook ];
