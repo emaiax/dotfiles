@@ -3,6 +3,8 @@
 # Confines Bash and its children only. Read/Edit/Write go through the permission system, so a path policy covering both has to be written twice; this is the Bash half. Profiles layer on top via `--settings`, which merges, so they inherit every deny here.
 #
 # Two ways to write a rule that silently does nothing: a trailing slash voids the entry on 2.1.222 (fixed in 2.1.224), and a glob like `$HOME/*` matches nothing and fails open.
+#
+# 2026-08-19: on 2.1.222, every write under an allowWrite entry (`${home}/code`, no trailing slash, not a glob) was denied outright — not just new files, appends to existing tracked files too. Root cause not confirmed by reading the sandbox source; circumstantial match to the trailing-slash/glob class of bug above. Bumping past 2.1.224 is the fix to verify; if writes are still denied after the bump, this note is wrong and the real cause is still open.
 { config, ... }:
 let
   home = config.home.homeDirectory;
@@ -103,6 +105,19 @@ in
         "${home}/.npm"
         "${home}/.gem"
         "${home}/go"
+
+        # rtk's global init (`rtk init -g`) writes RTK.md here. denyWrite below keeps
+        # the credential file out of reach even though it's nested under this entry.
+        "${home}/.claude"
+
+        # rtk's global init also writes its filters template here, outside ~/.claude.
+        "${home}/Library/Application Support/rtk"
+      ];
+
+      # denyWrite beats allowWrite unconditionally (see credentialDenies above) — this
+      # is that same carve-out for writes, needed now that ~/.claude is allowWrite.
+      denyWrite = [
+        "${home}/.claude/.credentials.json"
       ];
     };
   };
