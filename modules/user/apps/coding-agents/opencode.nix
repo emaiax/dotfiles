@@ -1,4 +1,18 @@
 { lib, ... }:
+let
+  # Shared with claude-code.nix — see gates.nix for why this list is centralised.
+  gates = import ./gates.nix;
+
+  # last-matching-rule-wins, evaluated in *declaration* order — Nix attrsets
+  # don't preserve that order when serialized to JSON (keys come out
+  # alphabetical), so every rule after the "*" catch-all has to be pinned with
+  # entryAfter or it can silently reorder ahead of it.
+  renderGate = g: {
+    name = g.opencodePattern or (if g.exact or false then g.cmd else "${g.cmd}*");
+    value = lib.hm.dag.entryAfter [ "*" ] g.action;
+  };
+  gateRules = builtins.listToAttrs (map renderGate gates);
+in
 {
   programs.opencode = {
     enable = true;
@@ -54,36 +68,10 @@
         # Same tool call repeated 3x with identical input — kill it, don't ask.
         doom_loop = "deny";
 
-        # last-matching-rule-wins, evaluated in *declaration* order — Nix
-        # attrsets don't preserve that order when serialized to JSON (keys
-        # come out alphabetical), so every rule after the "*" catch-all has
-        # to be pinned with entryAfter or it can silently reorder ahead of it.
         bash = {
           "*" = "allow";
-
-          "git commit*" = lib.hm.dag.entryAfter [ "*" ] "ask";
-          "git push*" = lib.hm.dag.entryAfter [ "*" ] "deny";
-
-          "gh pr create*" = lib.hm.dag.entryAfter [ "*" ] "deny";
-          "gh pr ready*" = lib.hm.dag.entryAfter [ "*" ] "deny";
-          "gh pr merge*" = lib.hm.dag.entryAfter [ "*" ] "deny";
-          "gh pr review*" = lib.hm.dag.entryAfter [ "*" ] "deny";
-
-          # This repo's Forgejo equivalent of the gh gates above.
-          "fj pr create*" = lib.hm.dag.entryAfter [ "*" ] "deny";
-          "fj pr merge*" = lib.hm.dag.entryAfter [ "*" ] "deny";
-          "fj pr review*" = lib.hm.dag.entryAfter [ "*" ] "deny";
-          "fj pr close*" = lib.hm.dag.entryAfter [ "*" ] "deny";
-          "fj pr comment*" = lib.hm.dag.entryAfter [ "*" ] "deny";
-
-          "git reset --hard*" = lib.hm.dag.entryAfter [ "*" ] "ask";
-          "git checkout -- *" = lib.hm.dag.entryAfter [ "*" ] "ask";
-          "git checkout ." = lib.hm.dag.entryAfter [ "*" ] "ask";
-          "git restore*" = lib.hm.dag.entryAfter [ "*" ] "ask";
-          "git clean*" = lib.hm.dag.entryAfter [ "*" ] "ask";
-          "git rebase*" = lib.hm.dag.entryAfter [ "*" ] "ask";
-          "rm -rf*" = lib.hm.dag.entryAfter [ "*" ] "ask";
-        };
+        }
+        // gateRules;
       };
 
       # Plugins loaded at startup.
