@@ -1,6 +1,8 @@
 # justfile: https://just.systems/man/en/global-and-user-justfiles.html
 set unstable := true
 
+import 'just/secrets.just'
+
 default:
 	@just --list --unsorted
 

@@ -77,8 +77,15 @@ in
     # Docker does not compose with the sandbox. Excluded commands run entirely unwrapped, so this is a hole rather than a containment.
     excludedCommands = [ "docker" ];
 
-    # Without this every nix subcommand fails to reach its daemon.
-    network.allowUnixSockets = [ "/nix/var/nix/daemon-socket/socket" ];
+    network = {
+      # Without this every nix subcommand fails to reach its daemon.
+      allowUnixSockets = [ "/nix/var/nix/daemon-socket/socket" ];
+
+      # github.com is public, so it's a plain literal here. The forgejo host
+      # is private (this repo mirrors publicly) and gets patched into
+      # settings.json at runtime instead — see claude-hooks/rtk-hook.sh.
+      allowedDomains = [ "github.com" ];
+    };
 
     filesystem = {
       # Reads are allow-everything by default upstream. Denying $HOME and allowing back the toolchain recovers most of what agent-jail gave.
