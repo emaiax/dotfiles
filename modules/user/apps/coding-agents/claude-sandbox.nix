@@ -47,13 +47,6 @@ let
 
     # Same story as ~/.claude above: allowWrite alone didn't make this writable.
     "${home}/Library/Application Support/rtk"
-
-    # fj's (forgejo-cli) token store, per the `directories` crate's macOS convention for
-    # ProjectDirs::from("", "Cyborus", "forgejo-cli") — confirmed by binary string analysis
-    # (the adjacent literals "Cyborus", "forgejo-cli", "keys.json") and by overriding $HOME,
-    # which made the keys.rs read failure disappear. Moot once `fj` is in excludedCommands
-    # below, kept anyway as defense in depth if that exclusion is ever narrowed.
-    "${home}/Library/Application Support/Cyborus.forgejo-cli"
   ];
 
   # `commit.gpgSign = true` with `gpg.format = "ssh"` (modules/user/git/git.nix), so denying ~/.ssh outright breaks every commit. The other four private keys stay denied.
@@ -108,6 +101,15 @@ in
       # Without this every nix subcommand fails to reach its daemon.
       allowUnixSockets = [ "/nix/var/nix/daemon-socket/socket" ];
 
+      # Go binaries (gh, terraform, kubectl) validate TLS certs via macOS's
+      # Security.framework, which delegates to trustd over a Mach-service lookup
+      # Seatbelt denies by default, surfacing as `x509: OSStatus -26276` even for
+      # a valid cert (curl/git/Node verify in-process and are unaffected). This
+      # re-grants just that one lookup rather than excluding the whole command
+      # from the sandbox. See anthropics/claude-code#26466 (comments from
+      # pradeep-mj and cdunkelb).
+      allowMachLookup = [ "com.apple.trustd.agent" ];
+
       # github.com covers plain git-over-https; the gh CLI talks to a separate host for
       # its REST/GraphQL API, and without it every gh command that isn't a hard deny still
       # dies on a network-outbound block instead of reaching the permission gates in
@@ -147,8 +149,6 @@ in
 
         # rtk's global init also writes its filters template here, outside ~/.claude.
         "${home}/Library/Application Support/rtk"
-
-        "${home}/Library/Application Support/Cyborus.forgejo-cli"
       ];
 
       # denyWrite beats allowWrite unconditionally (see credentialDenies above) — this
