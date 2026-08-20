@@ -80,7 +80,19 @@ in
     autoAllowBashIfSandboxed = true;
 
     # Docker does not compose with the sandbox. Excluded commands run entirely unwrapped, so this is a hole rather than a containment.
-    excludedCommands = [ "docker" ];
+    #
+    # gh and fj: Seatbelt blocks mach-lookup to trustd, the daemon Security.framework's
+    # SecTrustEvaluateWithError needs for TLS certificate validation. Every tool that
+    # validates certs through Security.framework fails with OSStatus -26276 ("invalid
+    # peer certificate") under the sandbox — not Go-specific despite fj being Rust, same
+    # root cause as the documented gh/gcloud/terraform case. No allowlist knob exists for
+    # this (anthropics/claude-code#34876, closed "not planned"); the documented fix is
+    # excludedCommands. See code.claude.com/docs/en/sandboxing.md#troubleshooting.
+    excludedCommands = [
+      "docker"
+      "gh"
+      "fj"
+    ];
 
     # Without this, `open -a <App>` fails with kLSUnknownErr ("couldn't communicate
     # with a helper application"): the sandbox blocks the mach-lookup to
