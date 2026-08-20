@@ -34,12 +34,16 @@ profiles=(claude claudio claudio-thebot claude-yolo)
   echo
   echo "## Observed verdicts (dynamic probes)"
   echo
-  # Header and delimiter must carry the same cell count or GFM refuses to render the table. One leading "case" column plus one per profile; printf without a trailing separator so no phantom column appears.
-  printf '| case |'
-  printf ' %s |' "${profiles[@]}"
-  printf '\n|---|'
-  printf '---|%.0s' "${profiles[@]}"
-  printf '\n'
+  # Header and delimiter must carry the same cell count or GFM refuses to render the table.
+  # Built by string append rather than printf: a printf format beginning with '---' is parsed
+  # as options ("invalid option"), and a trailing separator would add a phantom column.
+  header='| case |'
+  delim='|---|'
+  for p in "${profiles[@]}"; do
+    header+=" $p |"
+    delim+='---|'
+  done
+  printf '%s\n%s\n' "$header" "$delim"
   # Dynamic cases carry an observed verdict; static rows have none and are skipped here.
   while IFS= read -r case_id; do
     row="| $case_id |"
