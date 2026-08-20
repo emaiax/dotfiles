@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# Static assertions over the branch's generated artifacts: base settings.json (sandbox, permissions, network) and each profile's overlay + wrapper flags. These run per-branch-build, cost nothing, and catch config regressions before any probe spends a token.
+
+set -euo pipefail
+
+static_settings_run() {
+  local base=$BASE_SETTINGS
+  local h=$HOME
+
+  # Sandbox hardening: all three toggles that make the boundary real rather than advisory.
+  assert_jq static-sandbox-enabled base "$base" '.sandbox.enabled' 'true'
+  assert_jq static-sandbox-fail-unavailable base "$base" '.sandbox.failIfUnavailable' 'true'
+  assert_jq static-sandbox-no-unsandboxed-retry base "$base" '.sandbox.allowUnsandboxedCommands' 'false'
+  assert_jq static-sandbox-autoallow-bash base "$base" '.sandbox.autoAllowBashIfSandboxed' 'true'
+
+  # excludedCommands must stay globs: bare names match nothing and fail open (see claude-sandbox.nix).
+  assert_jq static-excluded-commands base "$base" '.sandbox.excludedCommands | sort | join(",")' 'docker *,fj *,gh *'
+
+  # Filesystem policy: the deny wall and the carve-outs the PR is about.
+  assert_jq static-denyread-home base "$base" ".sandbox.filesystem.denyRead | index(\"$h\") != null" 'true'
+  assert_jq static-denyread-credentials base "$base" ".sandbox.filesystem.denyRead | index(\"$h/.claude/.credentials.json\") != null" 'true'
+  assert_jq static-denyread-credentials-bak base "$base" ".sandbox.filesystem.denyRead | index(\"$h/.claude/.credentials.json.bak\") != null" 'true'
+  assert_jq static-allowread-keychains base "$base" ".sandbox.filesystem.allowRead | index(\"$h/Library/Keychains\") != null" 'true'
+  assert_jq static-allowread-claude-dir base "$base" ".sandbox.filesystem.allowRead | index(\"$h/.claude\") != null" 'true'
+  assert_jq static-allowread-rtk-dir base "$base" ".sandbox.filesystem.allowRead | index(\"$h/Library/Application Support/rtk\") != null" 'true'
+  assert_jq static-allowwrite-claude-dir base "$base" ".sandbox.filesystem.allowWrite | index(\"$h/.claude\") != null" 'true'
+  assert_jq static-allowwrite-rtk-dir base "$base" ".sandbox.filesystem.allowWrite | index(\"$h/Library/Application Support/rtk\") != null" 'true'
+  # The keychain allowWrite was tried and reverted: it never fixed the store failure (see the claude-sandbox.nix comment on error 100001). Guard against it silently coming back.
+  assert_jq static-no-allowwrite-keychains base "$base" ".sandbox.filesystem.allowWrite | index(\"$h/Library/Keychains\") == null" 'true'
+  assert_jq static-denywrite-credentials base "$base" ".sandbox.filesystem.denyWrite | sort | join(\",\")" "$h/.claude/.credentials.json,$h/.claude/.credentials.json.bak"
+
+  # Network policy: public domains inline; the private forgejo host is runtime-patched by rtk-hook.sh and must NOT be baked into the store artifact.
+  assert_jq static-net-domains base "$base" '.sandbox.network.allowedDomains | sort | join(",")' 'api.github.com,github.com'
+  assert_jq static-net-nix-socket base "$base" '.sandbox.network.allowUnixSockets | join(",")' '/nix/var/nix/daemon-socket/socket'
+  assert_jq static-net-trustd base "$base" '.sandbox.network.allowMachLookup | join(",")' 'com.apple.trustd.agent'
+  assert_jq static-apple-events base "$base" '.sandbox.allowAppleEvents' 'true'
+
+  # Permission gates: the deny list survives every mode including bypassPermissions, the ask list is what claude-yolo trades away.
+  assert_jq static-deny-gh-merge base "$base" '.permissions.deny | index("Bash(gh pr merge:*)") != null' 'true'
+  assert_jq static-deny-gh-release base "$base" '.permissions.deny | index("Bash(gh release:*)") != null' 'true'
+  assert_jq static-deny-fj-merge base "$base" '.permissions.deny | index("Bash(fj pr merge:*)") != null' 'true'
+  assert_jq static-deny-fj-release base "$base" '.permissions.deny | index("Bash(fj release:*)") != null' 'true'
+  # Deny rules spell absolute paths as Read(//Users/...): the leading // marks an absolute path, so the pattern is // plus the path without its own leading slash.
+  assert_jq static-deny-read-credentials base "$base" ".permissions.deny | index(\"Read(/$h/.claude/.credentials.json)\") != null" 'true'
+  assert_jq static-ask-git-push base "$base" '.permissions.ask | index("Bash(git push:*)") != null' 'true'
+  assert_jq static-ask-rm-rf base "$base" '.permissions.ask | index("Bash(rm -rf:*)") != null' 'true'
+  assert_jq static-ask-git-reset base "$base" '.permissions.ask | index("Bash(git reset --hard:*)") != null' 'true'
+  assert_jq static-default-mode-auto base "$base" '.permissions.defaultMode' 'auto'
+
+  # claudio overlay: exactly the Obsidian socket grants and nothing else — canonical-JSON equality so any accidental extra key fails loudly.
+  local claudio_expected
+  claudio_expected=$(jq -Sc . <<EOF
+{"sandbox":{"filesystem":{"allowRead":["$h/.obsidian-cli.sock"]},"network":{"allowUnixSockets":["$h/.obsidian-cli.sock"]}}}
+EOF
+  )
+  if [[ $(jq -Sc . "${OVERLAY[claudio]}") == "$claudio_expected" ]]; then
+    t_record PASS static-overlay-shape claudio
+  else
+    t_record FAIL static-overlay-shape claudio "overlay diverged from the two expected socket grants: $(jq -Sc . "${OVERLAY[claudio]}")"
+  fi
+
+  # claude-yolo overlay: exactly {sandbox:{enabled:false}}. Anything more means the profile grew scope nobody reviewed.
+  if [[ $(jq -Sc . "${OVERLAY[claude-yolo]}") == '{"sandbox":{"enabled":false}}' ]]; then
+    t_record PASS static-overlay-shape claude-yolo
+  else
+    t_record FAIL static-overlay-shape claude-yolo "overlay is $(jq -Sc . "${OVERLAY[claude-yolo]}")"
+  fi
+
+  # thebot overlay shape is asserted in 50-automode.sh (it is purely an autoMode override).
+
+  # Wrapper flags: the behavior-defining arguments each wrapper must carry.
+  assert_contains static-wrapper-skip-permissions claude-yolo "$(readlink -f "${WRAPPER[claude-yolo]}")" '--dangerously-skip-permissions'
+  assert_contains static-wrapper-adddir-context claudio-thebot "$(readlink -f "${WRAPPER[claudio-thebot]}")" "$h/code/claudio"
+  assert_contains static-wrapper-adddir-publish claudio-thebot "$(readlink -f "${WRAPPER[claudio-thebot]}")" "$h/code/claudio-thebot/claudio-core"
+}
