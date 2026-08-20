@@ -33,7 +33,7 @@ static_settings_run() {
   assert_jq static-denywrite-hooks base "$base" ".sandbox.filesystem.denyWrite | index(\"$h/.claude/hooks\") != null" 'true'
   assert_jq static-denywrite-settings-state base "$base" ".sandbox.filesystem.denyWrite | index(\"$h/.local/state/claude-code/settings.json\") != null" 'true'
 
-  # Network policy: public domains inline; the private forgejo host is runtime-patched by rtk-hook.sh and must NOT be baked into the store artifact.
+  # Network policy: public domains inline; the private homelab domain is runtime-patched by homelab-network-hook.sh as a `*.<domain>` wildcard and must NOT be baked into the store artifact.
   assert_jq static-net-domains base "$base" '.sandbox.network.allowedDomains | sort | join(",")' 'api.github.com,github.com'
   assert_jq static-net-nix-socket base "$base" '.sandbox.network.allowUnixSockets | join(",")' '/nix/var/nix/daemon-socket/socket'
   assert_jq static-net-trustd base "$base" '.sandbox.network.allowMachLookup | join(",")' 'com.apple.trustd.agent'

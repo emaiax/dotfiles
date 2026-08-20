@@ -25,4 +25,14 @@ home: {
     "${home}/.netrc"
     "${home}/.npmrc"
   ];
+
+  # Entries above that sit inside an allowRead/allowWrite tree by name, rather than under a
+  # directory denied wholesale — so both the exact path and a sibling `.bak` (home-manager's
+  # backupFileExtension = "bak" could smuggle one in through that same grant) need an explicit
+  # carve-out wherever the grant applies. Only .credentials.json qualifies today: every other
+  # file above already lives under a directory its consumer denies wholesale, so its .bak is
+  # already covered without a separate entry.
+  bakCarveouts = [
+    "${home}/.claude/.credentials.json"
+  ];
 }

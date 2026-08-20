@@ -42,25 +42,11 @@ let
   ];
   credentialDenyRules =
     lib.concatMap fileDenyRules (
-      credentialPaths.files
-      ++ [
-        # Same reasoning as the sandbox half: the only credentialDenies entry nested under a
-        # readable/writable directory, so the only one a sibling .bak could ride in on.
-        "${home}/.claude/.credentials.json.bak"
-      ]
+      credentialPaths.files ++ map (p: "${p}.bak") credentialPaths.bakCarveouts
     )
     ++ lib.concatMap dirDenyRules credentialPaths.dirs;
 
   # Invoked through `bash` rather than executed: the home-manager module writes hooksDir files as plain symlinks, so the executable bit is not guaranteed to survive. A hook that is not executable fails silently.
-  terminalTitleHook = {
-    hooks = [
-      {
-        type = "command";
-        command = ''bash "$HOME/.claude/hooks/terminal-title.sh"'';
-      }
-    ];
-  };
-
   rtkHook = {
     matcher = "Bash";
     hooks = [
@@ -68,6 +54,16 @@ let
         type = "command";
         command = ''bash "$HOME/.claude/hooks/rtk-hook.sh"'';
         statusMessage = "Applying rtk token-reduction filter...";
+      }
+    ];
+  };
+
+  # Separate from rtkHook: this only needs to run once per session, not on every Bash call.
+  homelabNetworkHook = {
+    hooks = [
+      {
+        type = "command";
+        command = ''bash "$HOME/.claude/hooks/homelab-network-hook.sh"'';
       }
     ];
   };
@@ -89,10 +85,8 @@ let
       deny = map prefixRule (withRtkTwin gates.denyHard) ++ credentialDenyRules;
     };
 
-    # Keep the terminal tab labelled with the repo and branch Claude Code is working in, so a stack of tabs is readable at a glance. UserPromptSubmit covers branch switches mid-session; SessionStart covers the initial state and a resumed session.
     hooks = {
-      UserPromptSubmit = [ terminalTitleHook ];
-      SessionStart = [ terminalTitleHook ];
+      SessionStart = [ homelabNetworkHook ];
       PreToolUse = [ rtkHook ];
     };
 
@@ -144,6 +138,12 @@ let
   # or home-manager sees two different attribute names resolving to the same target and refuses
   # to build ("Conflicting managed target files") instead of letting mkForce win.
   claudeConfigDir = config.programs.claude-code.configDir;
+
+  # Same convention as vscode/default.nix and iterm2/default.nix: an out-of-store symlink to the
+  # real file in the main checkout, not wherever this module happened to be evaluated from (e.g.
+  # a worktree). Deliberate, not a hardcode bug — all three point at ~/code/dotfiles so the target
+  # is stable and switching from a worktree never leaves the live config pointed at scratch work.
+  agentsSourcePath = "${home}/code/dotfiles/modules/user/apps/coding-agents/AGENTS.md";
 in
 {
   # Out-of-store symlink to a real file in this repo: rtk init -g injects a short RTK.md pointer
@@ -151,7 +151,7 @@ in
   # store. force = true: rtk (or any tool) may replace the symlink with a plain file on write;
   # without force, the next switch would refuse to reclaim that path.
   home.file."${claudeConfigDir}/CLAUDE.md" = {
-    source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/code/dotfiles/modules/user/apps/coding-agents/AGENTS.md";
+    source = config.lib.file.mkOutOfStoreSymlink agentsSourcePath;
     force = true;
   };
 

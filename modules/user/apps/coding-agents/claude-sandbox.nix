@@ -87,6 +87,7 @@ let
   # Nested inside the allowRead trees above, which works because reads honour narrower-wins. Writes do not: denyWrite beats allowWrite unconditionally, so never pair the two.
   credentialPaths = import ./credential-paths.nix home;
   credentialDenies = credentialPaths.dirs ++ credentialPaths.files;
+  credentialBaks = map (p: "${p}.bak") credentialPaths.bakCarveouts;
 in
 {
   programs.claude-code.settings.sandbox = {
@@ -152,9 +153,10 @@ in
       # its REST/GraphQL API, and without it every gh command that isn't a hard deny still
       # dies on a network-outbound block instead of reaching the permission gates in
       # gates.nix (ask/soft_deny/hard_deny) that were meant to be what actually governs it.
-      # Both are public, so they're plain literals here. The forgejo host is private (this
-      # repo mirrors publicly) and gets patched into settings.json at runtime instead —
-      # see claude-hooks/rtk-hook.sh.
+      # Both are public, so they're plain literals here. The homelab domain is private (this
+      # repo mirrors publicly) and gets patched into settings.json at runtime instead, as a
+      # `*.<domain>` wildcard covering every homelab service, not just forgejo — see
+      # claude-hooks/homelab-network-hook.sh.
       allowedDomains = [
         "github.com"
         "api.github.com"
@@ -163,10 +165,10 @@ in
 
     filesystem = {
       # Reads are allow-everything by default upstream. Denying $HOME and allowing back the toolchain recovers most of what agent-jail gave.
-      # .credentials.json.bak: same reasoning as the denyWrite carve-out below — the only
-      # credentialDenies entry nested under an allowRead path, so the only one a sibling .bak
-      # could ride the reallow back in on.
-      denyRead = [ home ] ++ credentialDenies ++ [ "${home}/.claude/.credentials.json.bak" ];
+      # credentialBaks: same reasoning as the denyWrite carve-out below — the entries in
+      # credential-paths.nix's bakCarveouts are nested under an allowRead path, so their sibling
+      # .bak could ride the reallow back in without this.
+      denyRead = [ home ] ++ credentialDenies ++ credentialBaks;
       allowRead = toolchainReads ++ nixReads ++ sshSigningReads;
 
       # Writes are already deny-by-default, and cwd is writable implicitly. Package managers need to write where they install.
@@ -189,11 +191,12 @@ in
         "${home}/Library/Application Support/rtk"
       ];
 
-      # denyWrite beats allowWrite unconditionally (see credentialDenies above) — this
-      # is that same carve-out for writes, needed now that ~/.claude is allowWrite. Only
-      # .credentials.json needs this: it's the only credentialDenies entry nested under an
-      # allowWrite path, so it's the only one a sibling .bak (e.g. home-manager's
-      # backupFileExtension) could smuggle onto the same allowWrite grant (see #126).
+      # denyWrite beats allowWrite unconditionally (see credentialDenies above) — this is that
+      # same carve-out for writes, needed now that ~/.claude is allowWrite. bakCarveouts +
+      # credentialBaks: credential-paths.nix's bakCarveouts lists the credentialDenies entries
+      # nested under an allowWrite path, and credentialBaks is their sibling .bak (e.g.
+      # home-manager's backupFileExtension) that could smuggle onto the same allowWrite grant
+      # (see #126).
       #
       # The next two entries close a same-session sandbox escape: PreToolUse hooks run
       # UNSANDBOXED (verified: a hook writing to the denyWrite'd $HOME root succeeds while
@@ -208,12 +211,13 @@ in
       # rtk-hook.sh uses could set permissions.deny=[] or sandbox.enabled=false for the next
       # session. Denying the sandboxed write to both does not hinder rtk: it patches
       # settings.json from the hook, which runs unsandboxed.
-      denyWrite = [
-        "${home}/.claude/.credentials.json"
-        "${home}/.claude/.credentials.json.bak"
-        "${home}/.claude/hooks"
-        "${home}/.local/state/claude-code/settings.json"
-      ];
+      denyWrite =
+        credentialPaths.bakCarveouts
+        ++ credentialBaks
+        ++ [
+          "${home}/.claude/hooks"
+          "${home}/.local/state/claude-code/settings.json"
+        ];
     };
   };
 }
