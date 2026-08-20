@@ -40,6 +40,13 @@ let
     "${home}/.nix-profile"
     "${home}/.nix-defexpr"
 
+    # git-credential-osxkeychain (and other Security.framework keychain consumers) needs
+    # to read the keychain database to even reach the normal per-item ACL prompt — without
+    # this the read is denied outright and the helper fails silently instead of asking.
+    # Read access alone doesn't bypass per-item authorization; macOS still decrypts and
+    # gates each item via its own ACL. Same fix as CJHwong/agent-seatbelt's my.sb.
+    "${home}/Library/Keychains"
+
     # Whole directory, not just RTK.md: allowWrite alone wasn't enough to make ~/.claude
     # actually writable (see the 2026-08-19 note above), so read access is granted too.
     # .credentials.json stays denied regardless — narrower wins for reads, same as writes.
