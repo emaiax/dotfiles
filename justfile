@@ -67,3 +67,11 @@ ssh-keygen NAME COMMENT:
 
 copy-ssh-key-to-host key host:
   ssh-copy-id -i {{key}} {{host}}
+
+# decrypt a sops file in place for editing (SOPS_AGE_KEY_FILE comes from modules/user/sops/default.nix, not this justfile)
+decrypt secret_file:
+	sops --decrypt --in-place {{secret_file}}
+
+# re-encrypt a sops file after decrypt
+encrypt secret_file:
+	sops --encrypt --in-place {{secret_file}}
