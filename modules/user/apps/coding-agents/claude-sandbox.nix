@@ -88,10 +88,15 @@ in
     # root cause as the documented gh/gcloud/terraform case. No allowlist knob exists for
     # this (anthropics/claude-code#34876, closed "not planned"); the documented fix is
     # excludedCommands. See code.claude.com/docs/en/sandboxing.md#troubleshooting.
+    #
+    # Bare command names ("gh", "fj") are NOT respected — matching requires a glob
+    # covering the arguments, per the docs' own "docker *" example and confirmed by
+    # anthropics/claude-code#10524 (bare "uv" silently ignored). Bare "docker" above
+    # was never actually verified working; only rm/write denials were tested.
     excludedCommands = [
-      "docker"
-      "gh"
-      "fj"
+      "docker *"
+      "gh *"
+      "fj *"
     ];
 
     # Without this, `open -a <App>` fails with kLSUnknownErr ("couldn't communicate
