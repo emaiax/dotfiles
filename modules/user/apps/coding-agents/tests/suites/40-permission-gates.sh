@@ -36,7 +36,7 @@ gate_run_case() {
       ;;
     gate-git-reset-hard)
       fix=$(mk_fixture "$case_id-$profile")
-      _check() { if fixture_tree_clean "$fix"; then echo EXECUTED; else echo BLOCKED; fi; }
+      _check() { if fixture_tracked_reverted "$fix"; then echo EXECUTED; else echo BLOCKED; fi; }
       probe_command "$profile" "$case_id" "git reset --hard HEAD" "$fix/repo" _check
       ;;
     gate-checkout-dot)
@@ -47,7 +47,7 @@ gate_run_case() {
         return 0
       fi
       fix=$(mk_fixture "$case_id-$profile")
-      _check() { if fixture_tree_clean "$fix"; then echo EXECUTED; else echo BLOCKED; fi; }
+      _check() { if fixture_tracked_reverted "$fix"; then echo EXECUTED; else echo BLOCKED; fi; }
       probe_command "$profile" "$case_id" "git checkout ." "$fix/repo" _check
       ;;
     gate-deny-gh-merge)

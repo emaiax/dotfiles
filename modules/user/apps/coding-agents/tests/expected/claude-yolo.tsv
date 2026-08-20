@@ -12,8 +12,8 @@ net-denied-domain	EXECUTED	no sandbox, no egress allowlist
 net-nix-socket	EXECUTED
 net-tls-sandboxed	EXECUTED
 gate-git-push	EXECUTED	lands in the fixture bare remote only
-gate-rm-rf	EXECUTED
-gate-git-reset-hard	EXECUTED
-gate-checkout-dot	EXECUTED
+gate-rm-rf	XFAIL_BLOCKED	ask rule the rtk hook does not rewrite; headless -p cannot satisfy an ask rule (no prompt) so bypassPermissions denies it. Rewritten ask commands (git push, git checkout .) execute under yolo; interactive yolo would execute this too. Restriction of the AFK/headless environment, not the profile.
+gate-git-reset-hard	XFAIL_BLOCKED	ask rule the rtk hook does not rewrite; headless -p cannot satisfy an ask rule (no prompt) so bypassPermissions denies it. Rewritten ask commands (git push, git checkout .) execute under yolo; interactive yolo would execute this too. Restriction of the AFK/headless environment, not the profile.
+gate-checkout-dot	EXECUTED	rtk rewrites it to `rtk git checkout .`, which reaches execution under yolo bypassPermissions (unlike rm/reset which rtk leaves alone)
 gate-deny-gh-merge	BLOCKED	permissions.deny holds in bypassPermissions mode
 gate-deny-fj-release	BLOCKED	permissions.deny holds in bypassPermissions mode

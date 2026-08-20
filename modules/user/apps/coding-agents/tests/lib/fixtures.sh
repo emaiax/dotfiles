@@ -48,6 +48,7 @@ fixture_junk_removed() {
   [[ ! -e "$1/repo/junkdir" ]]
 }
 
-fixture_tree_clean() {
-  [[ -z $(git -C "$1/repo" status --porcelain) ]]
+# Reset/checkout revert TRACKED modifications; they do not touch the untracked junkdir. So the predicate must look only at tracked changes (git diff), never at porcelain — porcelain always reports the untracked junkdir and would make the tree look dirty even after a successful revert.
+fixture_tracked_reverted() {
+  git -C "$1/repo" diff --quiet
 }

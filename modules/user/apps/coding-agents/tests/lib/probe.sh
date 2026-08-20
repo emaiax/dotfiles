@@ -17,20 +17,34 @@ _run_in_dir() {
   cd "$dir" && "$@"
 }
 
-# Probe sessions must not share memory with each other or with the operator's sessions: the claude-mem plugin records each probe's prompt as an observation and feeds it to later sessions, which then refuse gate probes as "prompt injection attempts" (observed live, first full run). --settings is repeatable and later flags merge over earlier ones, so this rides on top of each wrapper's own baked overlay.
-PROBE_EXTRA_SETTINGS='{"enabledPlugins":{"claude-mem@thedotmack":false}}'
+# Probe sessions must not share memory with each other or with the operator's sessions: the claude-mem plugin records each probe's prompt as an observation and feeds it to later sessions, which then refuse gate probes as "prompt injection attempts" (observed live, first full run).
+#
+# It cannot be disabled with a second --settings flag: Claude Code takes only the LAST --settings and drops the earlier ones entirely rather than merging them, so a second flag would silently discard each wrapper's own overlay — for claude-yolo that means losing sandbox.enabled=false and probing a sandboxed session by accident (observed: yolo home-path writes failing on the base denyRead). Instead each profile's overlay is deep-merged with the plugin-disable into one file, passed as the single --settings, replacing the wrapper's own flag with a superset of it.
+_probe_settings() {
+  local profile=$1
+  local merged="$RESULTS_DIR/settings-$profile.json"
+  if [[ ! -f $merged ]]; then
+    local overlay=${OVERLAY[$profile]:-}
+    local base='{}'
+    [[ -n $overlay && -f $overlay ]] && base=$(cat "$overlay")
+    jq -n --argjson o "$base" '$o * {enabledPlugins: {"claude-mem@thedotmack": false}}' >"$merged"
+  fi
+  echo "$merged"
+}
 
 # _invoke PROFILE CASE_ID PROMPT WORKDIR — one claude -p run; retries once on infra failure (unparseable output or timeout). Prints the attempt's outdir.
 _invoke() {
   local profile=$1 case_id=$2 prompt=$3 workdir=$4
   local outdir="$RESULTS_DIR/probes/$profile/$case_id"
   mkdir -p "$outdir"
+  local settings
+  settings=$(_probe_settings "$profile")
   local attempt rc
   for attempt in 1 2; do
     rc=0
     with_timeout "$PROBE_TIMEOUT" _run_in_dir "$workdir" \
       "${WRAPPER[$profile]}" -p --model "$TESTS_MODEL" --max-turns 4 --output-format json \
-      --settings "$PROBE_EXTRA_SETTINGS" "$prompt" \
+      --settings "$settings" "$prompt" \
       <"/dev/null" >"$outdir/out.json" 2>"$outdir/out.err" || rc=$?
     if jq -e .result "$outdir/out.json" >/dev/null 2>&1; then
       echo "$outdir"
