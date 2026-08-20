@@ -8,6 +8,7 @@
     ./claude-automode.nix
     ./claude-code.nix
     ./claude-sandbox.nix
+    ./claude-yolo.nix
     ./claudio.nix
     ./claudio-thebot.nix
     ./opencode.nix
