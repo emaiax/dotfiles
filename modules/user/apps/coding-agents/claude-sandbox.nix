@@ -45,6 +45,25 @@ let
     # this the read is denied outright and the helper fails silently instead of asking.
     # Read access alone doesn't bypass per-item authorization; macOS still decrypts and
     # gates each item via its own ACL. Same fix as CJHwong/agent-seatbelt's my.sb.
+    #
+    # Known non-blocking gap: `git push` under this sandbox still ends with `fatal:
+    # failed to store: 100001` from git-credential-osxkeychain's `store` op (push itself
+    # succeeds; git just can't cache the credential back). 100001 decodes via `security
+    # error 100001` to errSecErrnoBase(100000)+EPERM — a raw UNIX errno, not a Seatbelt
+    # denial. Confirmed by reading anthropic-experimental/sandbox-runtime's
+    # macos-sandbox-utils.ts (the profile generator this sandbox is built on): the
+    # baseline profile already grants unconditional mach-lookup to
+    # com.apple.securityd.xpc and com.apple.SecurityServer, and allowWrite here already
+    # compiles to a clean file-write* allow with no unlink/create re-deny catching it —
+    # so per the generator's own logic, this should already work. Adding allowWrite for
+    # this path (tried, then reverted) did not fix it, and a live repro with `log stream`
+    # running unsandboxed alongside a sandboxed `store` call showed zero kernel Sandbox
+    # deny lines for git/bash/git-credential-osxkeychain in the failure window — if
+    # Seatbelt were blocking the syscall, the kernel would log it. The failure isn't a
+    # rule this profile can express; it points at securityd's own ACL/identity
+    # resolution for SecItemAdd (new item) under a sandbox-exec-wrapped caller, outside
+    # this file's control surface. Accepted as a known limitation; do not re-attempt
+    # allowWrite/allowMachLookup tuning for this without new evidence.
     "${home}/Library/Keychains"
 
     # Whole directory, not just RTK.md: allowWrite alone wasn't enough to make ~/.claude
