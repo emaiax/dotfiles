@@ -14,7 +14,11 @@ fi
 # PreToolUse hook wiring is already declared in claude-code.nix. Best-effort:
 # a failed bootstrap must not block the actual command.
 if [[ ! -f "$HOME/.claude/RTK.md" ]]; then
-  rtk init -g --no-patch >/dev/null 2>&1 || true
+  # </dev/null: this is a PreToolUse hook, so the tool-call JSON is on our stdin and
+  # `exec rtk hook claude` below needs it intact. Without the redirect, rtk init could
+  # drain that stdin and leave the actual hook with truncated or empty input on the
+  # first-ever Bash call of a fresh machine.
+  rtk init -g --no-patch </dev/null >/dev/null 2>&1 || true
 fi
 
 # Add the forgejo host to the sandbox's network allowlist so `git push`/`fj`
@@ -32,8 +36,15 @@ patch_forgejo_allowlist() {
   local real_settings
   real_settings="$(readlink -f "$settings" 2>/dev/null || echo "$settings")"
 
+  # allowedDomains matches on hostname, not host:port or user@host — strip the scheme, any
+  # path, any userinfo, and any :port so a FJ_FALLBACK_HOST like https://forgejo:3000/ still
+  # yields a bare `forgejo` that can actually match. Keeping the port would append an entry
+  # that never matches, and the idempotence check below would then treat that bogus entry as
+  # done and never repair it.
   local host="${FJ_FALLBACK_HOST#*://}"
   host="${host%%/*}"
+  host="${host##*@}"
+  host="${host%%:*}"
 
   jq -e --arg h "$host" '(.sandbox.network.allowedDomains // []) | index($h) != null' \
     "$real_settings" >/dev/null 2>&1 && return 0

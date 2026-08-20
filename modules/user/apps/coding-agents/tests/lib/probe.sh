@@ -23,13 +23,31 @@ _run_in_dir() {
 _probe_settings() {
   local profile=$1
   local merged="$RESULTS_DIR/settings-$profile.json"
+  # Up to --jobs probes for one profile start together, so the write must be atomic: a probe
+  # whose `claude --settings` reads this file mid-write would get a truncated JSON, and for
+  # claude-yolo that silently drops sandbox.enabled=false and probes a sandboxed session by
+  # accident. Write to a private temp then rename (atomic on the same filesystem); a late
+  # writer harmlessly replaces an identical file. run.sh also pre-builds these serially
+  # before forking, so in practice the file is already present, but this stays correct
+  # even when called concurrently.
   if [[ ! -f $merged ]]; then
     local overlay=${OVERLAY[$profile]:-}
     local base='{}'
     [[ -n $overlay && -f $overlay ]] && base=$(cat "$overlay")
-    jq -n --argjson o "$base" '$o * {enabledPlugins: {"claude-mem@thedotmack": false}}' >"$merged"
+    local tmp
+    tmp=$(mktemp "$merged.XXXXXX")
+    jq -n --argjson o "$base" '$o * {enabledPlugins: {"claude-mem@thedotmack": false}}' >"$tmp"
+    mv -f "$tmp" "$merged"
   fi
   echo "$merged"
+}
+
+# prebuild_probe_settings — build every profile's merged settings serially before the probe
+# fan-out, so no two forked jobs race to create the same file (the atomic write above is the
+# backstop; this avoids even attempting the race).
+prebuild_probe_settings() {
+  local p
+  for p in "$@"; do _probe_settings "$p" >/dev/null; done
 }
 
 # _invoke PROFILE CASE_ID PROMPT WORKDIR — one claude -p run; retries once on infra failure (unparseable output or timeout). Prints the attempt's outdir.

@@ -112,10 +112,22 @@ in
     # covering the arguments, per the docs' own "docker *" example and confirmed by
     # anthropics/claude-code#10524 (bare "uv" silently ignored). Bare "docker" above
     # was never actually verified working; only rm/write denials were tested.
+    #
+    # rtk twins: the PreToolUse hook rewrites `gh …` to `rtk gh …` (verified: `gh api`,
+    # `gh pr view`; not `fj`, not the gh/fj deny targets), and exclusion matching runs on
+    # the REWRITTEN command — so `gh *` never matches `rtk gh api …` and gh runs fully
+    # sandboxed after all, surviving only by the trustd allowMachLookup plus the two
+    # allowlisted github domains (any gh call to another host dies on the egress block).
+    # Same rewrite-defeats-the-rule bug the permission gates hit; the `rtk gh *`/`rtk fj *`
+    # twins restore the intended full-bypass. rtk does not rewrite docker, but the twin is
+    # harmless and future-proofs the same way (rewrite inventory is rtk's to change).
     excludedCommands = [
       "docker *"
+      "rtk docker *"
       "gh *"
+      "rtk gh *"
       "fj *"
+      "rtk fj *"
     ];
 
     # Without this, `open -a <App>` fails with kLSUnknownErr ("couldn't communicate
@@ -182,9 +194,25 @@ in
       # .credentials.json needs this: it's the only credentialDenies entry nested under an
       # allowWrite path, so it's the only one a sibling .bak (e.g. home-manager's
       # backupFileExtension) could smuggle onto the same allowWrite grant (see #126).
+      #
+      # The next two entries close a same-session sandbox escape: PreToolUse hooks run
+      # UNSANDBOXED (verified: a hook writing to the denyWrite'd $HOME root succeeds while
+      # a sandboxed Bash command cannot), so any file a sandboxed command can write that a
+      # hook later executes, or that governs the next session's policy, is an escape hatch.
+      # ~/.claude/hooks holds the very scripts invoked as `bash ~/.claude/hooks/*.sh`
+      # (claude-code.nix) — writable via the ~/.claude allowWrite above, so a sandboxed or
+      # prompt-injected command could overwrite rtk-hook.sh and get arbitrary unsandboxed
+      # execution on the next Bash call. The settings state path is the real file
+      # ~/.claude/settings.json resolves to (mkOutOfStoreSymlink into ~/.local/state, which
+      # the allowWrite above covers); a sandboxed command running the same jq+mv pattern
+      # rtk-hook.sh uses could set permissions.deny=[] or sandbox.enabled=false for the next
+      # session. Denying the sandboxed write to both does not hinder rtk: it patches
+      # settings.json from the hook, which runs unsandboxed.
       denyWrite = [
         "${home}/.claude/.credentials.json"
         "${home}/.claude/.credentials.json.bak"
+        "${home}/.claude/hooks"
+        "${home}/.local/state/claude-code/settings.json"
       ];
     };
   };

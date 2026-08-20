@@ -128,6 +128,8 @@ if [[ $STATIC_ONLY == 0 ]]; then
   source "$TESTS_ROOT/lib/probe.sh"
   # Fixture repos are per-run throwaways; reclaim the whole root when the run ends, however it ends.
   trap 'rm -rf "$FIXTURE_ROOT"' EXIT
+  # Build each profile's merged --settings once, serially, before forking probe jobs.
+  prebuild_probe_settings "${PROFILE_FILTER[@]}"
 
   # Each job is a forked subshell: it inherits the sourced functions and resolved arrays, runs one probe, and appends one line to results.jsonl.
   while IFS=$'\t' read -r fn case_id profile; do

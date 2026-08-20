@@ -14,7 +14,8 @@ static_settings_run() {
   assert_jq static-sandbox-autoallow-bash base "$base" '.sandbox.autoAllowBashIfSandboxed' 'true'
 
   # excludedCommands must stay globs: bare names match nothing and fail open (see claude-sandbox.nix).
-  assert_jq static-excluded-commands base "$base" '.sandbox.excludedCommands | sort | join(",")' 'docker *,fj *,gh *'
+  # rtk twins included: the hook rewrites gh to `rtk gh …`, and exclusion matches the rewritten string, so the bare `gh *` alone leaves gh sandboxed.
+  assert_jq static-excluded-commands base "$base" '.sandbox.excludedCommands | sort | join(",")' 'docker *,fj *,gh *,rtk docker *,rtk fj *,rtk gh *'
 
   # Filesystem policy: the deny wall and the carve-outs the PR is about.
   assert_jq static-denyread-home base "$base" ".sandbox.filesystem.denyRead | index(\"$h\") != null" 'true'
@@ -27,7 +28,10 @@ static_settings_run() {
   assert_jq static-allowwrite-rtk-dir base "$base" ".sandbox.filesystem.allowWrite | index(\"$h/Library/Application Support/rtk\") != null" 'true'
   # The keychain allowWrite was tried and reverted: it never fixed the store failure (see the claude-sandbox.nix comment on error 100001). Guard against it silently coming back.
   assert_jq static-no-allowwrite-keychains base "$base" ".sandbox.filesystem.allowWrite | index(\"$h/Library/Keychains\") == null" 'true'
-  assert_jq static-denywrite-credentials base "$base" ".sandbox.filesystem.denyWrite | sort | join(\",\")" "$h/.claude/.credentials.json,$h/.claude/.credentials.json.bak"
+  assert_jq static-denywrite-credentials base "$base" ".sandbox.filesystem.denyWrite | index(\"$h/.claude/.credentials.json\") != null" 'true'
+  # Same-session escape carve-outs: hooks run unsandboxed, so a sandboxed write to the hook scripts or the settings state path would escalate. See the denyWrite comment in claude-sandbox.nix.
+  assert_jq static-denywrite-hooks base "$base" ".sandbox.filesystem.denyWrite | index(\"$h/.claude/hooks\") != null" 'true'
+  assert_jq static-denywrite-settings-state base "$base" ".sandbox.filesystem.denyWrite | index(\"$h/.local/state/claude-code/settings.json\") != null" 'true'
 
   # Network policy: public domains inline; the private forgejo host is runtime-patched by rtk-hook.sh and must NOT be baked into the store artifact.
   assert_jq static-net-domains base "$base" '.sandbox.network.allowedDomains | sort | join(",")' 'api.github.com,github.com'
