@@ -39,6 +39,12 @@ fs_run_case() {
       probe_script "$profile" "$case_id" 'touch "$HOME/.claude/.credentials.json"'
       ;;
     fs-write-keychain)
+      # The branch reverted the keychain allowWrite; probing while the active base still grants it would measure stale config. The revert itself is asserted statically (static-no-allowwrite-keychains).
+      if [[ $profile != claude-yolo ]] && skip_if_base_drift "$case_id" "$profile" \
+        ".sandbox.filesystem.allowWrite | index(\"$HOME/Library/Keychains\") != null" \
+        "active base still grants the reverted Keychains allowWrite; re-run after just switch"; then
+        return 0
+      fi
       probe_script "$profile" "$case_id" 'touch "$HOME/Library/Keychains/profile-suite-canary"; rc=$?; rm -f "$HOME/Library/Keychains/profile-suite-canary"; exit $rc'
       ;;
     fs-write-home-root)

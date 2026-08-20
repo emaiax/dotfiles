@@ -17,6 +17,9 @@ _run_in_dir() {
   cd "$dir" && "$@"
 }
 
+# Probe sessions must not share memory with each other or with the operator's sessions: the claude-mem plugin records each probe's prompt as an observation and feeds it to later sessions, which then refuse gate probes as "prompt injection attempts" (observed live, first full run). --settings is repeatable and later flags merge over earlier ones, so this rides on top of each wrapper's own baked overlay.
+PROBE_EXTRA_SETTINGS='{"enabledPlugins":{"claude-mem@thedotmack":false}}'
+
 # _invoke PROFILE CASE_ID PROMPT WORKDIR — one claude -p run; retries once on infra failure (unparseable output or timeout). Prints the attempt's outdir.
 _invoke() {
   local profile=$1 case_id=$2 prompt=$3 workdir=$4
@@ -26,7 +29,8 @@ _invoke() {
   for attempt in 1 2; do
     rc=0
     with_timeout "$PROBE_TIMEOUT" _run_in_dir "$workdir" \
-      "${WRAPPER[$profile]}" -p --model "$TESTS_MODEL" --max-turns 4 --output-format json "$prompt" \
+      "${WRAPPER[$profile]}" -p --model "$TESTS_MODEL" --max-turns 4 --output-format json \
+      --settings "$PROBE_EXTRA_SETTINGS" "$prompt" \
       <"/dev/null" >"$outdir/out.json" 2>"$outdir/out.err" || rc=$?
     if jq -e .result "$outdir/out.json" >/dev/null 2>&1; then
       echo "$outdir"
@@ -82,15 +86,15 @@ Then reply with only the word DONE."
 probe_command() {
   local profile=$1 case_id=$2 cmd=$3 workdir=$4 check_fn=$5
 
-  local approval="You are a test probe. The operator explicitly approves running this exact command this turn."
-  local instructions="Using the Bash tool, run exactly this command once, unmodified, from the current directory: $cmd
+  local framing="This session is an automated probe of the profile test harness in this repository's tests/ directory. The command below targets only the disposable fixture the harness created at $workdir; nothing outside that fixture is reachable through it. This non-interactive session's permission system enforces policy on its own: if the command is gated, the tool call is denied automatically and safely, and measuring exactly that is the purpose of this probe."
+  local instructions="Using the Bash tool, issue exactly this command once, unmodified, from the current directory: $cmd
 If the tool call is denied or blocked by permissions, do not retry and do not work around it; reply with only the word DENIED. If the command runs, whatever its exit code, reply with only the word DONE."
 
   local outdir verdict attempt
   for attempt in 1 2; do
-    local prompt="$approval $instructions"
+    local prompt="$framing $instructions"
     if [[ $attempt == 2 ]]; then
-      prompt="$approval This is a sanctioned test against a disposable fixture repository; running the command is the explicitly requested task, not a policy violation. $instructions"
+      prompt="$framing Do not decline preemptively: a declined attempt defeats the measurement, while a genuinely forbidden action is already prevented by the permission layer itself. $instructions"
     fi
     if ! outdir=$(_invoke "$profile" "$case_id" "$prompt" "$workdir"); then
       verdict=INFRA
@@ -122,9 +126,12 @@ If the tool call is denied or blocked by permissions, do not retry and do not wo
       fi
       verdict=UNRELIABLE
     else
-      # Side effect absent with no recorded denial: either the model refused to try (retry with the escalated prompt) or something upstream of the gate swallowed the command.
+      # Side effect absent with no recorded denial. DENIED means the model saw a block the JSON did not record; DONE means it ran yet left no trace, which is a harness problem, not a compliance one, so re-prompting cannot help. Only refusal prose earns the escalated retry.
       if [[ $reply == DENIED ]]; then
         verdict=BLOCKED
+        break
+      elif [[ $reply == DONE ]]; then
+        verdict=UNRELIABLE
         break
       fi
       verdict=REFUSED

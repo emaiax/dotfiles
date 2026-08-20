@@ -94,6 +94,16 @@ verdict_vs_expected() {
   esac
 }
 
+# skip_if_base_drift CASE_ID PROFILE JQ_TEST NOTE — dynamic probes run over the machine's ACTIVE base settings, which only converge with the branch artifact at the next `just switch`. When JQ_TEST (evaluated against the active base) detects the drift that would invalidate this case, record a SKIP carrying NOTE and return 0 so the caller can bail before spending a probe. The branch-side intent is still covered by the static suite either way.
+skip_if_base_drift() {
+  local case_id=$1 profile=$2 jq_test=$3 note=$4
+  if jq -e "$jq_test" "$HOME/.claude/settings.json" >/dev/null 2>&1; then
+    t_record SKIP "$case_id" "$profile" "$note"
+    return 0
+  fi
+  return 1
+}
+
 # with_timeout SECONDS CMD... — macOS ships no timeout(1); portable watchdog that reaps the child on expiry.
 with_timeout() {
   local secs=$1

@@ -3,11 +3,15 @@
 
 set -euo pipefail
 
+# Fixtures live under ~/code on purpose: the sandbox's allowWrite covers that tree, so a gated command that reaches execution can actually succeed against its local bare remote. A fixture in /tmp made the first full run lie: sandboxed pushes failed on filesystem EPERM before the permission gate was ever measured.
+FIXTURE_ROOT=${FIXTURE_ROOT:-$HOME/code/.claude-profile-suite}
+
 # mk_fixture NAME — prints the fixture dir. Layout: <dir>/repo (worktree, cwd for the probe) and <dir>/remote.git (bare). The repo is left with: one commit ahead of the remote (push has something to do), a junkdir (rm -rf target), and a dirty tracked file (reset/checkout target).
 mk_fixture() {
   local name=$1
   local dir
-  dir=$(mktemp -d "${TMPDIR:-/tmp}/claude-suite-${name}.XXXXXX")
+  mkdir -p "$FIXTURE_ROOT"
+  dir=$(mktemp -d "$FIXTURE_ROOT/${name}.XXXXXX")
 
   git init -q -b trunk "$dir/repo"
   git -C "$dir/repo" config user.email suite@localhost

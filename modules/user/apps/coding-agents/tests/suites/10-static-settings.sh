@@ -47,6 +47,13 @@ static_settings_run() {
   assert_jq static-ask-git-reset base "$base" '.permissions.ask | index("Bash(git reset --hard:*)") != null' 'true'
   assert_jq static-default-mode-auto base "$base" '.permissions.defaultMode' 'auto'
 
+  # rtk twins: the PreToolUse hook rewrites recognized commands to `rtk <cmd>` and permission rules match the rewritten string, so every gate needs its rtk-prefixed twin or the rewrite defeats it (found live by the gate probes; fix in claude-code.nix's withRtkTwin).
+  assert_jq static-ask-rtk-git-push base "$base" '.permissions.ask | index("Bash(rtk git push:*)") != null' 'true'
+  assert_jq static-ask-rtk-checkout-exact base "$base" '.permissions.ask | index("Bash(rtk git checkout .)") != null' 'true'
+  assert_jq static-ask-rtk-checkout-dashes base "$base" '.permissions.ask | index("Bash(rtk git checkout --:*)") != null' 'true'
+  assert_jq static-deny-rtk-gh-merge base "$base" '.permissions.deny | index("Bash(rtk gh pr merge:*)") != null' 'true'
+  assert_jq static-deny-rtk-fj-release base "$base" '.permissions.deny | index("Bash(rtk fj release:*)") != null' 'true'
+
   # claudio overlay: exactly the Obsidian socket grants and nothing else — canonical-JSON equality so any accidental extra key fails loudly.
   local claudio_expected
   claudio_expected=$(jq -Sc . <<EOF

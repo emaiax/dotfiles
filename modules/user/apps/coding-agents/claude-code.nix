@@ -14,6 +14,14 @@ let
   prefixRule = cmd: "Bash(${cmd}:*)";
   exactRule = cmd: "Bash(${cmd})";
 
+  # The rtk PreToolUse hook rewrites recognized commands to `rtk <cmd>` via updatedInput, and permission rules are evaluated against the REWRITTEN string — so a gate spelled only for the bare command is silently defeated for every command rtk recognizes. Found by tests/ probing the live gates: `git push`, `git checkout .`, and `git checkout --` all escaped their ask rules this way (rtk does not rewrite rm/reset/restore/clean/rebase or the gh/fj deny targets today, but that inventory is rtk's to change), hence a twin for every gate rather than just the three known escapees.
+  withRtkTwin =
+    cmds:
+    lib.concatMap (cmd: [
+      cmd
+      "rtk ${cmd}"
+    ]) cmds;
+
   # The other half of the credential policy (see #126): sandbox.filesystem.denyRead/denyWrite in
   # claude-sandbox.nix only confines the Bash subprocess. Read and Edit go through the permission
   # system instead, and Claude Code only consults Edit(path)/Read(path) rules — a Write(path) rule
@@ -75,10 +83,10 @@ let
       defaultMode = "auto";
 
       # These hold in every mode, unlike allow rules and unlike autoMode.
-      ask = map prefixRule gates.ask ++ map exactRule gates.askExact;
+      ask = map prefixRule (withRtkTwin gates.ask) ++ map exactRule (withRtkTwin gates.askExact);
       # Hard tier only; the reversible ones are soft_deny in claude-automode.nix. credentialDenyRules
       # is the Read/Edit half of the credential policy — see its definition above.
-      deny = map prefixRule gates.denyHard ++ credentialDenyRules;
+      deny = map prefixRule (withRtkTwin gates.denyHard) ++ credentialDenyRules;
     };
 
     # Keep the terminal tab labelled with the repo and branch Claude Code is working in, so a stack of tabs is readable at a glance. UserPromptSubmit covers branch switches mid-session; SessionStart covers the initial state and a resumed session.
