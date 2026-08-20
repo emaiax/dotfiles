@@ -47,6 +47,13 @@ let
 
     # Same story as ~/.claude above: allowWrite alone didn't make this writable.
     "${home}/Library/Application Support/rtk"
+
+    # fj's (forgejo-cli) token store, per the `directories` crate's macOS convention for
+    # ProjectDirs::from("", "Cyborus", "forgejo-cli") — confirmed by binary string analysis
+    # (the adjacent literals "Cyborus", "forgejo-cli", "keys.json") and by overriding $HOME,
+    # which made the keys.rs read failure disappear. Moot once `fj` is in excludedCommands
+    # below, kept anyway as defense in depth if that exclusion is ever narrowed.
+    "${home}/Library/Application Support/Cyborus.forgejo-cli"
   ];
 
   # `commit.gpgSign = true` with `gpg.format = "ssh"` (modules/user/git/git.nix), so denying ~/.ssh outright breaks every commit. The other four private keys stay denied.
@@ -123,6 +130,8 @@ in
 
         # rtk's global init also writes its filters template here, outside ~/.claude.
         "${home}/Library/Application Support/rtk"
+
+        "${home}/Library/Application Support/Cyborus.forgejo-cli"
       ];
 
       # denyWrite beats allowWrite unconditionally (see credentialDenies above) — this
