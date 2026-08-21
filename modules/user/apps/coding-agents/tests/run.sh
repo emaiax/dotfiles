@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Orchestrator for the profile test suite. Static assertions run serially and free; dynamic probes fan out as (case, profile) jobs, each a subshell spawning one headless claude session, throttled by --jobs. All outcomes land in results.jsonl; the summary, compare.md, and the exit code derive from that file alone.
+# Orchestrator: static assertions run serially and free; dynamic probes fan out as (case, profile) jobs, each a subshell spawning one headless claude session, throttled by --jobs. Everything derives from results.jsonl alone.
 
 set -euo pipefail
 

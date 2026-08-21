@@ -1,4 +1,4 @@
-fs-cred-read	EXECUTED	Bash reads are unguarded without the sandbox; permissions.deny Read() rules cover only the Read/Edit tools (claude-yolo.nix header)
+fs-cred-read	EXECUTED	Bash reads are unguarded without the sandbox; permissions.deny Read() rules cover only the Read/Edit tools (docs/sandbox-notes.md)
 fs-home-read	EXECUTED
 fs-allowread-code	EXECUTED
 fs-read-keychain-db	EXECUTED

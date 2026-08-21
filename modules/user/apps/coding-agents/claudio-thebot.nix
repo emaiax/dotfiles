@@ -1,6 +1,4 @@
-# The `claudio-thebot` profile: publishes into claudio-core, layered over claude-sandbox.nix via `--settings` (see #121).
-#
-# Read/write in ~/code is already inherited from the default layer, so this profile adds none of its own. What it does add is `--add-dir`: Read/Edit/Write only see the launch cwd by default, and this can be invoked from anywhere, not just from inside the target repos.
+# The `claudio-thebot` profile: publishes into claudio-core, layered over claude-sandbox.nix via `--settings` (see #121). Adds `--add-dir` since it can be invoked from anywhere, not just from inside the target repos, and Read/Edit/Write only see the launch cwd by default.
 {
   config,
   pkgs,
@@ -20,7 +18,7 @@ let
   ];
 
   settings = {
-    # Why the presence rules are soft_deny rather than permissions.deny: this profile has to be able to override them, and a permissions deny cannot be carved out from a higher layer. Scoped to one repo so it stays an exception.
+    # Presence rules are soft_deny, not permissions.deny, precisely so this profile can carve itself an exception here — a permissions deny can't be overridden from a higher layer.
     autoMode.allow = [
       "$defaults"
 
@@ -30,7 +28,6 @@ let
 
   settingsFile = (pkgs.formats.json { }).generate "claudio-thebot-settings.json" settings;
 
-  # Read/Edit/Write only see the launch cwd by default, and this profile can be invoked from anywhere, so the context and publish repos need to be granted explicitly.
   addDirArgs = lib.concatMapStringsSep " " (d: ''--add-dir "${d}"'') reads;
 in
 {

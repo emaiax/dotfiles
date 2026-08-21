@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Resolves the branch's built artifacts: profile wrappers, their overlay settings JSONs, and the base settings.json. Everything comes from nix build of the flake in this worktree, never from the activated system, so the suite tests the PR's code. The one exception is documented in README.md: probe sessions inherit the machine's active base settings, and this file measures that drift.
+# Resolves the branch's built artifacts (wrappers, overlays, base settings.json) via nix build, never the activated system — see README.md for the one exception this file measures the drift of.
 
 set -euo pipefail
 
@@ -24,7 +24,7 @@ resolve_artifacts() {
       echo "build.sh: nix build of $attr produced nothing" >&2
       return 1
     }
-    # ~/.claude/settings.json is deployed as an out-of-store symlink to a writable state path (so rtk can patch it at runtime), which means following the home-files symlink lands on the machine's ACTIVE, mutated copy. The pristine branch artifact is the store JSON the activation script installs into that state path; pull it from the activate script instead.
+    # ~/.claude/settings.json symlinks to a writable state path rtk patches at runtime, so following it lands on the active, mutated copy — pull the pristine store JSON the activation script installs there instead.
     local base
     base=$(grep -o '/nix/store/[a-z0-9]*-claude-code-settings\.json' "$gen/activate" | head -1)
     [[ -f $base ]] || {

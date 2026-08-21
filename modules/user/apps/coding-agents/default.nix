@@ -14,7 +14,7 @@
     ./opencode.nix
   ];
 
-  # Global, always-on token-reduction wrapper for coding-agent Bash calls (see claude-code.nix's PreToolUse hook). Unlike dudumox's devShell-gated build, this repo has no devShell — always on PATH is the equivalent here.
+  # Always on PATH, not devShell-gated like dudumox's build — this repo has no devShell.
   home.packages = [
     (pkgs.callPackage ./rtk.nix { rtkSrc = inputs.rtk-src; })
   ];

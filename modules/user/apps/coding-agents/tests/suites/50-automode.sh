@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Auto-mode layering per profile, validated at the config level. Auto-mode entries are prose judged by a model at runtime, not mechanically enforced rules, so asserting the exact layered configuration each profile ships is the deterministic limit of AFK testing — behavioral soft-deny probes would need the probe session to take an unprompted external action, which is flaky by construction and unsafe against a real forge.
+# Auto-mode layering per profile, validated at the config level — entries are prose judged by a model at runtime, not mechanical rules, so asserting the shipped config is the deterministic limit here. Behavioral probes would need an unprompted external action: flaky and unsafe.
 
 set -euo pipefail
 

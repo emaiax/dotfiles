@@ -34,9 +34,7 @@ profiles=(claude claudio claudio-thebot claude-yolo)
   echo
   echo "## Observed verdicts (dynamic probes)"
   echo
-  # Header and delimiter must carry the same cell count or GFM refuses to render the table.
-  # Built by string append rather than printf: a printf format beginning with '---' is parsed
-  # as options ("invalid option"), and a trailing separator would add a phantom column.
+  # String append, not printf: a format starting with '---' is parsed as options. Header and delimiter need the same cell count or GFM won't render the table.
   header='| case |'
   delim='|---|'
   for p in "${profiles[@]}"; do

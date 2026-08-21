@@ -14,7 +14,7 @@ let
   prefixRule = cmd: "Bash(${cmd}:*)";
   exactRule = cmd: "Bash(${cmd})";
 
-  # The rtk PreToolUse hook rewrites recognized commands to `rtk <cmd>` via updatedInput, and permission rules are evaluated against the REWRITTEN string — so a gate spelled only for the bare command is silently defeated for every command rtk recognizes. Found by tests/ probing the live gates: `git push`, `git checkout .`, and `git checkout --` all escaped their ask rules this way (rtk does not rewrite rm/reset/restore/clean/rebase or the gh/fj deny targets today, but that inventory is rtk's to change), hence a twin for every gate rather than just the three known escapees.
+  # rtk's PreToolUse hook rewrites recognized commands to `rtk <cmd>`, and permission rules match against that rewritten string — so a bare-command gate is silently defeated for anything rtk rewrites. A twin per gate rather than a fixed list, since rtk's rewrite inventory can grow.
   withRtkTwin =
     cmds:
     lib.concatMap (cmd: [
@@ -22,14 +22,9 @@ let
       "rtk ${cmd}"
     ]) cmds;
 
-  # The other half of the credential policy (see #126): sandbox.filesystem.denyRead/denyWrite in
-  # claude-sandbox.nix only confines the Bash subprocess. Read and Edit go through the permission
-  # system instead, and Claude Code only consults Edit(path)/Read(path) rules — a Write(path) rule
-  # is accepted but silently never checked, so Edit covers Write too here.
+  # Read/Edit half of the credential policy (see #126) — claude-sandbox.nix's denyRead/denyWrite only confines Bash. Write(path) rules are silently never checked, so Edit covers Write too.
   #
-  # `//path` is filesystem-root-absolute; a bare `/path` would anchor at the settings source
-  # instead and match nothing. Directories need a `/**` suffix to reach files nested inside; a
-  # bare file path doesn't.
+  # `//path` is filesystem-root-absolute; `/path` matches nothing. Dirs need `/**` for nested files.
   credentialPaths = import ./credential-paths.nix home;
   absRule = path: lib.removePrefix "/" path;
   fileDenyRules = path: [
@@ -46,7 +41,7 @@ let
     )
     ++ lib.concatMap dirDenyRules credentialPaths.dirs;
 
-  # Invoked through `bash` rather than executed: the home-manager module writes hooksDir files as plain symlinks, so the executable bit is not guaranteed to survive. A hook that is not executable fails silently.
+  # `bash "path"`, not direct exec: hooksDir symlinks don't reliably keep the executable bit, and a non-executable hook fails silently.
   rtkHook = {
     matcher = "Bash";
     hooks = [
@@ -75,13 +70,12 @@ let
     theme = "dark";
 
     permissions = {
-      # Chosen over bypassPermissions because entering auto mode drops broad allow rules granting arbitrary code execution, and because the classifier never sees tool results.
+      # auto over bypassPermissions: bypass drops broad allow rules (arbitrary code execution), and its classifier never sees tool results.
       defaultMode = "auto";
 
-      # These hold in every mode, unlike allow rules and unlike autoMode.
+      # ask/deny hold in every mode, unlike allow and autoMode.
       ask = map prefixRule (withRtkTwin gates.ask) ++ map exactRule (withRtkTwin gates.askExact);
-      # Hard tier only; the reversible ones are soft_deny in claude-automode.nix. credentialDenyRules
-      # is the Read/Edit half of the credential policy — see its definition above.
+      # Hard tier only; reversible ones are soft_deny in claude-automode.nix.
       deny = map prefixRule (withRtkTwin gates.denyHard) ++ credentialDenyRules;
     };
 
@@ -90,9 +84,7 @@ let
       PreToolUse = [ rtkHook ];
     };
 
-    # Pre-registers each third-party marketplace so its plugin below resolves without an
-    # interactive `/plugin marketplace add` first. claude-plugins-official needs no entry
-    # here — it's the built-in Anthropic marketplace, known to Claude Code by name alone.
+    # Pre-registers each third-party marketplace so its plugin below resolves without an interactive `/plugin marketplace add` first; claude-plugins-official is built-in.
     extraKnownMarketplaces = {
       thedotmack = {
         source = {
@@ -117,12 +109,7 @@ let
     };
   };
 
-  # config.programs.claude-code.settings, not the local claudeSettings above: claude-sandbox.nix
-  # and claude-automode.nix each merge their own keys (sandbox, autoMode) into the same option,
-  # and the generated file needs all of it, not just what this module contributes. Doesn't
-  # replicate the upstream module's disabledMcpjsonServers injection — this repo doesn't use
-  # programs.mcp, so cfg.settings alone matches today. extraKnownMarketplaces is set directly
-  # in claudeSettings above, so that one does flow through here like everything else.
+  # config.programs.claude-code.settings, not claudeSettings above: claude-sandbox.nix and claude-automode.nix merge their own keys (sandbox, autoMode) into the same option.
   claudeSettingsJson = (pkgs.formats.json { }).generate "claude-code-settings.json" (
     config.programs.claude-code.settings
     // {
@@ -130,35 +117,23 @@ let
     }
   );
 
-  # Outside the repo and untracked: content gets regenerated from claudeSettings on every
-  # `home-manager switch`, so there's no point versioning it.
+  # Outside the repo and untracked: content gets regenerated from claudeSettings on every `home-manager switch`, so there's no point versioning it.
   claudeSettingsStatePath = "${config.home.homeDirectory}/.local/state/claude-code/settings.json";
 
-  # Must match the home.file keys the claude-code module itself uses (absolute, under configDir),
-  # or home-manager sees two different attribute names resolving to the same target and refuses
-  # to build ("Conflicting managed target files") instead of letting mkForce win.
+  # Must match the upstream module's own home.file keys (absolute, under configDir), or home-manager sees two attrs targeting the same file and refuses to build instead of letting mkForce win.
   claudeConfigDir = config.programs.claude-code.configDir;
 
-  # Same convention as vscode/default.nix and iterm2/default.nix: an out-of-store symlink to the
-  # real file in the main checkout, not wherever this module happened to be evaluated from (e.g.
-  # a worktree). Deliberate, not a hardcode bug — all three point at ~/code/dotfiles so the target
-  # is stable and switching from a worktree never leaves the live config pointed at scratch work.
+  # Same convention as vscode/default.nix and iterm2/default.nix: always the main checkout, deliberately, not wherever this was evaluated from.
   agentsSourcePath = "${home}/code/dotfiles/modules/user/apps/coding-agents/AGENTS.md";
 in
 {
-  # Out-of-store symlink to a real file in this repo: rtk init -g injects a short RTK.md pointer
-  # into CLAUDE.md at runtime, which fails with EACCES if it's a symlink into the read-only Nix
-  # store. force = true: rtk (or any tool) may replace the symlink with a plain file on write;
-  # without force, the next switch would refuse to reclaim that path.
+  # Out-of-store: rtk init -g writes an RTK.md pointer into CLAUDE.md at runtime, which EACCESs against the read-only store. force = true lets rtk replace the symlink with a plain file without the next switch refusing to reclaim it.
   home.file."${claudeConfigDir}/CLAUDE.md" = {
     source = config.lib.file.mkOutOfStoreSymlink agentsSourcePath;
     force = true;
   };
 
-  # Same problem as CLAUDE.md above, but settings.json has no source file to point at directly —
-  # it's generated from the claudeSettings attrset. So generate it into the store as usual, then
-  # copy it out to a writable state path and symlink ~/.claude/settings.json to that, so rtk init -g
-  # can patch it (e.g. wiring its own hook) instead of hitting EACCES on the store path.
+  # Same EACCES problem as CLAUDE.md, but settings.json has no source file — generated into the store, then copied to a writable state path and symlinked there so rtk can patch it.
   home.file."${claudeConfigDir}/settings.json" = lib.mkForce {
     source = config.lib.file.mkOutOfStoreSymlink claudeSettingsStatePath;
     force = true;

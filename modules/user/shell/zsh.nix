@@ -16,6 +16,10 @@ in
       export PATH="${config.home.homeDirectory}/.asdf/shims:$PATH"
 
       any-nix-shell zsh --info-right | source /dev/stdin
+
+      # decrypted async by a launchd agent, so this may not exist yet on a fresh login
+      [[ -r "${config.sops.secrets.homelab-domain.path}" ]] &&
+        export HOMELAB_DOMAIN="$(<"${config.sops.secrets.homelab-domain.path}")"
     '';
 
     shellAliases = {

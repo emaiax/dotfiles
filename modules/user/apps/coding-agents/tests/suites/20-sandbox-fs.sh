@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Filesystem enforcement probes. Every payload is wrapped by probe_script (sandbox semantics apply to children), reads prove access via byte counts rather than content so nothing sensitive lands in a probe session's context, and write canaries clean up after themselves in the same script so a yolo run leaves no residue.
+# Filesystem enforcement probes, wrapped by probe_script. Reads prove access via byte counts, not content, so nothing sensitive lands in a probe's context; write canaries self-clean.
 
 set -euo pipefail
 
@@ -39,7 +39,7 @@ fs_run_case() {
       probe_script "$profile" "$case_id" 'touch "$HOME/.claude/.credentials.json"'
       ;;
     fs-write-keychain)
-      # The branch reverted the keychain allowWrite; probing while the active base still grants it would measure stale config. The revert itself is asserted statically (static-no-allowwrite-keychains).
+      # Branch reverted the keychain allowWrite; skip if the active base still grants it (stale config), the revert itself is asserted statically (static-no-allowwrite-keychains).
       if [[ $profile != claude-yolo ]] && skip_if_base_drift "$case_id" "$profile" \
         ".sandbox.filesystem.allowWrite | index(\"$HOME/Library/Keychains\") != null" \
         "active base still grants the reverted Keychains allowWrite; re-run after just switch"; then

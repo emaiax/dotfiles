@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Static assertions over the branch's generated artifacts: base settings.json (sandbox, permissions, network) and each profile's overlay + wrapper flags. These run per-branch-build, cost nothing, and catch config regressions before any probe spends a token.
+# Static assertions over the branch's generated artifacts — base settings.json, each profile's overlay + wrapper flags. Free, and catches config regressions before any probe spends a token.
 
 set -euo pipefail
 
@@ -13,8 +13,7 @@ static_settings_run() {
   assert_jq static-sandbox-no-unsandboxed-retry base "$base" '.sandbox.allowUnsandboxedCommands' 'false'
   assert_jq static-sandbox-autoallow-bash base "$base" '.sandbox.autoAllowBashIfSandboxed' 'true'
 
-  # excludedCommands must stay globs: bare names match nothing and fail open (see claude-sandbox.nix).
-  # rtk twins included: the hook rewrites gh to `rtk gh …`, and exclusion matches the rewritten string, so the bare `gh *` alone leaves gh sandboxed.
+  # Must stay globs (bare names fail open) and keep the rtk twins (claude-sandbox.nix).
   assert_jq static-excluded-commands base "$base" '.sandbox.excludedCommands | sort | join(",")' 'docker *,fj *,gh *,rtk docker *,rtk fj *,rtk gh *'
 
   # Filesystem policy: the deny wall and the carve-outs the PR is about.
@@ -26,14 +25,14 @@ static_settings_run() {
   assert_jq static-allowread-rtk-dir base "$base" ".sandbox.filesystem.allowRead | index(\"$h/Library/Application Support/rtk\") != null" 'true'
   assert_jq static-allowwrite-claude-dir base "$base" ".sandbox.filesystem.allowWrite | index(\"$h/.claude\") != null" 'true'
   assert_jq static-allowwrite-rtk-dir base "$base" ".sandbox.filesystem.allowWrite | index(\"$h/Library/Application Support/rtk\") != null" 'true'
-  # The keychain allowWrite was tried and reverted: it never fixed the store failure (see the claude-sandbox.nix comment on error 100001). Guard against it silently coming back.
+  # Tried and reverted (docs/sandbox-notes.md, error 100001) — guard against it coming back.
   assert_jq static-no-allowwrite-keychains base "$base" ".sandbox.filesystem.allowWrite | index(\"$h/Library/Keychains\") == null" 'true'
   assert_jq static-denywrite-credentials base "$base" ".sandbox.filesystem.denyWrite | index(\"$h/.claude/.credentials.json\") != null" 'true'
-  # Same-session escape carve-outs: hooks run unsandboxed, so a sandboxed write to the hook scripts or the settings state path would escalate. See the denyWrite comment in claude-sandbox.nix.
+  # Same-session escape carve-outs — see docs/sandbox-notes.md.
   assert_jq static-denywrite-hooks base "$base" ".sandbox.filesystem.denyWrite | index(\"$h/.claude/hooks\") != null" 'true'
   assert_jq static-denywrite-settings-state base "$base" ".sandbox.filesystem.denyWrite | index(\"$h/.local/state/claude-code/settings.json\") != null" 'true'
 
-  # Network policy: public domains inline; the private homelab domain is runtime-patched by homelab-network-hook.sh as a `*.<domain>` wildcard and must NOT be baked into the store artifact.
+  # Public domains inline; the private homelab domain is runtime-patched (homelab-network-hook.sh) and must not appear in the store artifact.
   assert_jq static-net-domains base "$base" '.sandbox.network.allowedDomains | sort | join(",")' 'api.github.com,github.com'
   assert_jq static-net-nix-socket base "$base" '.sandbox.network.allowUnixSockets | join(",")' '/nix/var/nix/daemon-socket/socket'
   assert_jq static-net-trustd base "$base" '.sandbox.network.allowMachLookup | join(",")' 'com.apple.trustd.agent'
@@ -44,14 +43,14 @@ static_settings_run() {
   assert_jq static-deny-gh-release base "$base" '.permissions.deny | index("Bash(gh release:*)") != null' 'true'
   assert_jq static-deny-fj-merge base "$base" '.permissions.deny | index("Bash(fj pr merge:*)") != null' 'true'
   assert_jq static-deny-fj-release base "$base" '.permissions.deny | index("Bash(fj release:*)") != null' 'true'
-  # Deny rules spell absolute paths as Read(//Users/...): the leading // marks an absolute path, so the pattern is // plus the path without its own leading slash.
+  # Read(//Users/...): // marks filesystem-root-absolute (claude-code.nix).
   assert_jq static-deny-read-credentials base "$base" ".permissions.deny | index(\"Read(/$h/.claude/.credentials.json)\") != null" 'true'
   assert_jq static-ask-git-push base "$base" '.permissions.ask | index("Bash(git push:*)") != null' 'true'
   assert_jq static-ask-rm-rf base "$base" '.permissions.ask | index("Bash(rm -rf:*)") != null' 'true'
   assert_jq static-ask-git-reset base "$base" '.permissions.ask | index("Bash(git reset --hard:*)") != null' 'true'
   assert_jq static-default-mode-auto base "$base" '.permissions.defaultMode' 'auto'
 
-  # rtk twins: the PreToolUse hook rewrites recognized commands to `rtk <cmd>` and permission rules match the rewritten string, so every gate needs its rtk-prefixed twin or the rewrite defeats it (found live by the gate probes; fix in claude-code.nix's withRtkTwin).
+  # rtk twins: found live by the gate probes; fix is claude-code.nix's withRtkTwin.
   assert_jq static-ask-rtk-git-push base "$base" '.permissions.ask | index("Bash(rtk git push:*)") != null' 'true'
   assert_jq static-ask-rtk-checkout-exact base "$base" '.permissions.ask | index("Bash(rtk git checkout .)") != null' 'true'
   assert_jq static-ask-rtk-checkout-dashes base "$base" '.permissions.ask | index("Bash(rtk git checkout --:*)") != null' 'true'

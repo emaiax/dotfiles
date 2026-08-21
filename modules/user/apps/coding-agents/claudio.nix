@@ -1,8 +1,6 @@
-# The `claudio` profile: Obsidian vault work, layered over claude-sandbox.nix via `--settings` (see #121).
+# The `claudio` profile: Obsidian vault work, layered over claude-sandbox.nix via `--settings` (see #121). Otherwise identical to the default profile — this only adds the vault socket.
 #
-# No vault path appears below on purpose. The vault is reached only through obsidian-cli, which means Obsidian.app does the file access and nothing here can scope it. Needs Obsidian running.
-#
-# Otherwise identical to the default profile: full read/write in ~/code, same ask/deny gates. This profile only adds the vault socket.
+# No vault path below on purpose: the vault is reached only through obsidian-cli, so Obsidian.app does the file access and nothing here can scope it. Needs Obsidian running.
 {
   config,
   pkgs,

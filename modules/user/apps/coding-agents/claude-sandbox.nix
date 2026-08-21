@@ -1,21 +1,17 @@
-# Default sandbox layer for every Claude Code session (see #121).
-#
-# Confines Bash and its children only. Read/Edit/Write go through the permission system instead — that's the other half of the credential policy, in claude-code.nix's permissions.deny, both halves built from credential-paths.nix so they can't drift apart (see #126). Profiles layer on top via `--settings`, which merges, so they inherit every deny here.
+# Default sandbox layer for every Claude Code session (see #121). Confines Bash and its children only — Read/Edit/Write go through claude-code.nix's permissions.deny instead (see #126), both built from credential-paths.nix. Profiles layer on top via `--settings`, which merges, so they inherit every deny here. Background/investigation notes: docs/sandbox-notes.md.
 #
 # Two ways to write a rule that silently does nothing: a trailing slash voids the entry on 2.1.222 (fixed in 2.1.224), and a glob like `$HOME/*` matches nothing and fails open.
-#
-# 2026-08-19: writes to ${home}/.claude and ${home}/Library/Application Support/rtk were denied outright despite both being allowWrite entries, on 2.1.234 — well past the 2.1.224 a previous note here blamed (that theory was disproven; sandbox-runtime docs describe allowRead/allowWrite as independent axes, and its mandatory always-denied-write list only covers .claude/commands/ and .claude/agents/, not .claude broadly — https://github.com/anthropic-experimental/sandbox-runtime/blob/main/README.md). Unverified hypothesis, untested against source: every allowWrite entry that worked also had allowRead covering it; these two didn't. Both are now also in allowRead below to test that. If writes still fail after this, the hypothesis is wrong and the real cause is still open.
 { config, ... }:
 let
   home = config.home.homeDirectory;
 
-  # nix breaks three separate ways under the sandbox: the fetcher cache, the state dir, and the daemon socket below.
+  # nix breaks under the sandbox without these: the fetcher cache, the state dir, and the daemon socket below.
   nixReads = [
     "${home}/.cache/nix"
     "${home}/.local/state/nix"
   ];
 
-  # Toolchains live scattered across top-level dotfiles, so denying $HOME wholesale takes out npm, node and every asdf-managed runtime. Deny personal data, not the toolchain.
+  # Toolchains, not personal data — denying $HOME wholesale takes out npm/node/asdf too.
   toolchainReads = [
     "${home}/code"
     "${home}/.cache"
@@ -40,42 +36,15 @@ let
     "${home}/.nix-profile"
     "${home}/.nix-defexpr"
 
-    # git-credential-osxkeychain (and other Security.framework keychain consumers) needs
-    # to read the keychain database to even reach the normal per-item ACL prompt — without
-    # this the read is denied outright and the helper fails silently instead of asking.
-    # Read access alone doesn't bypass per-item authorization; macOS still decrypts and
-    # gates each item via its own ACL. Same fix as CJHwong/agent-seatbelt's my.sb.
-    #
-    # Known non-blocking gap: `git push` under this sandbox still ends with `fatal:
-    # failed to store: 100001` from git-credential-osxkeychain's `store` op (push itself
-    # succeeds; git just can't cache the credential back). 100001 decodes via `security
-    # error 100001` to errSecErrnoBase(100000)+EPERM — a raw UNIX errno, not a Seatbelt
-    # denial. Confirmed by reading anthropic-experimental/sandbox-runtime's
-    # macos-sandbox-utils.ts (the profile generator this sandbox is built on): the
-    # baseline profile already grants unconditional mach-lookup to
-    # com.apple.securityd.xpc and com.apple.SecurityServer, and allowWrite here already
-    # compiles to a clean file-write* allow with no unlink/create re-deny catching it —
-    # so per the generator's own logic, this should already work. Adding allowWrite for
-    # this path (tried, then reverted) did not fix it, and a live repro with `log stream`
-    # running unsandboxed alongside a sandboxed `store` call showed zero kernel Sandbox
-    # deny lines for git/bash/git-credential-osxkeychain in the failure window — if
-    # Seatbelt were blocking the syscall, the kernel would log it. The failure isn't a
-    # rule this profile can express; it points at securityd's own ACL/identity
-    # resolution for SecItemAdd (new item) under a sandbox-exec-wrapped caller, outside
-    # this file's control surface. Accepted as a known limitation; do not re-attempt
-    # allowWrite/allowMachLookup tuning for this without new evidence.
+    # Needed just to reach the normal per-item ACL prompt; doesn't bypass it. `git push`'s credential store still fails here with a known, accepted gap — docs/sandbox-notes.md.
     "${home}/Library/Keychains"
 
-    # Whole directory, not just RTK.md: allowWrite alone wasn't enough to make ~/.claude
-    # actually writable (see the 2026-08-19 note above), so read access is granted too.
-    # .credentials.json stays denied regardless — narrower wins for reads, same as writes.
+    # allowWrite alone wasn't enough for either (docs/sandbox-notes.md); .credentials.json under ~/.claude stays denied regardless — narrower wins for reads, same as writes.
     "${home}/.claude"
-
-    # Same story as ~/.claude above: allowWrite alone didn't make this writable.
     "${home}/Library/Application Support/rtk"
   ];
 
-  # `commit.gpgSign = true` with `gpg.format = "ssh"` (modules/user/git/git.nix), so denying ~/.ssh outright breaks every commit. The other four private keys stay denied.
+  # ~/.ssh is denied outright otherwise; commit.gpgSign uses gpg.format = "ssh" (git/git.nix).
   sshSigningReads = [
     "${home}/.ssh/allowed_signers"
     "${home}/.ssh/config"
@@ -84,7 +53,7 @@ let
     "${home}/.ssh/known_hosts"
   ];
 
-  # Nested inside the allowRead trees above, which works because reads honour narrower-wins. Writes do not: denyWrite beats allowWrite unconditionally, so never pair the two.
+  # Nested inside allowRead above; reads honour narrower-wins but denyWrite beats allowWrite unconditionally, so never pair the two.
   credentialPaths = import ./credential-paths.nix home;
   credentialDenies = credentialPaths.dirs ++ credentialPaths.files;
   credentialBaks = map (p: "${p}.bak") credentialPaths.bakCarveouts;
@@ -99,29 +68,7 @@ in
 
     autoAllowBashIfSandboxed = true;
 
-    # Docker does not compose with the sandbox. Excluded commands run entirely unwrapped, so this is a hole rather than a containment.
-    #
-    # gh and fj: Seatbelt blocks mach-lookup to trustd, the daemon Security.framework's
-    # SecTrustEvaluateWithError needs for TLS certificate validation. Every tool that
-    # validates certs through Security.framework fails with OSStatus -26276 ("invalid
-    # peer certificate") under the sandbox — not Go-specific despite fj being Rust, same
-    # root cause as the documented gh/gcloud/terraform case. No allowlist knob exists for
-    # this (anthropics/claude-code#34876, closed "not planned"); the documented fix is
-    # excludedCommands. See code.claude.com/docs/en/sandboxing.md#troubleshooting.
-    #
-    # Bare command names ("gh", "fj") are NOT respected — matching requires a glob
-    # covering the arguments, per the docs' own "docker *" example and confirmed by
-    # anthropics/claude-code#10524 (bare "uv" silently ignored). Bare "docker" above
-    # was never actually verified working; only rm/write denials were tested.
-    #
-    # rtk twins: the PreToolUse hook rewrites `gh …` to `rtk gh …` (verified: `gh api`,
-    # `gh pr view`; not `fj`, not the gh/fj deny targets), and exclusion matching runs on
-    # the REWRITTEN command — so `gh *` never matches `rtk gh api …` and gh runs fully
-    # sandboxed after all, surviving only by the trustd allowMachLookup plus the two
-    # allowlisted github domains (any gh call to another host dies on the egress block).
-    # Same rewrite-defeats-the-rule bug the permission gates hit; the `rtk gh *`/`rtk fj *`
-    # twins restore the intended full-bypass. rtk does not rewrite docker, but the twin is
-    # harmless and future-proofs the same way (rewrite inventory is rtk's to change).
+    # docker doesn't compose with the sandbox; gh/fj fail cert validation under it (trustd mach-lookup blocked). Excluded commands run fully unwrapped — a hole, not a containment. Each needs a glob (bare names aren't matched) and an `rtk `-prefixed twin, since the PreToolUse hook rewrites gh/fj commands before this matches against them. Full background: docs/sandbox-notes.md.
     excludedCommands = [
       "docker *"
       "rtk docker *"
@@ -131,32 +78,17 @@ in
       "rtk fj *"
     ];
 
-    # Without this, `open -a <App>` fails with kLSUnknownErr ("couldn't communicate
-    # with a helper application"): the sandbox blocks the mach-lookup to
-    # RunningBoard/launchservicesd that launching another app's process requires.
+    # Without this, `open -a <App>` fails with kLSUnknownErr: launching another app's process needs a mach-lookup to RunningBoard/launchservicesd that the sandbox blocks.
     allowAppleEvents = true;
 
     network = {
       # Without this every nix subcommand fails to reach its daemon.
       allowUnixSockets = [ "/nix/var/nix/daemon-socket/socket" ];
 
-      # Go binaries (gh, terraform, kubectl) validate TLS certs via macOS's
-      # Security.framework, which delegates to trustd over a Mach-service lookup
-      # Seatbelt denies by default, surfacing as `x509: OSStatus -26276` even for
-      # a valid cert (curl/git/Node verify in-process and are unaffected). This
-      # re-grants just that one lookup rather than excluding the whole command
-      # from the sandbox. See anthropics/claude-code#26466 (comments from
-      # pradeep-mj and cdunkelb).
+      # gh/terraform/kubectl validate TLS via Security.framework → trustd, which Seatbelt blocks by default (`x509: OSStatus -26276`, even for a valid cert; curl/git/Node verify in-process and are unaffected). anthropics/claude-code#26466.
       allowMachLookup = [ "com.apple.trustd.agent" ];
 
-      # github.com covers plain git-over-https; the gh CLI talks to a separate host for
-      # its REST/GraphQL API, and without it every gh command that isn't a hard deny still
-      # dies on a network-outbound block instead of reaching the permission gates in
-      # gates.nix (ask/soft_deny/hard_deny) that were meant to be what actually governs it.
-      # Both are public, so they're plain literals here. The homelab domain is private (this
-      # repo mirrors publicly) and gets patched into settings.json at runtime instead, as a
-      # `*.<domain>` wildcard covering every homelab service, not just forgejo — see
-      # claude-hooks/homelab-network-hook.sh.
+      # github.com covers git-over-https; api.github.com is the gh CLI's separate REST/GraphQL host — without it gh dies on the egress block before reaching gates.nix's own rules. Both public, so plain literals; the private homelab domain is patched in at runtime as a wildcard instead — claude-hooks/homelab-network-hook.sh.
       allowedDomains = [
         "github.com"
         "api.github.com"
@@ -164,10 +96,8 @@ in
     };
 
     filesystem = {
-      # Reads are allow-everything by default upstream. Denying $HOME and allowing back the toolchain recovers most of what agent-jail gave.
-      # credentialBaks: same reasoning as the denyWrite carve-out below — the entries in
-      # credential-paths.nix's bakCarveouts are nested under an allowRead path, so their sibling
-      # .bak could ride the reallow back in without this.
+      # Reads are allow-everything by default upstream; deny $HOME, allow back the toolchain.
+      # credentialBaks: same reasoning as the denyWrite carve-out below.
       denyRead = [ home ] ++ credentialDenies ++ credentialBaks;
       allowRead = toolchainReads ++ nixReads ++ sshSigningReads;
 
@@ -183,34 +113,12 @@ in
         "${home}/.gem"
         "${home}/go"
 
-        # rtk's global init (`rtk init -g`) writes RTK.md here. denyWrite below keeps
-        # the credential file out of reach even though it's nested under this entry.
+        # rtk's global init writes RTK.md and its filters template into these; denyWrite below still keeps .credentials.json out of reach.
         "${home}/.claude"
-
-        # rtk's global init also writes its filters template here, outside ~/.claude.
         "${home}/Library/Application Support/rtk"
       ];
 
-      # denyWrite beats allowWrite unconditionally (see credentialDenies above) — this is that
-      # same carve-out for writes, needed now that ~/.claude is allowWrite. bakCarveouts +
-      # credentialBaks: credential-paths.nix's bakCarveouts lists the credentialDenies entries
-      # nested under an allowWrite path, and credentialBaks is their sibling .bak (e.g.
-      # home-manager's backupFileExtension) that could smuggle onto the same allowWrite grant
-      # (see #126).
-      #
-      # The next two entries close a same-session sandbox escape: PreToolUse hooks run
-      # UNSANDBOXED (verified: a hook writing to the denyWrite'd $HOME root succeeds while
-      # a sandboxed Bash command cannot), so any file a sandboxed command can write that a
-      # hook later executes, or that governs the next session's policy, is an escape hatch.
-      # ~/.claude/hooks holds the very scripts invoked as `bash ~/.claude/hooks/*.sh`
-      # (claude-code.nix) — writable via the ~/.claude allowWrite above, so a sandboxed or
-      # prompt-injected command could overwrite rtk-hook.sh and get arbitrary unsandboxed
-      # execution on the next Bash call. The settings state path is the real file
-      # ~/.claude/settings.json resolves to (mkOutOfStoreSymlink into ~/.local/state, which
-      # the allowWrite above covers); a sandboxed command running the same jq+mv pattern
-      # rtk-hook.sh uses could set permissions.deny=[] or sandbox.enabled=false for the next
-      # session. Denying the sandboxed write to both does not hinder rtk: it patches
-      # settings.json from the hook, which runs unsandboxed.
+      # bakCarveouts/credentialBaks: the credentialDenies entries nested under an allowWrite path need denying again here, plus their .bak sibling (see #126). ~/.claude/hooks and the settings state path close a same-session escape — PreToolUse hooks run unsandboxed, so a sandboxed command could otherwise overwrite rtk-hook.sh or flip permissions.deny/sandbox.enabled for the next session. Full trail: docs/sandbox-notes.md.
       denyWrite =
         credentialPaths.bakCarveouts
         ++ credentialBaks

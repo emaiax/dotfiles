@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Throwaway git fixtures for destructive probe payloads. Every fixture is a fresh repo with a local bare "remote", so a yolo probe that really executes git push has somewhere harmless to land. Branch name is trunk on purpose: nothing in this suite ever touches a branch called main, not even a disposable one.
+# Throwaway git fixtures for destructive probe payloads: a fresh repo with a local bare "remote" so a probe that really executes git push has somewhere harmless to land. Branch is trunk on purpose — nothing here ever touches a branch called main, not even a disposable one.
 
 set -euo pipefail
 
-# Fixtures live under ~/code on purpose: the sandbox's allowWrite covers that tree, so a gated command that reaches execution can actually succeed against its local bare remote. A fixture in /tmp made the first full run lie: sandboxed pushes failed on filesystem EPERM before the permission gate was ever measured.
+# Under ~/code, not /tmp: the sandbox's allowWrite covers that tree, so a gated command that reaches execution can actually succeed against its bare remote instead of failing on EPERM before the permission gate is even measured.
 FIXTURE_ROOT=${FIXTURE_ROOT:-$HOME/code/.claude-profile-suite}
 
-# mk_fixture NAME — prints the fixture dir. Layout: <dir>/repo (worktree, cwd for the probe) and <dir>/remote.git (bare). The repo is left with: one commit ahead of the remote (push has something to do), a junkdir (rm -rf target), and a dirty tracked file (reset/checkout target).
+# mk_fixture NAME — prints the fixture dir: <dir>/repo (worktree, probe cwd) and <dir>/remote.git (bare). Left with a commit ahead of remote (push target), a junkdir (rm -rf target), and a dirty tracked file (reset/checkout target).
 mk_fixture() {
   local name=$1
   local dir
@@ -48,7 +48,7 @@ fixture_junk_removed() {
   [[ ! -e "$1/repo/junkdir" ]]
 }
 
-# Reset/checkout revert TRACKED modifications; they do not touch the untracked junkdir. So the predicate must look only at tracked changes (git diff), never at porcelain — porcelain always reports the untracked junkdir and would make the tree look dirty even after a successful revert.
+# git diff, never porcelain: reset/checkout only revert tracked changes, and porcelain always reports the untracked junkdir regardless, which would make a successful revert look dirty.
 fixture_tracked_reverted() {
   git -C "$1/repo" diff --quiet
 }

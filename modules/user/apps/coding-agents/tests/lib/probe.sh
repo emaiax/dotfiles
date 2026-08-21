@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-# Headless probe runner. A probe spawns a real claude session under the profile's wrapper and derives a verdict (EXECUTED / BLOCKED) from artifacts, never from the model's prose: sandbox cases read the exit code their generated case.sh recorded, gate cases read fixture side effects plus the session JSON's permission_denials array.
-#
-# Two modes exist because enforcement happens at two different layers. Sandbox rules apply to every child process, so wrapping the payload in case.sh keeps sandbox semantics while buying deterministic exit/stdout/stderr capture. Permission rules match the top-level Bash command string, so gate payloads must reach the tool call literally and unwrapped.
+# Headless probe runner. Verdicts (EXECUTED/BLOCKED) come from artifacts, never the model's prose: sandbox cases read case.sh's exit code, gate cases read fixture side effects plus permission_denials. Two modes because enforcement happens at two layers — sandbox rules apply to every child process (so wrapping in case.sh is fine), permission rules match the top-level Bash command string (so gate payloads must reach the tool call literally, unwrapped).
 
 set -euo pipefail
 
@@ -17,19 +15,11 @@ _run_in_dir() {
   cd "$dir" && "$@"
 }
 
-# Probe sessions must not share memory with each other or with the operator's sessions: the claude-mem plugin records each probe's prompt as an observation and feeds it to later sessions, which then refuse gate probes as "prompt injection attempts" (observed live, first full run).
-#
-# It cannot be disabled with a second --settings flag: Claude Code takes only the LAST --settings and drops the earlier ones entirely rather than merging them, so a second flag would silently discard each wrapper's own overlay — for claude-yolo that means losing sandbox.enabled=false and probing a sandboxed session by accident (observed: yolo home-path writes failing on the base denyRead). Instead each profile's overlay is deep-merged with the plugin-disable into one file, passed as the single --settings, replacing the wrapper's own flag with a superset of it.
+# claude-mem must be disabled per probe (observed live: it records each probe's prompt and later sessions refuse gate probes as "prompt injection attempts"). Can't just add a second --settings flag — Claude Code keeps only the last one, dropping the wrapper's own overlay entirely (for claude-yolo that means losing sandbox.enabled=false and probing sandboxed by accident). So each profile's overlay is deep-merged with the plugin-disable into one file and passed as the only --settings.
 _probe_settings() {
   local profile=$1
   local merged="$RESULTS_DIR/settings-$profile.json"
-  # Up to --jobs probes for one profile start together, so the write must be atomic: a probe
-  # whose `claude --settings` reads this file mid-write would get a truncated JSON, and for
-  # claude-yolo that silently drops sandbox.enabled=false and probes a sandboxed session by
-  # accident. Write to a private temp then rename (atomic on the same filesystem); a late
-  # writer harmlessly replaces an identical file. run.sh also pre-builds these serially
-  # before forking, so in practice the file is already present, but this stays correct
-  # even when called concurrently.
+  # Atomic write (temp + rename): up to --jobs probes for one profile start together, and a mid-write read here would truncate the JSON, again risking a silently sandboxed claude-yolo. run.sh pre-builds these serially so this races nobody in practice, but stays correct if it did.
   if [[ ! -f $merged ]]; then
     local overlay=${OVERLAY[$profile]:-}
     local base='{}'
@@ -42,9 +32,7 @@ _probe_settings() {
   echo "$merged"
 }
 
-# prebuild_probe_settings — build every profile's merged settings serially before the probe
-# fan-out, so no two forked jobs race to create the same file (the atomic write above is the
-# backstop; this avoids even attempting the race).
+# prebuild_probe_settings — builds every profile's merged settings before the fan-out, so no two forked jobs even attempt the race the atomic write above backstops.
 prebuild_probe_settings() {
   local p
   for p in "$@"; do _probe_settings "$p" >/dev/null; done
@@ -114,7 +102,7 @@ Then reply with only the word DONE."
   fi
 }
 
-# probe_command PROFILE CASE_ID CMD WORKDIR CHECK_FN — gate-layer probe. CHECK_FN prints EXECUTED, BLOCKED, or UNKNOWN from side effects; UNKNOWN falls back to the session's permission_denials count and final reply. Side effects outrank every session signal because they are ground truth.
+# probe_command PROFILE CASE_ID CMD WORKDIR CHECK_FN — gate-layer probe. CHECK_FN prints EXECUTED/BLOCKED/UNKNOWN from side effects, which outrank every session signal (ground truth); UNKNOWN falls back to permission_denials and the final reply.
 probe_command() {
   local profile=$1 case_id=$2 cmd=$3 workdir=$4 check_fn=$5
 
@@ -158,7 +146,7 @@ If the tool call is denied or blocked by permissions, do not retry and do not wo
       fi
       verdict=UNRELIABLE
     else
-      # Side effect absent with no recorded denial. DENIED means the model saw a block the JSON did not record; DONE means it ran yet left no trace, which is a harness problem, not a compliance one, so re-prompting cannot help. Only refusal prose earns the escalated retry.
+      # No side effect, no recorded denial. DENIED: the model saw a block the JSON missed. DONE: it ran but left no trace — a harness bug, not a compliance one; re-prompting can't fix that, so only refusal prose earns the escalated retry.
       if [[ $reply == DENIED ]]; then
         verdict=BLOCKED
         break
