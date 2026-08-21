@@ -68,10 +68,18 @@ ssh-keygen NAME COMMENT:
 copy-ssh-key-to-host key host:
   ssh-copy-id -i {{key}} {{host}}
 
-# decrypt a sops file in place for editing (SOPS_AGE_KEY_FILE comes from modules/user/sops/default.nix, not this justfile)
-decrypt secret_file:
-	sops --decrypt --in-place {{secret_file}}
+# open a sops file in $EDITOR for free-form edits; sops decrypts to a temp file and re-encrypts on save, so the tracked file is never plaintext on disk
+edit-secrets secret_file="secrets/secrets.enc.yaml":
+	sops edit {{secret_file}}
 
-# re-encrypt a sops file after decrypt
-encrypt secret_file:
-	sops --encrypt --in-place {{secret_file}}
+# set one key's value without opening an editor. Run this yourself, typed at your own terminal — read -rs never echoes the value or puts it in shell history, and it never enters a Claude transcript. Not meant to be run by relaying a value through chat.
+set-secret secret_file key:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	read -rs -p "value: " value
+	echo
+	printf '%s' "$value" | jq -Rs . | sops set "{{secret_file}}" "[\"{{key}}\"]" --value-stdin
+
+# remove one key
+unset-secret secret_file key:
+	sops unset {{secret_file}} "[\"{{key}}\"]"
