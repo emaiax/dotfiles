@@ -15,9 +15,6 @@ let
   # rendered to Claude's native shape, this file only wires perms.claudeCode in.
   perms = import ../permissions.nix { inherit home lib dotfilesPath; };
 
-  # Shared with opencode/default.nix.
-  settingsValues = import ../settings.nix;
-
   # `bash "path"`, not direct exec: hooksDir symlinks don't reliably keep the executable bit, and a non-executable hook fails silently.
   rtkHook = {
     matcher = "Bash";
@@ -39,7 +36,33 @@ let
     ];
   };
 
-  claudeSettings = settingsValues.claudeCode // {
+  claudeSettings = {
+    model = "sonnet";
+
+    includeCoAuthoredBy = false;
+    theme = "dark";
+
+    extraKnownMarketplaces = {
+      obsidian-skills = {
+        source = {
+          source = "github";
+          repo = "kepano/obsidian-skills";
+        };
+      };
+      thedotmack = {
+        source = {
+          source = "github";
+          repo = "thedotmack/claude-mem";
+        };
+      };
+    };
+
+    enabledPlugins = {
+      "claude-mem@thedotmack" = true; # semantic memory across sessions
+      "obsidian@obsidian-skills" = true; # obsidian markdown, bases, JSON Canvas and `obsidian` CLI
+      "superpowers@claude-plugins-official" = true; # superpowers: code analysis, refactoring, and generation
+    };
+
     # ask/deny hold in every mode, unlike allow and autoMode.
     permissions = perms.claudeCode.permissions // {
       defaultMode = "auto";
@@ -112,35 +135,26 @@ let
       "$schema" = "https://json.schemastore.org/claude-code-settings.json";
     }
   );
-
-  # Same convention as vscode/default.nix: a real, writable file inside the main checkout, not a store copy, so
-  # both halves of what touches it show up in `git status`/`git diff`. Regenerated from claudeSettings on every
-  # `home-manager switch`, and separately patched at runtime by rtk-hook.sh and homelab-network-hook.sh, both
-  # land on this same file since it's the actual symlink target, not a copy.
-  claudeSettingsStatePath = perms.paths.claudeSettingsFile;
-
-  # Must match the upstream module's own home.file keys (absolute, under configDir), or home-manager sees two attrs targeting the same file and refuses to build instead of letting mkForce win.
-  claudeConfigDir = config.programs.claude-code.configDir;
-
-  # same convention as vscode/default.nix and iterm2/default.nix: always the main checkout (dotfilesPath, from
-  # nix/inventory.nix's repo), deliberately, not wherever this was evaluated from
-  agentsSourcePath = "${dotfilesPath}/modules/user/apps/claudio/AGENTS.md";
 in
 {
   # Out-of-store: rtk init -g writes an RTK.md pointer into CLAUDE.md at runtime, which EACCESs against the read-only store. force = true lets rtk replace the symlink with a plain file without the next switch refusing to reclaim it.
-  home.file."${claudeConfigDir}/CLAUDE.md" = {
-    source = config.lib.file.mkOutOfStoreSymlink agentsSourcePath;
+  home.file."${config.programs.claude-code.configDir}/CLAUDE.md" = {
+    source = config.lib.file.mkOutOfStoreSymlink "${dotfilesPath}/modules/user/apps/claudio/AGENTS.md";
     force = true;
   };
 
-  # Same EACCES problem as CLAUDE.md, but settings.json has no source file: generated into the store, then copied to claudeSettingsStatePath and symlinked there so rtk can patch it.
-  home.file."${claudeConfigDir}/settings.json" = lib.mkForce {
-    source = config.lib.file.mkOutOfStoreSymlink claudeSettingsStatePath;
+  # Same EACCES problem as CLAUDE.md, but settings.json has no source file: generated into the store, then
+  # copied to perms.paths.claudeSettingsFile (a real, writable file inside the main checkout, not a store copy,
+  # same convention as vscode/default.nix) and symlinked there so rtk can patch it and a running session can
+  # overwrite its own settings without a `just switch`. Must match the upstream module's own home.file key, or
+  # home-manager sees two attrs targeting the same file and refuses to build instead of letting mkForce win.
+  home.file."${config.programs.claude-code.configDir}/settings.json" = lib.mkForce {
+    source = config.lib.file.mkOutOfStoreSymlink perms.paths.claudeSettingsFile;
     force = true;
   };
 
   home.activation.claudeCodeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    install -Dm644 ${claudeSettingsJson} ${claudeSettingsStatePath}
+    install -Dm644 ${claudeSettingsJson} ${perms.paths.claudeSettingsFile}
   '';
 
   programs.claude-code = {
