@@ -1,99 +1,206 @@
 # Permissions for commands, filesystem paths, and network domains policy shared across every coding agent and profile in this repo.
 # These are the loosest any profile will ever be, since they land in the user layer and a higher-precedence layer cannot loosen them.
 #
-# Structure: `commands` and `credentials` are raw, backend-agnostic input. `claudeCode` and `opencode` are each
-# backend's own tree, already rendered into its native settings shape, so claude-code.nix, sandbox.nix, and
+# Structure: `policy` is the single source of truth, grouped by domain (commands, credentials, filesystem,
+# network, sandbox). mkClaudeCodePermissions, mkClaudeCodeSandbox, and mkOpencodePermissions each take that one
+# policy and render it into one consumer's native settings shape, so claude-code.nix, sandbox.nix, and
 # opencode/default.nix each just wire in their own branch instead of carrying their own translation logic.
 { home, lib, dotfilesPath }:
 let
-  commands = {
-    ask = [
-      "git push"
+  policy = {
+    commands = {
+      ask = [
+        "git push"
 
-      # Destructive and hard to undo.
-      "git reset --hard"
-      "git checkout --"
-      "git restore"
-      "git clean"
-      "git rebase"
-      "rm -rf"
-    ];
+        # Destructive and hard to undo.
+        "git reset --hard"
+        "git checkout --"
+        "git restore"
+        "git clean"
+        "git rebase"
+        "rm -rf"
+      ];
 
-    # Matched literally rather than as a prefix.
-    askExact = [ "git checkout ." ];
+      # Matched literally rather than as a prefix.
+      askExact = [ "git checkout ." ];
 
-    # Irreversible, so these go to `permissions.deny` where nothing overrides them.
-    denyHard = [
-      "gh pr merge"
-      "gh release"
-      "fj pr merge"
-      "fj release"
-    ];
+      # Irreversible, so these go to `permissions.deny` where nothing overrides them.
+      denyHard = [
+        "gh pr merge"
+        "gh release"
+        "fj pr merge"
+        "fj release"
+      ];
 
-    # Reversible, so these become prose in auto-mode.nix's soft_deny, which claudio-thebot can carve an exception
-    # out of, and only claudeCode.permissions.deny renders them that way. OpenCode has no classifier, so
-    # opencode.bash renders denyHard and denySoft both as plain denies.
-    denySoft = [
-      "gh pr create"
-      "gh pr ready"
-      "gh pr review"
-      "gh pr comment"
-      "gh pr close"
-      "gh issue create"
-      "gh issue edit"
-      "gh issue comment"
+      # Reversible, so these become prose in auto-mode.nix's soft_deny, which claudio-thebot can carve an
+      # exception out of, and only claudeCode.permissions.deny renders them that way. OpenCode has no classifier,
+      # so opencode.permission.bash renders denyHard and denySoft both as plain denies.
+      denySoft = [
+        "gh pr create"
+        "gh pr ready"
+        "gh pr review"
+        "gh pr comment"
+        "gh pr close"
+        "gh issue create"
+        "gh issue edit"
+        "gh issue comment"
 
-      "fj pr create"
-      "fj pr review"
-      "fj pr close"
-      "fj pr comment"
-      "fj issue create"
-      "fj issue edit"
-      "fj issue comment"
-    ];
+        "fj pr create"
+        "fj pr review"
+        "fj pr close"
+        "fj pr comment"
+        "fj issue create"
+        "fj issue edit"
+        "fj issue comment"
+      ];
 
-    # No allowlist: `ls` and `cat` are aliases resolving to nix store paths that no name-based rule matches, so an
-    # allowlist blocks them however it is written.
+      # No allowlist: `ls` and `cat` are aliases resolving to nix store paths that no name-based rule matches, so
+      # an allowlist blocks them however it is written.
 
-    # Derived globs that would widen the rule if applied as a plain prefix. `git checkout --` would become
-    # `git checkout --*`, swallowing `--track` and `--force`. Only opencode.bash consumes this.
-    opencodePatterns = {
-      "git checkout --" = "git checkout -- *";
+      # Derived globs that would widen the rule if applied as a plain prefix. `git checkout --` would become
+      # `git checkout --*`, swallowing `--track` and `--force`. Only opencode.permission.bash consumes this.
+      opencodePatterns = {
+        "git checkout --" = "git checkout -- *";
+      };
     };
-  };
 
-  # Filesystem paths that must stay out of every agent's reach, no matter which tool asks for them.
-  # claudeCode.sandbox.filesystem denies these to the sandboxed Bash subprocess, and claudeCode.permissions
-  # denies them to the native Read/Edit tools, which the sandbox never sees. OpenCode has no path-based deny
-  # mechanism of its own yet, so only claude-code's two halves read this today.
-  credentials = {
-    # Directories: Read/Edit deny rules need a /** suffix to reach files nested inside.
-    dirs = [
-      "${home}/.aws"
-      "${home}/.config/1Password"
-      "${home}/.config/sops"
-      "${home}/.gnupg"
-    ];
+    # Filesystem paths that must stay out of every agent's reach, no matter which tool asks for them.
+    # claudeCode.sandbox.filesystem denies these to the sandboxed Bash subprocess, and claudeCode.permissions
+    # denies them to the native Read/Edit tools, which the sandbox never sees. OpenCode has no path-based deny
+    # mechanism of its own yet, so only claude-code's two halves read this today.
+    credentials = {
+      # Directories: Read/Edit deny rules need a /** suffix to reach files nested inside.
+      dirs = [
+        "${home}/.aws"
+        "${home}/.config/1Password"
+        "${home}/.config/sops"
+        "${home}/.gnupg"
+      ];
 
-    # Single files.
-    files = [
-      "${home}/.claude/.credentials.json"
+      # Single files.
+      files = [
+        "${home}/.claude/.credentials.json"
 
-      # Deny the credential file, never the config directory around it: denying ~/.config/gh stopped gh starting at
-      # all, and ~/.config/opencode holds only config while opencode keeps its tokens under ~/.local/share.
-      "${home}/.local/share/opencode/auth.json"
-      "${home}/.local/share/opencode/mcp-auth.json"
-      "${home}/.docker/config.json"
-      "${home}/.netrc"
-      "${home}/.npmrc"
-    ];
+        # Deny the credential file, never the config directory around it: denying ~/.config/gh stopped gh
+        # starting at all, and ~/.config/opencode holds only config while opencode keeps its tokens under
+        # ~/.local/share.
+        "${home}/.local/share/opencode/auth.json"
+        "${home}/.local/share/opencode/mcp-auth.json"
+        "${home}/.docker/config.json"
+        "${home}/.netrc"
+        "${home}/.npmrc"
+      ];
+    };
 
+    # Sandbox policy for Claude Code's Seatbelt boundary: filesystem paths every profile needs read access to.
+    # OpenCode has no sandbox mechanism, so none of this applies there.
+    filesystem = {
+      # nix breaks under the sandbox without these: the fetcher cache and the state dir (the daemon socket
+      # itself is under network.allowUnixSockets).
+      nixReads = [
+        "${home}/.cache/nix"
+        "${home}/.local/state/nix"
+      ];
+
+      # Toolchains, not personal data: denying $HOME wholesale takes out npm/node/asdf too. These need both read
+      # and write access, so mkClaudeCodeSandbox's allowRead and allowWrite both draw from this one list instead
+      # of each retyping it, which is how allowWrite drifted out of sync with allowRead before.
+      toolchainReadWrite = [
+        "${home}/code"
+        "${home}/.cache"
+        "${home}/Library/Caches" # treefmt, which `nix fmt` runs, caches here rather than under XDG
+        "${home}/.asdf"
+        "${home}/.bun"
+        "${home}/.npm"
+        "${home}/.gem"
+        "${home}/go"
+
+        # allowWrite alone wasn't enough for either (docs/sandbox-notes.md); .credentials.json under ~/.claude
+        # stays denied regardless: narrower wins for reads, same as writes.
+        "${home}/.claude"
+        "${home}/Library/Application Support/rtk"
+      ];
+
+      # Read-only additions on top of toolchainReadWrite.
+      toolchainReadOnly = [
+        "${home}/.config"
+        "${home}/.local"
+        "${home}/.gitconfig"
+
+        # The Bash tool runs commands through the login shell.
+        "${home}/.zshrc"
+        "${home}/.zshenv"
+
+        "${home}/.bundle"
+        "${home}/.mix"
+        "${home}/.hex"
+        "${home}/.terraform.d"
+        "${home}/.nix-profile"
+        "${home}/.nix-defexpr"
+
+        # Needed just to reach the normal per-item ACL prompt; doesn't bypass it. `git push`'s credential store
+        # still fails here with a known, accepted gap (docs/sandbox-notes.md).
+        "${home}/Library/Keychains"
+      ];
+
+      # ~/.ssh is denied outright otherwise; commit.gpgSign uses gpg.format = "ssh" (git/git.nix).
+      sshSigningReads = [
+        "${home}/.ssh/allowed_signers"
+        "${home}/.ssh/config"
+        "${home}/.ssh/github"
+        "${home}/.ssh/github.pub"
+        "${home}/.ssh/known_hosts"
+      ];
+    };
+
+    # Network egress and IPC the sandbox otherwise blocks by default. Only claudeCode.sandbox.network consumes
+    # this, same reason as filesystem above.
+    network = {
+      # homelab domain is patched in at runtime by hooks/homelab-network-hook.sh
+      allowedDomains = [
+        "github.com" # git-over-https
+        "api.github.com" # gh api
+      ];
+
+      # Without this every nix subcommand fails to reach its daemon.
+      allowUnixSockets = [ "/nix/var/nix/daemon-socket/socket" ];
+
+      # gh/terraform/kubectl validate TLS via Security.framework -> trustd, which Seatbelt blocks by default
+      # (`x509: OSStatus -26276`, even for a valid cert; curl/git/Node verify in-process and are unaffected).
+      # anthropics/claude-code#26466.
+      allowMachLookup = [ "com.apple.trustd.agent" ];
+    };
+
+    # Config for the Seatbelt mechanism itself, not policy in the commands/credentials/filesystem/network sense.
+    sandbox = {
+      # docker doesn't compose with the sandbox; gh/fj fail cert validation under it (trustd mach-lookup
+      # blocked). Excluded commands run fully unwrapped: a hole, not a containment. Each needs a glob (bare
+      # names aren't matched) and an `rtk `-prefixed twin, since the PreToolUse hook rewrites gh/fj commands
+      # before this matches against them. Full background: docs/sandbox-notes.md.
+      excludedCommands = [
+        "docker *"
+        "rtk docker *"
+        "gh *"
+        "rtk gh *"
+        "fj *"
+        "rtk fj *"
+      ];
+
+      # Plain path constants that claude-code.nix and sandbox.nix both need to agree on. They're sibling files,
+      # neither imports the other, so without a shared spot they silently drift apart (see #126). settingsFile
+      # backs mkClaudeCodeSandbox's denyWrite: PreToolUse hooks run unsandboxed, so a sandboxed command could
+      # otherwise overwrite a hook script or flip permissions.deny/sandbox.enabled for the next session.
+      paths = {
+        settingsFile = "${dotfilesPath}/modules/user/apps/claudio/claude-code/settings.json";
+        hooksDir = "${home}/.claude/hooks";
+      };
+    };
   };
 
   # A sibling `.bak` (backupFileExtension = "bak") could ride the same allowRead/allowWrite grant back in as the
   # file it backs up, so every credential file needs its own `.bak` denied too, not just the ones nested inside
-  # an allowed tree today.
-  credentialBaks = map (p: "${p}.bak") credentials.files;
+  # an allowed tree today. Shared between mkClaudeCodePermissions and mkClaudeCodeSandbox.
+  credentialBaks = map (p: "${p}.bak") policy.credentials.files;
 
   # `Bash(x:*)` matches any arguments; `Bash(x)` matches only that literal invocation.
   claudeCodePrefixRule = cmd: "Bash(${cmd}:*)";
@@ -121,16 +228,13 @@ let
     "Read(//${claudeCodeAbsRule path}/**)"
     "Edit(//${claudeCodeAbsRule path}/**)"
   ];
-  claudeCodeCredentialDenyRules =
-    lib.concatMap claudeCodeFileDenyRules (credentials.files ++ credentialBaks)
-    ++ lib.concatMap claudeCodeDirDenyRules credentials.dirs;
 
   # OpenCode has no ask/deny split by classifier, so denyHard and denySoft both render as plain denies here.
   # last-matching-rule-wins, evaluated in *declaration* order: Nix attrsets don't preserve that order when
   # serialized to JSON (keys come out alphabetical), so every rule after the "*" catch-all has to be pinned with
   # entryAfter or it can silently reorder ahead of it.
   opencodePrefixRule = action: cmd: {
-    name = commands.opencodePatterns.${cmd} or "${cmd}*";
+    name = policy.commands.opencodePatterns.${cmd} or "${cmd}*";
     value = lib.hm.dag.entryAfter [ "*" ] action;
   };
   opencodeExactRule = action: cmd: {
@@ -138,175 +242,100 @@ let
     value = lib.hm.dag.entryAfter [ "*" ] action;
   };
 
-  # Sandbox policy for Claude Code's Seatbelt boundary: filesystem paths every profile needs read access to, plus
-  # the commands and domains that sit outside it. OpenCode has no sandbox mechanism, so none of this applies there.
-  nixReads = [
-    "${home}/.cache/nix"
-    "${home}/.local/state/nix"
-  ];
+  # programs.claude-code.settings.permissions: the native Read/Edit/Bash gate, ask/deny hold in every mode,
+  # unlike allow and autoMode.
+  mkClaudeCodePermissions =
+    policy:
+    let
+      credentialDenyRules =
+        lib.concatMap claudeCodeFileDenyRules (policy.credentials.files ++ credentialBaks)
+        ++ lib.concatMap claudeCodeDirDenyRules policy.credentials.dirs;
+    in
+    {
+      ask =
+        map claudeCodePrefixRule (withRtkTwin policy.commands.ask)
+        ++ map claudeCodeExactRule (withRtkTwin policy.commands.askExact);
 
-  # Toolchains, not personal data: denying $HOME wholesale takes out npm/node/asdf too. These need both read and
-  # write access, so allowRead and allowWrite in claudeCode.sandbox.filesystem both draw from this one list
-  # instead of each retyping it, which is how it drifted out of sync before.
-  toolchainReadWrite = [
-    "${home}/code"
-    "${home}/.cache"
-    "${home}/Library/Caches" # treefmt, which `nix fmt` runs, caches here rather than under XDG
-    "${home}/.asdf"
-    "${home}/.bun"
-    "${home}/.npm"
-    "${home}/.gem"
-    "${home}/go"
+      # hard tier only; reversible ones are soft_deny in auto-mode.nix
+      deny = map claudeCodePrefixRule (withRtkTwin policy.commands.denyHard) ++ credentialDenyRules;
+    };
 
-    # allowWrite alone wasn't enough for either (docs/sandbox-notes.md); .credentials.json under ~/.claude stays
-    # denied regardless: narrower wins for reads, same as writes.
-    "${home}/.claude"
-    "${home}/Library/Application Support/rtk"
-  ];
+  # programs.claude-code.settings.sandbox.{excludedCommands,filesystem,network}: the Seatbelt boundary itself.
+  mkClaudeCodeSandbox = policy: {
+    inherit (policy.sandbox) excludedCommands;
 
-  # Read-only additions on top of toolchainReadWrite.
-  toolchainReadOnly = [
-    "${home}/.config"
-    "${home}/.local"
-    "${home}/.gitconfig"
+    filesystem = {
+      # Reads are allow-everything by default upstream; deny $HOME, allow back the toolchain. credentialBaks:
+      # same reasoning as the denyWrite carve-out below.
+      denyRead = [ home ] ++ policy.credentials.dirs ++ policy.credentials.files ++ credentialBaks;
+      allowRead =
+        policy.filesystem.toolchainReadWrite
+        ++ policy.filesystem.toolchainReadOnly
+        ++ policy.filesystem.nixReads
+        ++ policy.filesystem.sshSigningReads;
 
-    # The Bash tool runs commands through the login shell.
-    "${home}/.zshrc"
-    "${home}/.zshenv"
+      # Writes are already deny-by-default, and cwd is writable implicitly. Package managers need to write
+      # where they install. rtk's global init writes RTK.md and its filters template under ~/.claude; denyWrite
+      # below still keeps .credentials.json out of reach there.
+      allowWrite = policy.filesystem.toolchainReadWrite ++ [ "${home}/.local/state" ];
 
-    "${home}/.bundle"
-    "${home}/.mix"
-    "${home}/.hex"
-    "${home}/.terraform.d"
-    "${home}/.nix-profile"
-    "${home}/.nix-defexpr"
+      # credentials.files/credentialBaks: the entries nested under an allowWrite path need denying again here,
+      # raw and their .bak sibling alike (see #126). hooksDir and settingsFile close a same-session escape:
+      # PreToolUse hooks run unsandboxed, so a sandboxed command could otherwise overwrite rtk-hook.sh or flip
+      # permissions.deny/sandbox.enabled for the next session. Full trail: docs/sandbox-notes.md.
+      denyWrite = policy.credentials.files ++ credentialBaks ++ [
+        policy.sandbox.paths.hooksDir
+        policy.sandbox.paths.settingsFile
+      ];
+    };
 
-    # Needed just to reach the normal per-item ACL prompt; doesn't bypass it. `git push`'s credential store still
-    # fails here with a known, accepted gap (docs/sandbox-notes.md).
-    "${home}/Library/Keychains"
-  ];
+    network = {
+      inherit (policy.network) allowedDomains allowUnixSockets allowMachLookup;
+    };
 
-  # ~/.ssh is denied outright otherwise; commit.gpgSign uses gpg.format = "ssh" (git/git.nix).
-  sshSigningReads = [
-    "${home}/.ssh/allowed_signers"
-    "${home}/.ssh/config"
-    "${home}/.ssh/github"
-    "${home}/.ssh/github.pub"
-    "${home}/.ssh/known_hosts"
-  ];
+    paths = policy.sandbox.paths;
+  };
 
-  # homelab domain is patched in at runtime by hooks/homelab-network-hook.sh
-  allowedDomains = [
-    "github.com" # git-over-https
-    "api.github.com" # gh api
-  ];
+  # programs.opencode.settings.permission.
+  mkOpencodePermissions = policy: {
+    read = {
+      "*" = "allow";
+      # Keep the default .env protection explicit: a bare "allow" string here isn't documented to preserve it.
+      "*.env" = "deny";
+      "*.env.*" = "deny";
+      "*.env.example" = "allow";
+    };
+    glob = "allow";
+    grep = "allow";
+    lsp = "allow";
+    edit = "allow";
+    webfetch = "allow";
+    websearch = "allow";
+    task = "allow";
+    # Touching paths outside the project: flag it.
+    external_directory = "ask";
+    # Same tool call repeated 3x with identical input: kill it, don't ask.
+    doom_loop = "deny";
 
-  # Plain path constants that claude-code.nix and sandbox.nix both need to agree on. They're sibling files,
-  # neither imports the other, so without a shared spot they silently drift apart (see #126). settingsFile backs
-  # sandbox.filesystem.denyWrite below: PreToolUse hooks run unsandboxed, so a sandboxed command could otherwise
-  # overwrite a hook script or flip permissions.deny/sandbox.enabled for the next session.
-  sandboxPaths = {
-    settingsFile = "${dotfilesPath}/modules/user/apps/claudio/claude-code/settings.json";
-    hooksDir = "${home}/.claude/hooks";
+    bash = {
+      "*" = "allow";
+    }
+    // builtins.listToAttrs (
+      map (opencodePrefixRule "ask") policy.commands.ask
+      ++ map (opencodePrefixRule "deny") (policy.commands.denyHard ++ policy.commands.denySoft)
+      ++ map (opencodeExactRule "ask") policy.commands.askExact
+    );
   };
 in
 {
-  inherit commands credentials;
+  inherit policy;
 
   claudeCode = {
-    permissions = {
-      # ask/deny hold in every mode, unlike allow and autoMode.
-      ask =
-        map claudeCodePrefixRule (withRtkTwin commands.ask)
-        ++ map claudeCodeExactRule (withRtkTwin commands.askExact);
-
-      # hard tier only; reversible ones are soft_deny in auto-mode.nix
-      deny = map claudeCodePrefixRule (withRtkTwin commands.denyHard) ++ claudeCodeCredentialDenyRules;
-    };
-
-    sandbox = {
-      # docker doesn't compose with the sandbox; gh/fj fail cert validation under it (trustd mach-lookup blocked).
-      # Excluded commands run fully unwrapped: a hole, not a containment. Each needs a glob (bare names aren't
-      # matched) and an `rtk `-prefixed twin, since the PreToolUse hook rewrites gh/fj commands before this
-      # matches against them. Full background: docs/sandbox-notes.md.
-      excludedCommands = [
-        "docker *"
-        "rtk docker *"
-        "gh *"
-        "rtk gh *"
-        "fj *"
-        "rtk fj *"
-      ];
-
-      filesystem = {
-        # Reads are allow-everything by default upstream; deny $HOME, allow back the toolchain.
-        # credentialBaks: same reasoning as the denyWrite carve-out below.
-        denyRead = [ home ] ++ credentials.dirs ++ credentials.files ++ credentialBaks;
-        allowRead = toolchainReadWrite ++ toolchainReadOnly ++ nixReads ++ sshSigningReads;
-
-        # Writes are already deny-by-default, and cwd is writable implicitly. Package managers need to write
-        # where they install. rtk's global init writes RTK.md and its filters template under ~/.claude; denyWrite
-        # below still keeps .credentials.json out of reach there.
-        allowWrite = toolchainReadWrite ++ [ "${home}/.local/state" ];
-
-        # credentials.files/credentialBaks: the entries nested under an allowWrite path need denying again here,
-        # raw and their .bak sibling alike (see #126). hooksDir and settingsFile close a same-session escape:
-        # PreToolUse hooks run unsandboxed, so a sandboxed command could otherwise overwrite rtk-hook.sh or flip
-        # permissions.deny/sandbox.enabled for the next session. Full trail: docs/sandbox-notes.md.
-        denyWrite =
-          credentials.files
-          ++ credentialBaks
-          ++ [
-            sandboxPaths.hooksDir
-            sandboxPaths.settingsFile
-          ];
-      };
-
-      network = {
-        inherit allowedDomains;
-
-        # Without this every nix subcommand fails to reach its daemon.
-        allowUnixSockets = [ "/nix/var/nix/daemon-socket/socket" ];
-
-        # gh/terraform/kubectl validate TLS via Security.framework -> trustd, which Seatbelt blocks by default
-        # (`x509: OSStatus -26276`, even for a valid cert; curl/git/Node verify in-process and are unaffected).
-        # anthropics/claude-code#26466.
-        allowMachLookup = [ "com.apple.trustd.agent" ];
-      };
-
-      paths = sandboxPaths;
-    };
+    permissions = mkClaudeCodePermissions policy;
+    sandbox = mkClaudeCodeSandbox policy;
   };
 
   opencode = {
-    permission = {
-      read = {
-        "*" = "allow";
-        # Keep the default .env protection explicit: a bare "allow" string here isn't documented to preserve it.
-        "*.env" = "deny";
-        "*.env.*" = "deny";
-        "*.env.example" = "allow";
-      };
-      glob = "allow";
-      grep = "allow";
-      lsp = "allow";
-      edit = "allow";
-      webfetch = "allow";
-      websearch = "allow";
-      task = "allow";
-      # Touching paths outside the project: flag it.
-      external_directory = "ask";
-      # Same tool call repeated 3x with identical input: kill it, don't ask.
-      doom_loop = "deny";
-
-      bash = {
-        "*" = "allow";
-      }
-      // builtins.listToAttrs (
-        map (opencodePrefixRule "ask") commands.ask
-        ++ map (opencodePrefixRule "deny") (commands.denyHard ++ commands.denySoft)
-        ++ map (opencodeExactRule "ask") commands.askExact
-      );
-    };
+    permission = mkOpencodePermissions policy;
   };
 }
