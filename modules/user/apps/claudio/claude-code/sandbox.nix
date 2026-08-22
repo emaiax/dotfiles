@@ -10,7 +10,7 @@ let
   home = config.home.homeDirectory;
 
   # Shared with claude-code.nix and opencode.nix.
-  perms = import ../claudio/permissions.nix { inherit home lib; };
+  perms = import ../permissions.nix { inherit home lib; };
   inherit (perms)
     nixReads
     toolchainReads

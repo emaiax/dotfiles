@@ -8,7 +8,7 @@ let
   home = config.home.homeDirectory;
 
   # Shared with opencode.nix and sandbox.nix.
-  perms = import ../claudio/permissions.nix { inherit home lib; };
+  perms = import ../permissions.nix { inherit home lib; };
 
   # `Bash(x:*)` matches any arguments; `Bash(x)` matches only that literal invocation.
   prefixRule = cmd: "Bash(${cmd}:*)";
@@ -133,10 +133,10 @@ in
     enable = true;
 
     # Symlinked to ~/.claude/hooks/. Wired into settings.hooks below — dropping a script here does nothing on its own.
-    hooksDir = ../claudio/hooks;
+    hooksDir = ../hooks;
 
     skills = {
-      nixpkgs-pr-checklist = ../claudio/skills/nixpkgs-pr-checklist;
+      nixpkgs-pr-checklist = ../skills/nixpkgs-pr-checklist;
     };
 
     settings = claudeSettings;

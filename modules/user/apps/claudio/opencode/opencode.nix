@@ -8,7 +8,7 @@ let
 
   # Shared with claude-code.nix and sandbox.nix. Rendered into OpenCode's dag-entry shape by
   # permissions.nix's opencodeBashRules.
-  perms = import ../claudio/permissions.nix { inherit home lib; };
+  perms = import ../permissions.nix { inherit home lib; };
 in
 {
   programs.opencode = {
@@ -16,11 +16,11 @@ in
 
     # Personal agent operating context as the global AGENTS.md; same source as programs.claude-code's
     # ~/.claude/CLAUDE.md.
-    context = ../claudio/AGENTS.md;
+    context = ../AGENTS.md;
 
     skills = {
       # Shared vendored skills dir; same source as programs.claude-code.skills.
-      nixpkgs-pr-checklist = ../claudio/skills/nixpkgs-pr-checklist;
+      nixpkgs-pr-checklist = ../skills/nixpkgs-pr-checklist;
     };
 
     settings = {
