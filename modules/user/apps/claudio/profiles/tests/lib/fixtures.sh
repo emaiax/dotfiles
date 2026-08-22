@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Throwaway git fixtures for destructive probe payloads: a fresh repo with a local bare "remote" so a probe that really
-# executes git push has somewhere harmless to land. Branch is trunk on purpose — nothing here ever touches a branch
+# executes git push has somewhere harmless to land. Branch is trunk on purpose, nothing here ever touches a branch
 # called main, not even a disposable one.
 
 set -euo pipefail
@@ -9,7 +9,7 @@ set -euo pipefail
 # actually succeed against its bare remote instead of failing on EPERM before the permission gate is even measured.
 FIXTURE_ROOT=${FIXTURE_ROOT:-$HOME/code/.claude-profile-suite}
 
-# mk_fixture NAME — prints the fixture dir: <dir>/repo (worktree, probe cwd) and <dir>/remote.git (bare). Left with a
+# mk_fixture NAME: prints the fixture dir: <dir>/repo (worktree, probe cwd) and <dir>/remote.git (bare). Left with a
 # commit ahead of remote (push target), a junkdir (rm -rf target), and a dirty tracked file (reset/checkout target).
 mk_fixture() {
   local name=$1

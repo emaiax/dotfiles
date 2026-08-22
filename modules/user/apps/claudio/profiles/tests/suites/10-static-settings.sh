@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Static assertions over the branch's generated artifacts — base settings.json, each profile's overlay + wrapper flags.
+# Static assertions over the branch's generated artifacts: base settings.json, each profile's overlay + wrapper flags.
 # Free, and catches config regressions before any probe spends a token.
 
 set -euo pipefail
@@ -14,7 +14,7 @@ static_settings_run() {
   assert_jq static-sandbox-no-unsandboxed-retry base "$base" '.sandbox.allowUnsandboxedCommands' 'false'
   assert_jq static-sandbox-autoallow-bash base "$base" '.sandbox.autoAllowBashIfSandboxed' 'true'
 
-  # Must stay globs (bare names fail open) and keep the rtk twins (claude-sandbox.nix).
+  # Must stay globs (bare names fail open) and keep the rtk twins (permissions.nix).
   assert_jq static-excluded-commands base "$base" '.sandbox.excludedCommands | sort | join(",")' 'docker *,fj *,gh *,rtk docker *,rtk fj *,rtk gh *'
 
   # Filesystem policy: the deny wall and the carve-outs the PR is about.
@@ -25,7 +25,7 @@ static_settings_run() {
   assert_jq static-allowread-rtk-dir base "$base" ".sandbox.filesystem.allowRead | index(\"$h/Library/Application Support/rtk\") != null" 'true'
   assert_jq static-allowwrite-claude-dir base "$base" ".sandbox.filesystem.allowWrite | index(\"$h/.claude\") != null" 'true'
   assert_jq static-allowwrite-rtk-dir base "$base" ".sandbox.filesystem.allowWrite | index(\"$h/Library/Application Support/rtk\") != null" 'true'
-  # Tried and reverted (docs/sandbox-notes.md, error 100001) — guard against it coming back.
+  # Tried and reverted (docs/sandbox-notes.md, error 100001), guard against it coming back.
   assert_jq static-no-allowwrite-keychains base "$base" ".sandbox.filesystem.allowWrite | index(\"$h/Library/Keychains\") == null" 'true'
   assert_jq static-denywrite-credentials base "$base" ".sandbox.filesystem.denyWrite | index(\"$h/.claude/.credentials.json\") != null" 'true'
 
@@ -40,7 +40,7 @@ static_settings_run() {
   assert_jq static-deny-gh-release base "$base" '.permissions.deny | index("Bash(gh release:*)") != null' 'true'
   assert_jq static-deny-fj-merge base "$base" '.permissions.deny | index("Bash(fj pr merge:*)") != null' 'true'
   assert_jq static-deny-fj-release base "$base" '.permissions.deny | index("Bash(fj release:*)") != null' 'true'
-  # Read(//Users/...): // marks filesystem-root-absolute (claude-code.nix).
+  # Read(//Users/...): // marks filesystem-root-absolute (permissions.nix).
   assert_jq static-deny-read-credentials base "$base" ".permissions.deny | index(\"Read(/$h/.claude/.credentials.json)\") != null" 'true'
   assert_jq static-deny-read-credentials-bak base "$base" ".permissions.deny | index(\"Read(/$h/.claude/.credentials.json.bak)\") != null" 'true'
   assert_jq static-deny-edit-credentials-bak base "$base" ".permissions.deny | index(\"Edit(/$h/.claude/.credentials.json.bak)\") != null" 'true'
@@ -49,14 +49,14 @@ static_settings_run() {
   assert_jq static-ask-git-reset base "$base" '.permissions.ask | index("Bash(git reset --hard:*)") != null' 'true'
   assert_jq static-default-mode-auto base "$base" '.permissions.defaultMode' 'auto'
 
-  # rtk twins: found live by the gate probes; fix is claude-code.nix's withRtkTwin.
+  # rtk twins: found live by the gate probes; fix is permissions.nix's withRtkTwin.
   assert_jq static-ask-rtk-git-push base "$base" '.permissions.ask | index("Bash(rtk git push:*)") != null' 'true'
   assert_jq static-ask-rtk-checkout-exact base "$base" '.permissions.ask | index("Bash(rtk git checkout .)") != null' 'true'
   assert_jq static-ask-rtk-checkout-dashes base "$base" '.permissions.ask | index("Bash(rtk git checkout --:*)") != null' 'true'
   assert_jq static-deny-rtk-gh-merge base "$base" '.permissions.deny | index("Bash(rtk gh pr merge:*)") != null' 'true'
   assert_jq static-deny-rtk-fj-release base "$base" '.permissions.deny | index("Bash(rtk fj release:*)") != null' 'true'
 
-  # claudio overlay: exactly the Obsidian socket grants and nothing else — canonical-JSON equality so any accidental
+  # claudio overlay: exactly the Obsidian socket grants and nothing else, canonical-JSON equality so any accidental
   # extra key fails loudly.
   local claudio_expected
   claudio_expected=$(jq -Sc . <<EOF

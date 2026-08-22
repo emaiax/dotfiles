@@ -18,7 +18,7 @@ _color() {
   if [[ -t 1 ]]; then printf '\033[%sm%s\033[0m' "$code" "$*"; else printf '%s' "$*"; fi
 }
 
-# t_record STATUS CASE_ID PROFILE [DETAIL] [OBSERVED] — the single sink for every outcome. OBSERVED carries the raw
+# t_record STATUS CASE_ID PROFILE [DETAIL] [OBSERVED]: the single sink for every outcome. OBSERVED carries the raw
 # probe verdict so compare.md can show what actually happened, not just pass/fail.
 t_record() {
   local status=$1 case_id=$2 profile=$3 detail=${4:-} observed=${5:-}
@@ -27,9 +27,9 @@ t_record() {
     '{case: $c, profile: $p, status: $s, detail: $d, observed: $o}' >>"$RESULTS_DIR/results.jsonl"
   case $status in
     PASS) echo "$(_color 32 'ok    ') $profile/$case_id" ;;
-    FAIL) echo "$(_color 31 'FAIL  ') $profile/$case_id — $detail" ;;
-    XFAIL) echo "$(_color 33 'xfail ') $profile/$case_id — $detail" ;;
-    SKIP) echo "$(_color 36 'skip  ') $profile/$case_id — $detail" ;;
+    FAIL) echo "$(_color 31 'FAIL  ') $profile/$case_id: $detail" ;;
+    XFAIL) echo "$(_color 33 'xfail ') $profile/$case_id: $detail" ;;
+    SKIP) echo "$(_color 36 'skip  ') $profile/$case_id: $detail" ;;
     *)
       echo "harness: unknown status '$status'" >&2
       return 1
@@ -37,7 +37,7 @@ t_record() {
   esac
 }
 
-# assert_jq CASE_ID PROFILE FILE JQ_EXPR EXPECTED — static assertion against a JSON artifact.
+# assert_jq CASE_ID PROFILE FILE JQ_EXPR EXPECTED: static assertion against a JSON artifact.
 assert_jq() {
   local case_id=$1 profile=$2 file=$3 expr=$4 expected=$5
   local actual
@@ -52,7 +52,7 @@ assert_jq() {
   fi
 }
 
-# assert_contains CASE_ID PROFILE HAYSTACK_FILE NEEDLE — plain-text presence check (wrapper scripts).
+# assert_contains CASE_ID PROFILE HAYSTACK_FILE NEEDLE: plain-text presence check (wrapper scripts).
 assert_contains() {
   local case_id=$1 profile=$2 file=$3 needle=$4
   if grep -qF -- "$needle" "$file"; then
@@ -62,7 +62,7 @@ assert_contains() {
   fi
 }
 
-# expected_verdict PROFILE CASE_ID — first TSV column match; empty output means the table is incomplete, which run_case
+# expected_verdict PROFILE CASE_ID: first TSV column match; empty output means the table is incomplete, which run_case
 # treats as FAIL.
 expected_verdict() {
   awk -F'\t' -v c="$2" '$1 == c { print $2; exit }' "$TESTS_ROOT/expected/$1.tsv"
@@ -72,7 +72,7 @@ expected_note() {
   awk -F'\t' -v c="$2" '$1 == c { print $3; exit }' "$TESTS_ROOT/expected/$1.tsv"
 }
 
-# verdict_vs_expected CASE_ID PROFILE ACTUAL — maps a probe verdict against the expected table, honoring XFAIL_*
+# verdict_vs_expected CASE_ID PROFILE ACTUAL: maps a probe verdict against the expected table, honoring XFAIL_*
 # markers.
 verdict_vs_expected() {
   local case_id=$1 profile=$2 actual=$3
@@ -98,7 +98,7 @@ verdict_vs_expected() {
   esac
 }
 
-# skip_if_base_drift CASE_ID PROFILE JQ_TEST NOTE — dynamic probes run over the machine's active base settings, not the
+# skip_if_base_drift CASE_ID PROFILE JQ_TEST NOTE: dynamic probes run over the machine's active base settings, not the
 # branch build (see lib/build.sh). If JQ_TEST detects drift that would invalidate this case, SKIP with NOTE and return 0
 # so the caller bails before spending a probe.
 skip_if_base_drift() {
@@ -110,7 +110,7 @@ skip_if_base_drift() {
   return 1
 }
 
-# with_timeout SECONDS CMD... — macOS ships no timeout(1); portable watchdog that reaps the child on expiry.
+# with_timeout SECONDS CMD...: macOS ships no timeout(1); portable watchdog that reaps the child on expiry.
 with_timeout() {
   local secs=$1
   shift

@@ -24,14 +24,14 @@ echo "pass=$pass fail=$fail xfail=$xfail skip=$skip"
 if [[ $fail -gt 0 ]]; then
   echo
   echo "failures:"
-  jq -r 'select(.status == "FAIL") | "  \(.profile)/\(.case) — \(.detail)"' "$R"
+  jq -r 'select(.status == "FAIL") | "  \(.profile)/\(.case): \(.detail)"' "$R"
 fi
 
 profiles=(claude claudio claudio-thebot claude-yolo)
 {
   echo "# Profile suite run $(basename "$RESULTS_DIR")"
   echo
-  echo "pass $pass / fail $fail / xfail $xfail / skip $skip — probe model: ${TESTS_MODEL:-haiku}"
+  echo "pass $pass / fail $fail / xfail $xfail / skip $skip, probe model: ${TESTS_MODEL:-haiku}"
   echo
   echo "## Observed verdicts (dynamic probes)"
   echo
@@ -50,14 +50,14 @@ profiles=(claude claudio claudio-thebot claude-yolo)
     for p in "${profiles[@]}"; do
       cell=$(jq -r --arg c "$case_id" --arg p "$p" \
         'select(.case == $c and .profile == $p and .observed != "") | "\(.observed) (\(.status))"' "$R" | tail -1)
-      row+=" ${cell:-—} |"
+      row+=" ${cell:--} |"
     done
     echo "$row"
   done < <(jq -r 'select(.observed != "") | .case' "$R" | sort -u)
   echo
   echo "## Static failures, if any"
   echo
-  jq -r 'select(.status == "FAIL" and .observed == "") | "- \(.profile)/\(.case) — \(.detail)"' "$R"
+  jq -r 'select(.status == "FAIL" and .observed == "") | "- \(.profile)/\(.case): \(.detail)"' "$R"
   echo
   echo "## Active-base drift"
   echo

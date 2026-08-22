@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Resolves the branch's built artifacts (wrappers, overlays, base settings.json) via nix build, never the activated
-# system — see README.md for the one exception this file measures the drift of.
+# system, see README.md for the one exception this file measures the drift of.
 
 set -euo pipefail
 
@@ -9,7 +9,7 @@ set -euo pipefail
 
 REPO_ROOT=$(cd "$TESTS_ROOT/../../../.." && pwd)
 
-# resolve_artifacts — populates BASE_SETTINGS, WRAPPER[<profile>], OVERLAY[<profile>]. Cached per run in paths.env since
+# resolve_artifacts: populates BASE_SETTINGS, WRAPPER[<profile>], OVERLAY[<profile>]. Cached per run in paths.env since
 # nix eval takes ~10s even warm.
 declare -A WRAPPER OVERLAY
 BASE_SETTINGS=
@@ -27,7 +27,7 @@ resolve_artifacts() {
       return 1
     }
     # ~/.claude/settings.json symlinks to a writable state path rtk patches at runtime, so following it lands on the
-    # active, mutated copy — pull the pristine store JSON the activation script installs there instead.
+    # active, mutated copy, pull the pristine store JSON the activation script installs there instead.
     local base
     base=$(grep -o '/nix/store/[a-z0-9]*-claude-code-settings\.json' "$gen/activate" | head -1)
     [[ -f $base ]] || {
@@ -64,7 +64,7 @@ resolve_artifacts() {
   done
 }
 
-# drift_report — diff of branch base settings vs the machine's active one; informational, written into the results dir
+# drift_report: diff of branch base settings vs the machine's active one; informational, written into the results dir
 # for compare.md.
 drift_report() {
   local active="$HOME/.claude/settings.json"

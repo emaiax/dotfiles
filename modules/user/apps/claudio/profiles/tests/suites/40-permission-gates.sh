@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Permission gate probes: ask rules (auto-denied headless, skipped under claude-yolo) and deny rules (hold in every
-# mode, bypassPermissions included). Payloads reach the model literally — wrapping would hide the command string the
+# mode, bypassPermissions included). Payloads reach the model literally, wrapping would hide the command string the
 # rules match on.
 
 set -euo pipefail
@@ -21,7 +21,7 @@ gate_run_case() {
   local fix
   case $case_id in
     gate-git-push)
-      # Holds only once the active base carries the rtk twin rules (claude-code.nix withRtkTwin) — otherwise this
+      # Holds only once the active base carries the rtk twin rules (permissions.nix withRtkTwin), otherwise this
       # re-measures the known escape, not the fix.
       if [[ $profile != claude-yolo ]] && skip_if_base_drift "$case_id" "$profile" \
         '.permissions.ask | index("Bash(rtk git push:*)") == null' \
@@ -43,7 +43,7 @@ gate_run_case() {
       probe_command "$profile" "$case_id" "git reset --hard HEAD" "$fix/repo" _check
       ;;
     gate-checkout-dot)
-      # Exact match, "Bash(git checkout .)" with no glob — worth probing on its own. Same twin-drift skip as
+      # Exact match, "Bash(git checkout .)" with no glob, worth probing on its own. Same twin-drift skip as
       # gate-git-push.
       if [[ $profile != claude-yolo ]] && skip_if_base_drift "$case_id" "$profile" \
         '.permissions.ask | index("Bash(rtk git checkout .)") == null' \

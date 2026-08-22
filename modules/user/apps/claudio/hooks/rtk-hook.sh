@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Off PATH before the first `just switch` — pass the call through untouched, don't error it.
+# Off PATH before the first `just switch`: pass the call through untouched, don't error it.
 if ! command -v rtk >/dev/null 2>&1; then
   exit 0
 fi

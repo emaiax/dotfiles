@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Auto-mode layering per profile, validated at the config level — entries are prose judged by a model at runtime, not
+# Auto-mode layering per profile, validated at the config level: entries are prose judged by a model at runtime, not
 # mechanical rules, so asserting the shipped config is the deterministic limit here. Behavioral probes would need an
 # unprompted external action: flaky and unsafe.
 
@@ -32,7 +32,7 @@ automode_run() {
   # claude-yolo: bypassPermissions skips auto mode entirely, and the overlay must not pretend otherwise.
   assert_jq automode-overlay-absent claude-yolo "${OVERLAY[claude-yolo]}" 'has("autoMode")' 'false'
 
-  # claudio-thebot: exactly one loosening — the bot-identity carve-out for its publish repo — layered as an allow that
+  # claudio-thebot: exactly one loosening (the bot-identity carve-out for its publish repo), layered as an allow that
   # keeps $defaults first and scopes itself to that one repository.
   assert_jq automode-thebot-allow-count claudio-thebot "${OVERLAY[claudio-thebot]}" '.autoMode.allow | length' '2'
   assert_jq automode-thebot-allow-defaults-first claudio-thebot "${OVERLAY[claudio-thebot]}" '.autoMode.allow[0]' '$defaults'
