@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  dotfilesPath,
   ...
 }:
 let
@@ -86,8 +87,9 @@ let
   # Must match the upstream module's own home.file keys (absolute, under configDir), or home-manager sees two attrs targeting the same file and refuses to build instead of letting mkForce win.
   claudeConfigDir = config.programs.claude-code.configDir;
 
-  # same convention as vscode/default.nix and iterm2/default.nix: always the main checkout, deliberately, not wherever this was evaluated from
-  agentsSourcePath = "${home}/code/dotfiles/modules/user/apps/claudio/AGENTS.md";
+  # same convention as vscode/default.nix and iterm2/default.nix: always the main checkout (dotfilesPath, from
+  # nix/inventory.nix), deliberately, not wherever this was evaluated from
+  agentsSourcePath = "${dotfilesPath}/modules/user/apps/claudio/AGENTS.md";
 in
 {
   # Out-of-store: rtk init -g writes an RTK.md pointer into CLAUDE.md at runtime, which EACCESs against the read-only store. force = true lets rtk replace the symlink with a plain file without the next switch refusing to reclaim it.

@@ -56,7 +56,10 @@
 
             useGlobalPkgs = true;
             useUserPackages = true;
-            extraSpecialArgs = { inherit inputs; };
+            extraSpecialArgs = {
+              inherit inputs;
+              dotfilesPath = "${host.user.homeDirectory}/${host.user.dotfilesCheckout}";
+            };
 
             users.${host.user.username} = {
               # Used for backwards compatibility, please read the changelog before changing.

@@ -13,7 +13,7 @@ let
     ask = [
       "git push"
 
-      # Destructive and hard to undo.
+      # Destructive and hard to undo
       "git reset --hard"
       "git checkout --"
       "git restore"
