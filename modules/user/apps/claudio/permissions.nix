@@ -11,6 +11,14 @@
   dotfilesPath,
 }:
 let
+  # Plain path constants. claude-code.nix and opencode/default.nix each generate their own settings.json into
+  # these, and neither is denyWrite-protected: the point is a session can overwrite its own settings.json to
+  # install a plugin or tweak config without a `just switch`.
+  paths = {
+    claudeSettingsFile = "${dotfilesPath}/modules/user/apps/claudio/claude-code/settings.json";
+    opencodeSettingsFile = "${dotfilesPath}/modules/user/apps/claudio/opencode/settings.json";
+  };
+
   policy = {
     commands = {
       ask = [
@@ -80,6 +88,39 @@ let
 
     # sandbox: claude's Seatbelt boundary policy for filesystem paths every profile needs access to
     filesystem = {
+      # filesystem paths that must stay out of every agent's reach, no matter which tool asks for them
+      # claudeCode.sandbox.filesystem denies these to the sandboxed Bash subprocess, and claudeCode.permissions
+      # denies them to the native Read/Edit tools, which the sandbox never sees.
+      #
+      # OpenCode has no path-based deny mechanism of its own yet, so only claude-code's two halves read this today.
+      #
+      credentials = {
+        # Read/Edit deny rules need a /** suffix to reach files nested inside these directories
+        dirs = [
+          "${home}/.aws"
+          "${home}/.config/1Password"
+          "${home}/.config/sops"
+          "${home}/.gnupg"
+          "${home}/.ssh"
+        ];
+
+        # Read/Edit is only half of the credential policy: denyRead/denyWrite only confines Bash in sandbox.
+        # Write(path) rules are silently never checked, so Edit covers Write too.
+        files = [
+          "${home}/.claude/.credentials.json"
+          "${home}/.netrc"
+          "${home}/.npmrc"
+
+          # Deny the credential file, never the config directory around it
+          #
+          # ~/.config/opencode - OpenCode configs
+          # ~/.local/share - OpenCode credentials
+          #
+          "${home}/.local/share/opencode/auth.json"
+          "${home}/.local/share/opencode/mcp-auth.json"
+        ];
+      };
+
       # Toolchains, not personal data: denying $HOME wholesale takes out npm/node/asdf too. These need both read
       # and write access, so mkClaudeCodeSandbox's allowRead and allowWrite both draw from this one list instead
       # of each retyping it, which is how allowWrite drifted out of sync with allowRead before.
@@ -122,39 +163,16 @@ let
         "${home}/.nix-profile"
 
         # ssh agent signing: the agent socket is ephemeral, so the sandbox can't allowWrite it,
-        # but it can allowRead the public keys and config that the agent reads to sign commits
+        # but it can allowRead the public keys and config that the agent reads to sign commits.
+        # ~/.ssh itself is denied below (credentials.dirs), but Seatbelt is last-match-wins and Claude Code's
+        # profile generator specifically re-emits allowRead entries after the deny they're nested under
+        # (anthropic-experimental/sandbox-runtime, src/sandbox/macos-sandbox-utils.ts: "denyOnly: deny reads
+        # from these paths ... allowWithinDeny: re-allow reads within denied regions ... allowWithinDeny takes
+        # precedence over denyOnly"), so these four still resolve readable despite the broader deny.
         "${home}/.ssh/*.pub"
         "${home}/.ssh/allowed_signers"
         "${home}/.ssh/config"
         "${home}/.ssh/known_hosts"
-      ];
-
-      # filesystem paths that must stay out of every agent's reach, no matter which tool asks for them
-      # claudeCode.sandbox.filesystem denies these to the sandboxed Bash subprocess, and claudeCode.permissions
-      # denies them to the native Read/Edit tools, which the sandbox never sees.
-      #
-      # OpenCode has no path-based deny mechanism of its own yet, so only claude-code's two halves read this today.
-      #
-      credentials = [
-        # Read/Edit deny rules need a /** suffix to reach files nested inside these directories
-        "${home}/.aws"
-        "${home}/.config/1Password"
-        "${home}/.config/sops"
-        "${home}/.gnupg"
-
-        # Read/Edit is only half of the credential policy: denyRead/denyWrite only confines Bash in sandbox.
-        # Write(path) rules are silently never checked, so Edit covers Write too.
-        "${home}/.claude/.credentials.json"
-        "${home}/.netrc"
-        "${home}/.npmrc"
-
-        # Deny the credential file, never the config directory around it
-        #
-        # ~/.config/opencode - OpenCode configs
-        # ~/.local/share - OpenCode credentials
-        #
-        "${home}/.local/share/opencode/auth.json"
-        "${home}/.local/share/opencode/mcp-auth.json"
       ];
     };
 
@@ -177,7 +195,7 @@ let
   # A sibling `.bak` (backupFileExtension = "bak") could ride the same allowRead/allowWrite grant back in as the
   # file it backs up, so every credential file needs its own `.bak` denied too, not just the ones nested inside
   # an allowed tree today. Shared between mkClaudeCodePermissions and mkClaudeCodeSandbox.
-  credentialBaks = map (p: "${p}.bak") policy.credentials.files;
+  credentialBaks = map (p: "${p}.bak") policy.filesystem.credentials.files;
 
   # `Bash(x:*)` matches any arguments; `Bash(x)` matches only that literal invocation.
   claudeCodePrefixRule = cmd: "Bash(${cmd}:*)";
@@ -197,10 +215,12 @@ let
   # Write(path) rules are silently never checked, so Edit covers Write too. `//path` is filesystem-root-absolute,
   # `/path` matches nothing, and dirs need `/**` for nested files.
   claudeCodeAbsRule = path: lib.removePrefix "/" path;
+
   claudeCodeFileDenyRules = path: [
     "Read(//${claudeCodeAbsRule path})"
     "Edit(//${claudeCodeAbsRule path})"
   ];
+
   claudeCodeDirDenyRules = path: [
     "Read(//${claudeCodeAbsRule path}/**)"
     "Edit(//${claudeCodeAbsRule path}/**)"
@@ -225,8 +245,8 @@ let
     policy:
     let
       credentialDenyRules =
-        lib.concatMap claudeCodeFileDenyRules (policy.credentials.files ++ credentialBaks)
-        ++ lib.concatMap claudeCodeDirDenyRules policy.credentials.dirs;
+        lib.concatMap claudeCodeFileDenyRules (policy.filesystem.credentials.files ++ credentialBaks)
+        ++ lib.concatMap claudeCodeDirDenyRules policy.filesystem.credentials.dirs;
     in
     {
       ask =
@@ -248,8 +268,8 @@ let
       allowRead = policy.filesystem.toolchainReadOnly ++ policy.filesystem.toolchainReadWrite;
       allowWrite = policy.filesystem.toolchainReadWrite;
 
-      denyRead = [ home ] ++ policy.credentials.dirs ++ policy.credentials.files;
-      denyWrite = [ home ] ++ policy.credentials.dirs ++ policy.credentials.files; # [ home ] is redundant but explicit
+      denyRead = [ home ] ++ policy.filesystem.credentials.dirs ++ policy.filesystem.credentials.files;
+      denyWrite = [ home ] ++ policy.filesystem.credentials.dirs ++ policy.filesystem.credentials.files; # [ home ] is redundant but explicit
     };
   };
 
@@ -257,11 +277,13 @@ let
   mkOpencodePermissions = policy: {
     read = {
       "*" = "allow";
-      # Keep the default .env protection explicit: a bare "allow" string here isn't documented to preserve it.
+
+      # default .env protection explicit: a bare "allow" string here isn't documented to preserve it
       "*.env" = "deny";
       "*.env.*" = "deny";
       "*.env.example" = "allow";
     };
+
     glob = "allow";
     grep = "allow";
     lsp = "allow";
@@ -269,10 +291,8 @@ let
     webfetch = "allow";
     websearch = "allow";
     task = "allow";
-    # Touching paths outside the project: flag it.
-    external_directory = "ask";
-    # Same tool call repeated 3x with identical input: kill it, don't ask.
-    doom_loop = "deny";
+    external_directory = "ask"; # Touching paths outside the project: flag it.
+    doom_loop = "deny"; # Same tool call repeated 3x with identical input: kill it, don't ask.
 
     bash = {
       "*" = "allow";
@@ -285,7 +305,7 @@ let
   };
 in
 {
-  inherit policy;
+  inherit policy paths;
 
   claudeCode = {
     permissions = mkClaudeCodePermissions policy;

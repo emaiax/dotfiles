@@ -64,7 +64,7 @@ let
   # `home-manager switch`, and separately patched at runtime by rtk-hook.sh and homelab-network-hook.sh, both land
   # on this same file since it's the actual symlink target, not a copy. Shared with sandbox.nix's denyWrite via
   # permissions.nix, since the two files can't otherwise agree on the same path.
-  claudeSettingsStatePath = perms.claudeCode.sandbox.paths.settingsFile;
+  claudeSettingsStatePath = perms.paths.claudeSettingsFile;
 
   # Must match the upstream module's own home.file keys (absolute, under configDir), or home-manager sees two attrs targeting the same file and refuses to build instead of letting mkForce win.
   claudeConfigDir = config.programs.claude-code.configDir;
