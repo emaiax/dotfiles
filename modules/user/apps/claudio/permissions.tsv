@@ -1,0 +1,38 @@
+rule	namespace	kind	consumers
+ask	commands.ask	raw	claudeCode.permissions.ask, opencode.permission.bash
+askExact	commands.askExact	raw	claudeCode.permissions.ask, opencode.permission.bash
+denyHard	commands.denyHard	raw	claudeCode.permissions.deny, opencode.permission.bash
+denySoft	commands.denySoft	raw	opencode.permission.bash (claude-code's soft tier is hand-written prose in auto-mode.nix, not read from here)
+opencodePatterns	commands.opencodePatterns	raw	opencode.permission.bash
+dirs	credentials.dirs	raw	claudeCode.permissions.deny, claudeCode.sandbox.filesystem.denyRead
+files	credentials.files	raw	claudeCode.permissions.deny, claudeCode.sandbox.filesystem.denyRead, claudeCode.sandbox.filesystem.denyWrite
+credentialBaks	credentialBaks (internal)	internal	claudeCode.permissions.deny, claudeCode.sandbox.filesystem.denyRead, claudeCode.sandbox.filesystem.denyWrite
+nixReads	nixReads (internal)	internal	claudeCode.sandbox.filesystem.allowRead
+toolchainReadWrite	toolchainReadWrite (internal)	internal	claudeCode.sandbox.filesystem.allowRead, claudeCode.sandbox.filesystem.allowWrite
+toolchainReadOnly	toolchainReadOnly (internal)	internal	claudeCode.sandbox.filesystem.allowRead
+sshSigningReads	sshSigningReads (internal)	internal	claudeCode.sandbox.filesystem.allowRead
+allowedDomains	allowedDomains (internal)	internal	claudeCode.sandbox.network.allowedDomains
+settingsFile	sandboxPaths.settingsFile	internal	claudeCode.sandbox.filesystem.denyWrite, claudeCode.sandbox.paths.settingsFile, claude-code.nix's claudeSettingsStatePath
+hooksDir	sandboxPaths.hooksDir	internal	claudeCode.sandbox.filesystem.denyWrite, claudeCode.sandbox.paths.hooksDir
+ask	claudeCode.permissions.ask	rendered	claude-code.nix (programs.claude-code.settings.permissions.ask)
+deny	claudeCode.permissions.deny	rendered	claude-code.nix (programs.claude-code.settings.permissions.deny)
+excludedCommands	claudeCode.sandbox.excludedCommands	rendered	sandbox.nix (programs.claude-code.settings.sandbox.excludedCommands)
+denyRead	claudeCode.sandbox.filesystem.denyRead	rendered	sandbox.nix
+allowRead	claudeCode.sandbox.filesystem.allowRead	rendered	sandbox.nix
+allowWrite	claudeCode.sandbox.filesystem.allowWrite	rendered	sandbox.nix
+denyWrite	claudeCode.sandbox.filesystem.denyWrite	rendered	sandbox.nix
+allowedDomains	claudeCode.sandbox.network.allowedDomains	rendered	sandbox.nix
+allowUnixSockets	claudeCode.sandbox.network.allowUnixSockets	rendered	sandbox.nix
+allowMachLookup	claudeCode.sandbox.network.allowMachLookup	rendered	sandbox.nix
+paths	claudeCode.sandbox.paths	rendered	claude-code.nix (claudeSettingsStatePath)
+read	opencode.permission.read	rendered	opencode/default.nix
+glob	opencode.permission.glob	rendered	opencode/default.nix
+grep	opencode.permission.grep	rendered	opencode/default.nix
+lsp	opencode.permission.lsp	rendered	opencode/default.nix
+edit	opencode.permission.edit	rendered	opencode/default.nix
+webfetch	opencode.permission.webfetch	rendered	opencode/default.nix
+websearch	opencode.permission.websearch	rendered	opencode/default.nix
+task	opencode.permission.task	rendered	opencode/default.nix
+external_directory	opencode.permission.external_directory	rendered	opencode/default.nix
+doom_loop	opencode.permission.doom_loop	rendered	opencode/default.nix
+bash	opencode.permission.bash	rendered	opencode/default.nix

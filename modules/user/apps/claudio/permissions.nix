@@ -88,15 +88,12 @@ let
       "${home}/.npmrc"
     ];
 
-    # Files above nested inside an allowRead/allowWrite tree by name, not a wholesale-denied directory, so a
-    # sibling `.bak` (backupFileExtension = "bak") could ride the same grant back in and needs its own carve-out.
-    # Only .credentials.json qualifies today.
-    bakCarveouts = [
-      "${home}/.claude/.credentials.json"
-    ];
   };
 
-  credentialBaks = map (p: "${p}.bak") credentials.bakCarveouts;
+  # A sibling `.bak` (backupFileExtension = "bak") could ride the same allowRead/allowWrite grant back in as the
+  # file it backs up, so every credential file needs its own `.bak` denied too, not just the ones nested inside
+  # an allowed tree today.
+  credentialBaks = map (p: "${p}.bak") credentials.files;
 
   # `Bash(x:*)` matches any arguments; `Bash(x)` matches only that literal invocation.
   claudeCodePrefixRule = cmd: "Bash(${cmd}:*)";
@@ -148,27 +145,38 @@ let
     "${home}/.local/state/nix"
   ];
 
-  # Toolchains, not personal data: denying $HOME wholesale takes out npm/node/asdf too.
-  toolchainReads = [
+  # Toolchains, not personal data: denying $HOME wholesale takes out npm/node/asdf too. These need both read and
+  # write access, so allowRead and allowWrite in claudeCode.sandbox.filesystem both draw from this one list
+  # instead of each retyping it, which is how it drifted out of sync before.
+  toolchainReadWrite = [
     "${home}/code"
     "${home}/.cache"
+    "${home}/Library/Caches" # treefmt, which `nix fmt` runs, caches here rather than under XDG
+    "${home}/.asdf"
+    "${home}/.bun"
+    "${home}/.npm"
+    "${home}/.gem"
+    "${home}/go"
+
+    # allowWrite alone wasn't enough for either (docs/sandbox-notes.md); .credentials.json under ~/.claude stays
+    # denied regardless: narrower wins for reads, same as writes.
+    "${home}/.claude"
+    "${home}/Library/Application Support/rtk"
+  ];
+
+  # Read-only additions on top of toolchainReadWrite.
+  toolchainReadOnly = [
     "${home}/.config"
     "${home}/.local"
-    "${home}/Library/Caches" # treefmt, which `nix fmt` runs, caches here rather than under XDG
     "${home}/.gitconfig"
 
     # The Bash tool runs commands through the login shell.
     "${home}/.zshrc"
     "${home}/.zshenv"
 
-    "${home}/.asdf"
-    "${home}/.bun"
-    "${home}/.npm"
-    "${home}/.gem"
     "${home}/.bundle"
     "${home}/.mix"
     "${home}/.hex"
-    "${home}/go"
     "${home}/.terraform.d"
     "${home}/.nix-profile"
     "${home}/.nix-defexpr"
@@ -176,11 +184,6 @@ let
     # Needed just to reach the normal per-item ACL prompt; doesn't bypass it. `git push`'s credential store still
     # fails here with a known, accepted gap (docs/sandbox-notes.md).
     "${home}/Library/Keychains"
-
-    # allowWrite alone wasn't enough for either (docs/sandbox-notes.md); .credentials.json under ~/.claude stays
-    # denied regardless: narrower wins for reads, same as writes.
-    "${home}/.claude"
-    "${home}/Library/Application Support/rtk"
   ];
 
   # ~/.ssh is denied outright otherwise; commit.gpgSign uses gpg.format = "ssh" (git/git.nix).
@@ -239,33 +242,19 @@ in
         # Reads are allow-everything by default upstream; deny $HOME, allow back the toolchain.
         # credentialBaks: same reasoning as the denyWrite carve-out below.
         denyRead = [ home ] ++ credentials.dirs ++ credentials.files ++ credentialBaks;
-        allowRead = toolchainReads ++ nixReads ++ sshSigningReads;
+        allowRead = toolchainReadWrite ++ toolchainReadOnly ++ nixReads ++ sshSigningReads;
 
         # Writes are already deny-by-default, and cwd is writable implicitly. Package managers need to write
-        # where they install.
-        allowWrite = [
-          "${home}/code"
-          "${home}/.cache"
-          "${home}/.local/state"
-          "${home}/Library/Caches"
-          "${home}/.asdf"
-          "${home}/.bun"
-          "${home}/.npm"
-          "${home}/.gem"
-          "${home}/go"
+        # where they install. rtk's global init writes RTK.md and its filters template under ~/.claude; denyWrite
+        # below still keeps .credentials.json out of reach there.
+        allowWrite = toolchainReadWrite ++ [ "${home}/.local/state" ];
 
-          # rtk's global init writes RTK.md and its filters template into these; denyWrite below still keeps
-          # .credentials.json out of reach.
-          "${home}/.claude"
-          "${home}/Library/Application Support/rtk"
-        ];
-
-        # bakCarveouts/credentialBaks: the credentialDenies entries nested under an allowWrite path need denying
-        # again here, plus their .bak sibling (see #126). hooksDir and settingsFile close a same-session escape:
+        # credentials.files/credentialBaks: the entries nested under an allowWrite path need denying again here,
+        # raw and their .bak sibling alike (see #126). hooksDir and settingsFile close a same-session escape:
         # PreToolUse hooks run unsandboxed, so a sandboxed command could otherwise overwrite rtk-hook.sh or flip
         # permissions.deny/sandbox.enabled for the next session. Full trail: docs/sandbox-notes.md.
         denyWrite =
-          credentials.bakCarveouts
+          credentials.files
           ++ credentialBaks
           ++ [
             sandboxPaths.hooksDir
