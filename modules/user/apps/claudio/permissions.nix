@@ -63,33 +63,18 @@ let
       opencodePatterns = {
         "git checkout --" = "git checkout -- *";
       };
-    };
 
-    # Filesystem paths that must stay out of every agent's reach, no matter which tool asks for them.
-    # claudeCode.sandbox.filesystem denies these to the sandboxed Bash subprocess, and claudeCode.permissions
-    # denies them to the native Read/Edit tools, which the sandbox never sees. OpenCode has no path-based deny
-    # mechanism of its own yet, so only claude-code's two halves read this today.
-    credentials = {
-      # Directories: Read/Edit deny rules need a /** suffix to reach files nested inside.
-      dirs = [
-        "${home}/.aws"
-        "${home}/.config/1Password"
-        "${home}/.config/sops"
-        "${home}/.gnupg"
-      ];
-
-      # Single files.
-      files = [
-        "${home}/.claude/.credentials.json"
-
-        # Deny the credential file, never the config directory around it: denying ~/.config/gh stopped gh
-        # starting at all, and ~/.config/opencode holds only config while opencode keeps its tokens under
-        # ~/.local/share.
-        "${home}/.local/share/opencode/auth.json"
-        "${home}/.local/share/opencode/mcp-auth.json"
-        "${home}/.docker/config.json"
-        "${home}/.netrc"
-        "${home}/.npmrc"
+      # docker doesn't compose with the sandbox; gh/fj fail cert validation under it (trustd mach-lookup
+      # blocked). Excluded commands run fully unwrapped: a hole, not a containment. Each needs a glob (bare
+      # names aren't matched) and an `rtk `-prefixed twin, since the PreToolUse hook rewrites gh/fj commands
+      # before this matches against them. Full background: docs/sandbox-notes.md.
+      bypassSandboxSeatbelt = [
+        "docker *"
+        "rtk docker *"
+        "gh *"
+        "rtk gh *"
+        "fj *"
+        "rtk fj *"
       ];
     };
 
@@ -143,6 +128,34 @@ let
         "${home}/.ssh/config"
         "${home}/.ssh/known_hosts"
       ];
+
+      # filesystem paths that must stay out of every agent's reach, no matter which tool asks for them
+      # claudeCode.sandbox.filesystem denies these to the sandboxed Bash subprocess, and claudeCode.permissions
+      # denies them to the native Read/Edit tools, which the sandbox never sees.
+      #
+      # OpenCode has no path-based deny mechanism of its own yet, so only claude-code's two halves read this today.
+      #
+      credentials = [
+        # Read/Edit deny rules need a /** suffix to reach files nested inside these directories
+        "${home}/.aws"
+        "${home}/.config/1Password"
+        "${home}/.config/sops"
+        "${home}/.gnupg"
+
+        # Read/Edit is only half of the credential policy: denyRead/denyWrite only confines Bash in sandbox.
+        # Write(path) rules are silently never checked, so Edit covers Write too.
+        "${home}/.claude/.credentials.json"
+        "${home}/.netrc"
+        "${home}/.npmrc"
+
+        # Deny the credential file, never the config directory around it
+        #
+        # ~/.config/opencode - OpenCode configs
+        # ~/.local/share - OpenCode credentials
+        #
+        "${home}/.local/share/opencode/auth.json"
+        "${home}/.local/share/opencode/mcp-auth.json"
+      ];
     };
 
     # sandbox: network egress and IPC the sandbox otherwise blocks by default
@@ -158,31 +171,6 @@ let
       # gh/terraform/kubectl validate TLS via Security.framework -> trustd, which Seatbelt blocks by default
       # (`x509: OSStatus -26276`, even for a valid cert; curl/git/Node verify in-process and are unaffected)
       allowMachLookup = [ "com.apple.trustd.agent" ]; # anthropics/claude-code#26466.
-    };
-
-    # Config for the Seatbelt mechanism itself, not policy in the commands/credentials/filesystem/network sense.
-    sandbox = {
-      # docker doesn't compose with the sandbox; gh/fj fail cert validation under it (trustd mach-lookup
-      # blocked). Excluded commands run fully unwrapped: a hole, not a containment. Each needs a glob (bare
-      # names aren't matched) and an `rtk `-prefixed twin, since the PreToolUse hook rewrites gh/fj commands
-      # before this matches against them. Full background: docs/sandbox-notes.md.
-      excludedCommands = [
-        "docker *"
-        "rtk docker *"
-        "gh *"
-        "rtk gh *"
-        "fj *"
-        "rtk fj *"
-      ];
-
-      # Plain path constants that claude-code.nix and sandbox.nix both need to agree on. They're sibling files,
-      # neither imports the other, so without a shared spot they silently drift apart (see #126). settingsFile
-      # backs mkClaudeCodeSandbox's denyWrite: PreToolUse hooks run unsandboxed, so a sandboxed command could
-      # otherwise overwrite a hook script or flip permissions.deny/sandbox.enabled for the next session.
-      paths = {
-        settingsFile = "${dotfilesPath}/modules/user/apps/claudio/claude-code/settings.json";
-        hooksDir = "${home}/.claude/hooks";
-      };
     };
   };
 
@@ -249,9 +237,10 @@ let
       deny = map claudeCodePrefixRule (withRtkTwin policy.commands.denyHard) ++ credentialDenyRules;
     };
 
-  # programs.claude-code.settings.sandbox.{excludedCommands,filesystem,network}: the Seatbelt boundary itself.
+  # programs.claude-code.settings.sandbox.{bypassSecurityCommands,filesystem,network}: the Seatbelt boundary itself.
   mkClaudeCodeSandbox = policy: {
-    inherit (policy.sandbox) excludedCommands;
+    excludedCommands = policy.commands.bypassSandboxSeatbelt;
+    network = policy.network;
 
     # Reads: allow-everything by default upstream
     # Writes: deny-by-default, and cwd is writable implicitly
@@ -262,9 +251,6 @@ let
       denyRead = [ home ] ++ policy.credentials.dirs ++ policy.credentials.files;
       denyWrite = [ home ] ++ policy.credentials.dirs ++ policy.credentials.files; # [ home ] is redundant but explicit
     };
-
-    network = policy.network;
-    paths = policy.sandbox.paths;
   };
 
   # programs.opencode.settings.permission.

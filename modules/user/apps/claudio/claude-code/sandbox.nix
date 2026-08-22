@@ -38,5 +38,11 @@ in
 
     network = perms.claudeCode.sandbox.network;
     filesystem = perms.claudeCode.sandbox.filesystem;
+
+    # plain path constants that claude-code.nix and sandbox.nix both need to agree on
+    paths = {
+      hooksDir = "${dotfilesPath}/modules/user/apps/claudio/hooks";
+      settingsFile = "${dotfilesPath}/modules/user/apps/claudio/claude-code/settings.json";
+    };
   };
 }
