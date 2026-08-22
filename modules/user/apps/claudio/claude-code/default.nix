@@ -46,20 +46,35 @@ in
     force = true;
   };
 
+  # Symlinked straight to the checkout rather than via programs.claude-code.hooksDir/skills: those options read
+  # the directory at eval time (lib.pathIsDirectory), which is both a pure-eval violation for a path outside the
+  # flake's own tree and, even inside it, a read-only nix store copy. This keeps them live-editable without
+  # `just switch`, same as settings.json below.
+  home.file."${config.programs.claude-code.configDir}/hooks" = {
+    source = config.lib.file.mkOutOfStoreSymlink "${claudioPath}/hooks";
+    force = true;
+  };
+
+  home.file."${config.programs.claude-code.configDir}/skills" = {
+    source = config.lib.file.mkOutOfStoreSymlink "${claudioPath}/skills";
+    force = true;
+  };
+
   home.file."${config.programs.claude-code.configDir}/settings.json" = lib.mkForce {
     source = config.lib.file.mkOutOfStoreSymlink "${claudioPath}/claude-code/settings.json";
     force = true;
   };
 
+  # Seed only, never overwrite: once this file exists it's a normal writable repo file, and a session may have
+  # edited it since the last switch (installed a plugin, etc.). Delete it to reset to the Nix-declared baseline.
   home.activation.claudeCodeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    install -Dm644 ${claudeSettingsJson} "${claudioPath}/claude-code/settings.json"
+    if [[ ! -e "${claudioPath}/claude-code/settings.json" ]]; then
+      install -Dm644 ${claudeSettingsJson} "${claudioPath}/claude-code/settings.json"
+    fi
   '';
 
   programs.claude-code = {
     enable = true;
-
-    hooksDir = ../hooks;
-    skills = ../skills;
 
     settings = {
       "$schema" = "https://json.schemastore.org/claude-code-settings.json";
