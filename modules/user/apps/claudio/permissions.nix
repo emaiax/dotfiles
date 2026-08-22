@@ -168,6 +168,15 @@ let
       "github.com" # git-over-https
       "api.github.com" # gh api
     ];
+
+    # Not policy: plain path constants that claude-code.nix and sandbox.nix both need to agree on. They're
+    # sibling files, neither imports the other, so without a shared spot they silently drift apart (see #126).
+    # settingsPath backs sandbox.nix's denyWrite: PreToolUse hooks run unsandboxed, so a sandboxed command could
+    # otherwise overwrite a hook script or flip permissions.deny/sandbox.enabled for the next session.
+    sandbox = {
+      settingsPath = "${home}/code/dotfiles/modules/user/apps/claudio/claude-code/settings.json";
+      hooksPath = "${home}/.claude/hooks";
+    };
   };
 
   # Claude Code's native Read/Edit tools deny credentials by path (see #126); the sandbox denies the same set to

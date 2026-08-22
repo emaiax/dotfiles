@@ -83,8 +83,9 @@ let
   # Same convention as vscode/default.nix: a real, writable file inside the main checkout, not a store copy, so
   # both halves of what touches it show up in `git status`/`git diff`. Regenerated from claudeSettings on every
   # `home-manager switch`, and separately patched at runtime by rtk-hook.sh and homelab-network-hook.sh, both land
-  # on this same file since it's the actual symlink target, not a copy.
-  claudeSettingsStatePath = "${home}/code/dotfiles/modules/user/apps/claudio/claude-code/settings.json";
+  # on this same file since it's the actual symlink target, not a copy. Shared with sandbox.nix's denyWrite via
+  # permissions.nix, since the two files can't otherwise agree on the same path.
+  claudeSettingsStatePath = perms.sandbox.settingsPath;
 
   # Must match the upstream module's own home.file keys (absolute, under configDir), or home-manager sees two attrs targeting the same file and refuses to build instead of letting mkForce win.
   claudeConfigDir = config.programs.claude-code.configDir;

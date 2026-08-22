@@ -43,6 +43,8 @@ in
     allowAppleEvents = true;
 
     network = {
+      inherit allowedDomains;
+
       # Without this every nix subcommand fails to reach its daemon.
       allowUnixSockets = [ "/nix/var/nix/daemon-socket/socket" ];
 
@@ -50,9 +52,6 @@ in
       # (`x509: OSStatus -26276`, even for a valid cert; curl/git/Node verify in-process and are unaffected).
       # anthropics/claude-code#26466.
       allowMachLookup = [ "com.apple.trustd.agent" ];
-
-      # github.com/api.github.com policy: permissions.nix's allowedDomains.
-      inherit allowedDomains;
     };
 
     filesystem = {
@@ -88,8 +87,8 @@ in
         perms.bakCarveouts
         ++ credentialBaks
         ++ [
-          "${home}/.claude/hooks"
-          "${home}/.local/state/claude-code/settings.json"
+          perms.sandbox.hooksPath
+          perms.sandbox.settingsPath
         ];
     };
   };
