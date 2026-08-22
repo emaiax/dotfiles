@@ -3,13 +3,18 @@
 #
 # Also renders that raw policy into each backend's native settings shape (claudeCodeCredentialDenyRules,
 # opencodeBashRules), so claude-code.nix and opencode/default.nix don't each carry their own copy of the same translation.
+#
+# Each field below is tagged with who actually reads it: claude-code (native Read/Edit/Bash permissions),
+# claude-code.sandbox (the Seatbelt boundary specifically), opencode, or more than one.
 { home, lib }:
 let
   raw = {
+    # tags: unused, not wired into either backend yet
     allow = [
       "git commit" # local and reversible
     ];
 
+    # tags: claude-code, opencode
     ask = [
       "git push"
 
@@ -23,6 +28,7 @@ let
     ];
 
     # Irreversible, so these go to `permissions.deny` where nothing overrides them.
+    # tags: claude-code, opencode
     denyHard = [
       "gh pr merge"
       "gh release"
@@ -32,6 +38,7 @@ let
 
     # Reversible, so these become prose in auto-mode.nix's soft_deny, which claudio-thebot can carve an exception out
     # of. OpenCode has no classifier and renders them as plain denies instead.
+    # tags: opencode (claude-code's soft tier is separately hand-written prose in auto-mode.nix, not read from here)
     denySoft = [
       "gh pr create"
       "gh pr ready"
@@ -52,12 +59,14 @@ let
     ];
 
     # Matched literally rather than as a prefix.
+    # tags: claude-code, opencode
     askExact = [ "git checkout ." ];
 
     # No allowlist: `ls` and `cat` are aliases resolving to nix store paths that no name-based rule matches, so an
     # allowlist blocks them however it is written.
 
     # derived globs that would widen the rule
+    # tags: opencode
     opencodePatterns = {
       "git checkout --" = "git checkout -- *"; # avoids swallowing `--track` and `--force`
     };
@@ -67,6 +76,7 @@ let
     ## denies them to the native Read/Edit tools via permissions.deny, which the sandbox never sees.
 
     # Directories: Read/Edit deny rules need a /** suffix to reach files nested inside.
+    # tags: claude-code, claude-code.sandbox
     dirs = [
       "${home}/.aws"
       "${home}/.config/1Password"
@@ -75,6 +85,7 @@ let
     ];
 
     # Single files.
+    # tags: claude-code, claude-code.sandbox
     files = [
       "${home}/.claude/.credentials.json"
 
@@ -90,6 +101,7 @@ let
     # Files above nested inside an allowRead/allowWrite tree by name, not a wholesale-denied directory, so a sibling
     # `.bak` (backupFileExtension = "bak") could ride the same grant back in and needs its own carve-out. Only
     # .credentials.json qualifies today.
+    # tags: claude-code, claude-code.sandbox
     bakCarveouts = [
       "${home}/.claude/.credentials.json"
     ];
@@ -100,12 +112,14 @@ let
 
     # nix breaks under the sandbox without these: the fetcher cache, the state dir, and the daemon socket (wired
     # separately in sandbox.nix).
+    # tags: claude-code.sandbox
     nixReads = [
       "${home}/.cache/nix"
       "${home}/.local/state/nix"
     ];
 
     # Toolchains, not personal data: denying $HOME wholesale takes out npm/node/asdf too.
+    # tags: claude-code.sandbox
     toolchainReads = [
       "${home}/code"
       "${home}/.cache"
@@ -141,6 +155,7 @@ let
     ];
 
     # ~/.ssh is denied outright otherwise; commit.gpgSign uses gpg.format = "ssh" (git/git.nix).
+    # tags: claude-code.sandbox
     sshSigningReads = [
       "${home}/.ssh/allowed_signers"
       "${home}/.ssh/config"
@@ -153,6 +168,7 @@ let
     # Excluded commands run fully unwrapped: a hole, not a containment. Each needs a glob (bare names aren't matched)
     # and an `rtk `-prefixed twin, since the PreToolUse hook rewrites gh/fj commands before this matches against
     # them. Full background: docs/sandbox-notes.md.
+    # tags: claude-code.sandbox
     excludedCommands = [
       "docker *"
       "rtk docker *"
@@ -163,7 +179,7 @@ let
     ];
 
     # homelab domain is patched in at runtime in hooks/homelab-network-hook.sh
-    #
+    # tags: claude-code.sandbox
     allowedDomains = [
       "github.com" # git-over-https
       "api.github.com" # gh api
@@ -173,6 +189,7 @@ let
     # sibling files, neither imports the other, so without a shared spot they silently drift apart (see #126).
     # settingsPath backs sandbox.nix's denyWrite: PreToolUse hooks run unsandboxed, so a sandboxed command could
     # otherwise overwrite a hook script or flip permissions.deny/sandbox.enabled for the next session.
+    # tags: claude-code.sandbox
     sandbox = {
       settingsPath = "${home}/code/dotfiles/modules/user/apps/claudio/claude-code/settings.json";
       hooksPath = "${home}/.claude/hooks";
@@ -190,6 +207,7 @@ let
     "Read(//${absRule path}/**)"
     "Edit(//${absRule path}/**)"
   ];
+  # tags: claude-code
   claudeCodeCredentialDenyRules =
     lib.concatMap fileDenyRules (raw.files ++ map (p: "${p}.bak") raw.bakCarveouts)
     ++ lib.concatMap dirDenyRules raw.dirs;
@@ -206,6 +224,7 @@ let
     name = cmd;
     value = lib.hm.dag.entryAfter [ "*" ] action;
   };
+  # tags: opencode
   opencodeBashRules = builtins.listToAttrs (
     map (opencodePrefixRule "ask") raw.ask
     ++ map (opencodePrefixRule "deny") (raw.denyHard ++ raw.denySoft)
@@ -219,6 +238,7 @@ let
 
   # Full programs.claude-code.settings.sandbox.filesystem block. sandbox.nix just wires this in, it carries no
   # policy of its own beyond the Seatbelt toggles that aren't data (enabled, allowUnsandboxedCommands, and so on).
+  # tags: claude-code.sandbox
   claudeCodeSandboxFilesystem = {
     # Reads are allow-everything by default upstream; deny $HOME, allow back the toolchain.
     # credentialBaks: same reasoning as the denyWrite carve-out below.
@@ -248,13 +268,17 @@ let
     # again here, plus their .bak sibling (see #126). hooksPath and settingsPath close a same-session escape:
     # PreToolUse hooks run unsandboxed, so a sandboxed command could otherwise overwrite rtk-hook.sh or flip
     # permissions.deny/sandbox.enabled for the next session. Full trail: docs/sandbox-notes.md.
-    denyWrite = raw.bakCarveouts ++ credentialBaks ++ [
-      raw.sandbox.hooksPath
-      raw.sandbox.settingsPath
-    ];
+    denyWrite =
+      raw.bakCarveouts
+      ++ credentialBaks
+      ++ [
+        raw.sandbox.hooksPath
+        raw.sandbox.settingsPath
+      ];
   };
 
   # Full programs.claude-code.settings.sandbox.network block, same reasoning as claudeCodeSandboxFilesystem.
+  # tags: claude-code.sandbox
   claudeCodeSandboxNetwork = {
     inherit (raw) allowedDomains;
 
