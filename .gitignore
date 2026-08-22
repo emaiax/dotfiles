@@ -4,7 +4,3 @@ result
 *-workspace
 .claude/
 docs/superpowers/
-
-# Seeded once at activation, then a live-editable local file (claudio/*/default.nix)
-modules/user/apps/claudio/claude-code/settings.json
-modules/user/apps/claudio/opencode/settings.json
