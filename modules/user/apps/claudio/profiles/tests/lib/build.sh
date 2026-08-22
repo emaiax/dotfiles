@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Resolves the branch's built artifacts (wrappers, overlays, base settings.json) via nix build, never the activated system — see README.md for the one exception this file measures the drift of.
+# Resolves the branch's built artifacts (wrappers, overlays, base settings.json) via nix build, never the activated
+# system — see README.md for the one exception this file measures the drift of.
 
 set -euo pipefail
 
@@ -8,7 +9,8 @@ set -euo pipefail
 
 REPO_ROOT=$(cd "$TESTS_ROOT/../../../.." && pwd)
 
-# resolve_artifacts — populates BASE_SETTINGS, WRAPPER[<profile>], OVERLAY[<profile>]. Cached per run in paths.env since nix eval takes ~10s even warm.
+# resolve_artifacts — populates BASE_SETTINGS, WRAPPER[<profile>], OVERLAY[<profile>]. Cached per run in paths.env since
+# nix eval takes ~10s even warm.
 declare -A WRAPPER OVERLAY
 BASE_SETTINGS=
 
@@ -24,7 +26,8 @@ resolve_artifacts() {
       echo "build.sh: nix build of $attr produced nothing" >&2
       return 1
     }
-    # ~/.claude/settings.json symlinks to a writable state path rtk patches at runtime, so following it lands on the active, mutated copy — pull the pristine store JSON the activation script installs there instead.
+    # ~/.claude/settings.json symlinks to a writable state path rtk patches at runtime, so following it lands on the
+    # active, mutated copy — pull the pristine store JSON the activation script installs there instead.
     local base
     base=$(grep -o '/nix/store/[a-z0-9]*-claude-code-settings\.json' "$gen/activate" | head -1)
     [[ -f $base ]] || {
@@ -49,7 +52,8 @@ resolve_artifacts() {
     }
   done
 
-  # The default profile has no overlay; the others carry theirs as a --settings store path baked into the wrapper script.
+  # The default profile has no overlay; the others carry theirs as a --settings store path baked into the wrapper
+  # script.
   OVERLAY[claude]=""
   for p in claudio claudio-thebot claude-yolo; do
     OVERLAY[$p]=$(grep -o -- '--settings /nix/store/[^ ]*' "$(readlink -f "${WRAPPER[$p]}")" | awk '{print $2}')
@@ -60,7 +64,8 @@ resolve_artifacts() {
   done
 }
 
-# drift_report — diff of branch base settings vs the machine's active one; informational, written into the results dir for compare.md.
+# drift_report — diff of branch base settings vs the machine's active one; informational, written into the results dir
+# for compare.md.
 drift_report() {
   local active="$HOME/.claude/settings.json"
   local out="$RESULTS_DIR/base-drift.diff"

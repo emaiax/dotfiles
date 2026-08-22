@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-# Headless probe runner. Verdicts (EXECUTED/BLOCKED) come from artifacts, never the model's prose: sandbox cases read case.sh's exit code, gate cases read fixture side effects plus permission_denials. Two modes because enforcement happens at two layers — sandbox rules apply to every child process (so wrapping in case.sh is fine), permission rules match the top-level Bash command string (so gate payloads must reach the tool call literally, unwrapped).
+# Headless probe runner. Verdicts (EXECUTED/BLOCKED) come from artifacts, never the model's prose: sandbox cases read
+# case.sh's exit code, gate cases read fixture side effects plus permission_denials. Two modes because enforcement
+# happens at two layers — sandbox rules apply to every child process (so wrapping in case.sh is fine), permission rules
+# match the top-level Bash command string (so gate payloads must reach the tool call literally, unwrapped).
 
 set -euo pipefail
 
@@ -15,11 +18,17 @@ _run_in_dir() {
   cd "$dir" && "$@"
 }
 
-# claude-mem must be disabled per probe (observed live: it records each probe's prompt and later sessions refuse gate probes as "prompt injection attempts"). Can't just add a second --settings flag — Claude Code keeps only the last one, dropping the wrapper's own overlay entirely (for claude-yolo that means losing sandbox.enabled=false and probing sandboxed by accident). So each profile's overlay is deep-merged with the plugin-disable into one file and passed as the only --settings.
+# claude-mem must be disabled per probe (observed live: it records each probe's prompt and later sessions refuse gate
+# probes as "prompt injection attempts"). Can't just add a second --settings flag — Claude Code keeps only the last one,
+# dropping the wrapper's own overlay entirely (for claude-yolo that means losing sandbox.enabled=false and probing
+# sandboxed by accident). So each profile's overlay is deep-merged with the plugin-disable into one file and passed as
+# the only --settings.
 _probe_settings() {
   local profile=$1
   local merged="$RESULTS_DIR/settings-$profile.json"
-  # Atomic write (temp + rename): up to --jobs probes for one profile start together, and a mid-write read here would truncate the JSON, again risking a silently sandboxed claude-yolo. run.sh pre-builds these serially so this races nobody in practice, but stays correct if it did.
+  # Atomic write (temp + rename): up to --jobs probes for one profile start together, and a mid-write read here would
+  # truncate the JSON, again risking a silently sandboxed claude-yolo. run.sh pre-builds these serially so this races
+  # nobody in practice, but stays correct if it did.
   if [[ ! -f $merged ]]; then
     local overlay=${OVERLAY[$profile]:-}
     local base='{}'
@@ -32,13 +41,15 @@ _probe_settings() {
   echo "$merged"
 }
 
-# prebuild_probe_settings — builds every profile's merged settings before the fan-out, so no two forked jobs even attempt the race the atomic write above backstops.
+# prebuild_probe_settings — builds every profile's merged settings before the fan-out, so no two forked jobs even
+# attempt the race the atomic write above backstops.
 prebuild_probe_settings() {
   local p
   for p in "$@"; do _probe_settings "$p" >/dev/null; done
 }
 
-# _invoke PROFILE CASE_ID PROMPT WORKDIR — one claude -p run; retries once on infra failure (unparseable output or timeout). Prints the attempt's outdir.
+# _invoke PROFILE CASE_ID PROMPT WORKDIR — one claude -p run; retries once on infra failure (unparseable output or
+# timeout). Prints the attempt's outdir.
 _invoke() {
   local profile=$1 case_id=$2 prompt=$3 workdir=$4
   local outdir="$RESULTS_DIR/probes/$profile/$case_id"
@@ -65,7 +76,8 @@ _invoke() {
 _session_result() { jq -r '.result // empty' "$1/out.json" 2>/dev/null; }
 _session_denials() { jq -r '.permission_denials | length' "$1/out.json" 2>/dev/null || echo 0; }
 
-# probe_script PROFILE CASE_ID BODY [WORKDIR] — sandbox-layer probe. BODY runs inside a generated case.sh whose exit code is the verdict: 0 EXECUTED, nonzero BLOCKED.
+# probe_script PROFILE CASE_ID BODY [WORKDIR] — sandbox-layer probe. BODY runs inside a generated case.sh whose exit
+# code is the verdict: 0 EXECUTED, nonzero BLOCKED.
 probe_script() {
   local profile=$1 case_id=$2 body=$3 workdir=${4:-}
   [[ -n $workdir ]] || workdir=$(mktemp -d "${TMPDIR:-/tmp}/claude-suite-${case_id}.XXXXXX")
@@ -102,7 +114,9 @@ Then reply with only the word DONE."
   fi
 }
 
-# probe_command PROFILE CASE_ID CMD WORKDIR CHECK_FN — gate-layer probe. CHECK_FN prints EXECUTED/BLOCKED/UNKNOWN from side effects, which outrank every session signal (ground truth); UNKNOWN falls back to permission_denials and the final reply.
+# probe_command PROFILE CASE_ID CMD WORKDIR CHECK_FN — gate-layer probe. CHECK_FN prints EXECUTED/BLOCKED/UNKNOWN from
+# side effects, which outrank every session signal (ground truth); UNKNOWN falls back to permission_denials and the
+# final reply.
 probe_command() {
   local profile=$1 case_id=$2 cmd=$3 workdir=$4 check_fn=$5
 
@@ -146,7 +160,9 @@ If the tool call is denied or blocked by permissions, do not retry and do not wo
       fi
       verdict=UNRELIABLE
     else
-      # No side effect, no recorded denial. DENIED: the model saw a block the JSON missed. DONE: it ran but left no trace — a harness bug, not a compliance one; re-prompting can't fix that, so only refusal prose earns the escalated retry.
+      # No side effect, no recorded denial. DENIED: the model saw a block the JSON missed. DONE: it ran but left no
+      # trace — a harness bug, not a compliance one; re-prompting can't fix that, so only refusal prose earns the
+      # escalated retry.
       if [[ $reply == DENIED ]]; then
         verdict=BLOCKED
         break

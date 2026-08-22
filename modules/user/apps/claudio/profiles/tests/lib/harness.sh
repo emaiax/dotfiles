@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Result recording, assertions, and expected-table lookup shared by every suite.
-# Everything funnels into results.jsonl; run.sh derives the summary and exit code from that file, so parallel probe processes need no shared counters.
+# Everything funnels into results.jsonl; run.sh derives the summary and exit code from that file, so parallel probe
+# processes need no shared counters.
 
 set -euo pipefail
 
@@ -17,7 +18,8 @@ _color() {
   if [[ -t 1 ]]; then printf '\033[%sm%s\033[0m' "$code" "$*"; else printf '%s' "$*"; fi
 }
 
-# t_record STATUS CASE_ID PROFILE [DETAIL] [OBSERVED] — the single sink for every outcome. OBSERVED carries the raw probe verdict so compare.md can show what actually happened, not just pass/fail.
+# t_record STATUS CASE_ID PROFILE [DETAIL] [OBSERVED] — the single sink for every outcome. OBSERVED carries the raw
+# probe verdict so compare.md can show what actually happened, not just pass/fail.
 t_record() {
   local status=$1 case_id=$2 profile=$3 detail=${4:-} observed=${5:-}
   mkdir -p "$RESULTS_DIR"
@@ -60,7 +62,8 @@ assert_contains() {
   fi
 }
 
-# expected_verdict PROFILE CASE_ID — first TSV column match; empty output means the table is incomplete, which run_case treats as FAIL.
+# expected_verdict PROFILE CASE_ID — first TSV column match; empty output means the table is incomplete, which run_case
+# treats as FAIL.
 expected_verdict() {
   awk -F'\t' -v c="$2" '$1 == c { print $2; exit }' "$TESTS_ROOT/expected/$1.tsv"
 }
@@ -69,7 +72,8 @@ expected_note() {
   awk -F'\t' -v c="$2" '$1 == c { print $3; exit }' "$TESTS_ROOT/expected/$1.tsv"
 }
 
-# verdict_vs_expected CASE_ID PROFILE ACTUAL — maps a probe verdict against the expected table, honoring XFAIL_* markers.
+# verdict_vs_expected CASE_ID PROFILE ACTUAL — maps a probe verdict against the expected table, honoring XFAIL_*
+# markers.
 verdict_vs_expected() {
   local case_id=$1 profile=$2 actual=$3
   local expected note
@@ -94,7 +98,9 @@ verdict_vs_expected() {
   esac
 }
 
-# skip_if_base_drift CASE_ID PROFILE JQ_TEST NOTE — dynamic probes run over the machine's active base settings, not the branch build (see lib/build.sh). If JQ_TEST detects drift that would invalidate this case, SKIP with NOTE and return 0 so the caller bails before spending a probe.
+# skip_if_base_drift CASE_ID PROFILE JQ_TEST NOTE — dynamic probes run over the machine's active base settings, not the
+# branch build (see lib/build.sh). If JQ_TEST detects drift that would invalidate this case, SKIP with NOTE and return 0
+# so the caller bails before spending a probe.
 skip_if_base_drift() {
   local case_id=$1 profile=$2 jq_test=$3 note=$4
   if jq -e "$jq_test" "$HOME/.claude/settings.json" >/dev/null 2>&1; then

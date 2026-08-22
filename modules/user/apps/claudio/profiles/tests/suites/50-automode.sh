@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Auto-mode layering per profile, validated at the config level — entries are prose judged by a model at runtime, not mechanical rules, so asserting the shipped config is the deterministic limit here. Behavioral probes would need an unprompted external action: flaky and unsafe.
+# Auto-mode layering per profile, validated at the config level — entries are prose judged by a model at runtime, not
+# mechanical rules, so asserting the shipped config is the deterministic limit here. Behavioral probes would need an
+# unprompted external action: flaky and unsafe.
 
 set -euo pipefail
 
@@ -17,7 +19,8 @@ automode_run() {
   assert_jq automode-softdeny-count base "$base" '.autoMode.soft_deny | length' '2'
   assert_jq automode-softdeny-defaults-first base "$base" '.autoMode.soft_deny[0]' '$defaults'
   assert_jq automode-softdeny-forge-presence base "$base" '.autoMode.soft_deny[1] | contains("theirs to initiate")' 'true'
-  # The forge-presence rule must stay phrased as a category, not an absolute: claudio-thebot's allow needs to be able to override it (see claude-automode.nix).
+  # The forge-presence rule must stay phrased as a category, not an absolute: claudio-thebot's allow needs to be able to
+  # override it (see claude-automode.nix).
   assert_jq automode-softdeny-overridable base "$base" '.autoMode.soft_deny[1] | contains("under any circumstances") | not' 'true'
 
   # The base must not ship an allow layer: loosening is a per-profile decision, and today only thebot makes it.
@@ -29,7 +32,8 @@ automode_run() {
   # claude-yolo: bypassPermissions skips auto mode entirely, and the overlay must not pretend otherwise.
   assert_jq automode-overlay-absent claude-yolo "${OVERLAY[claude-yolo]}" 'has("autoMode")' 'false'
 
-  # claudio-thebot: exactly one loosening — the bot-identity carve-out for its publish repo — layered as an allow that keeps $defaults first and scopes itself to that one repository.
+  # claudio-thebot: exactly one loosening — the bot-identity carve-out for its publish repo — layered as an allow that
+  # keeps $defaults first and scopes itself to that one repository.
   assert_jq automode-thebot-allow-count claudio-thebot "${OVERLAY[claudio-thebot]}" '.autoMode.allow | length' '2'
   assert_jq automode-thebot-allow-defaults-first claudio-thebot "${OVERLAY[claudio-thebot]}" '.autoMode.allow[0]' '$defaults'
   assert_jq automode-thebot-allow-bot-identity claudio-thebot "${OVERLAY[claudio-thebot]}" '.autoMode.allow[1] | contains("its own bot identity")' 'true'

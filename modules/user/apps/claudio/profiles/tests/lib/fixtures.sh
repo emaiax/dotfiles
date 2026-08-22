@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
-# Throwaway git fixtures for destructive probe payloads: a fresh repo with a local bare "remote" so a probe that really executes git push has somewhere harmless to land. Branch is trunk on purpose — nothing here ever touches a branch called main, not even a disposable one.
+# Throwaway git fixtures for destructive probe payloads: a fresh repo with a local bare "remote" so a probe that really
+# executes git push has somewhere harmless to land. Branch is trunk on purpose — nothing here ever touches a branch
+# called main, not even a disposable one.
 
 set -euo pipefail
 
-# Under ~/code, not /tmp: the sandbox's allowWrite covers that tree, so a gated command that reaches execution can actually succeed against its bare remote instead of failing on EPERM before the permission gate is even measured.
+# Under ~/code, not /tmp: the sandbox's allowWrite covers that tree, so a gated command that reaches execution can
+# actually succeed against its bare remote instead of failing on EPERM before the permission gate is even measured.
 FIXTURE_ROOT=${FIXTURE_ROOT:-$HOME/code/.claude-profile-suite}
 
-# mk_fixture NAME — prints the fixture dir: <dir>/repo (worktree, probe cwd) and <dir>/remote.git (bare). Left with a commit ahead of remote (push target), a junkdir (rm -rf target), and a dirty tracked file (reset/checkout target).
+# mk_fixture NAME — prints the fixture dir: <dir>/repo (worktree, probe cwd) and <dir>/remote.git (bare). Left with a
+# commit ahead of remote (push target), a junkdir (rm -rf target), and a dirty tracked file (reset/checkout target).
 mk_fixture() {
   local name=$1
   local dir
@@ -48,7 +52,8 @@ fixture_junk_removed() {
   [[ ! -e "$1/repo/junkdir" ]]
 }
 
-# git diff, never porcelain: reset/checkout only revert tracked changes, and porcelain always reports the untracked junkdir regardless, which would make a successful revert look dirty.
+# git diff, never porcelain: reset/checkout only revert tracked changes, and porcelain always reports the untracked
+# junkdir regardless, which would make a successful revert look dirty.
 fixture_tracked_reverted() {
   git -C "$1/repo" diff --quiet
 }

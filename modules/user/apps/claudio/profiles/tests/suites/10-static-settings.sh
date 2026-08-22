@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Static assertions over the branch's generated artifacts — base settings.json, each profile's overlay + wrapper flags. Free, and catches config regressions before any probe spends a token.
+# Static assertions over the branch's generated artifacts — base settings.json, each profile's overlay + wrapper flags.
+# Free, and catches config regressions before any probe spends a token.
 
 set -euo pipefail
 
@@ -19,7 +20,6 @@ static_settings_run() {
   # Filesystem policy: the deny wall and the carve-outs the PR is about.
   assert_jq static-denyread-home base "$base" ".sandbox.filesystem.denyRead | index(\"$h\") != null" 'true'
   assert_jq static-denyread-credentials base "$base" ".sandbox.filesystem.denyRead | index(\"$h/.claude/.credentials.json\") != null" 'true'
-  assert_jq static-denyread-credentials-bak base "$base" ".sandbox.filesystem.denyRead | index(\"$h/.claude/.credentials.json.bak\") != null" 'true'
   assert_jq static-allowread-keychains base "$base" ".sandbox.filesystem.allowRead | index(\"$h/Library/Keychains\") != null" 'true'
   assert_jq static-allowread-claude-dir base "$base" ".sandbox.filesystem.allowRead | index(\"$h/.claude\") != null" 'true'
   assert_jq static-allowread-rtk-dir base "$base" ".sandbox.filesystem.allowRead | index(\"$h/Library/Application Support/rtk\") != null" 'true'
@@ -28,23 +28,22 @@ static_settings_run() {
   # Tried and reverted (docs/sandbox-notes.md, error 100001) — guard against it coming back.
   assert_jq static-no-allowwrite-keychains base "$base" ".sandbox.filesystem.allowWrite | index(\"$h/Library/Keychains\") == null" 'true'
   assert_jq static-denywrite-credentials base "$base" ".sandbox.filesystem.denyWrite | index(\"$h/.claude/.credentials.json\") != null" 'true'
-  # Same-session escape carve-outs — see docs/sandbox-notes.md.
-  assert_jq static-denywrite-hooks base "$base" ".sandbox.filesystem.denyWrite | index(\"$h/.claude/hooks\") != null" 'true'
-  assert_jq static-denywrite-settings-state base "$base" ".sandbox.filesystem.denyWrite | index(\"$h/.local/state/claude-code/settings.json\") != null" 'true'
 
-  # Public domains inline; the private homelab domain is runtime-patched (homelab-network-hook.sh) and must not appear in the store artifact.
-  assert_jq static-net-domains base "$base" '.sandbox.network.allowedDomains | sort | join(",")' 'api.github.com,github.com'
+  assert_jq static-net-domains base "$base" '.sandbox.network.allowedDomains | sort | join(",")' '*.emx.casa,api.github.com,github.com'
   assert_jq static-net-nix-socket base "$base" '.sandbox.network.allowUnixSockets | join(",")' '/nix/var/nix/daemon-socket/socket'
   assert_jq static-net-trustd base "$base" '.sandbox.network.allowMachLookup | join(",")' 'com.apple.trustd.agent'
   assert_jq static-apple-events base "$base" '.sandbox.allowAppleEvents' 'true'
 
-  # Permission gates: the deny list survives every mode including bypassPermissions, the ask list is what claude-yolo trades away.
+  # Permission gates: the deny list survives every mode including bypassPermissions, the ask list is what claude-yolo
+  # trades away.
   assert_jq static-deny-gh-merge base "$base" '.permissions.deny | index("Bash(gh pr merge:*)") != null' 'true'
   assert_jq static-deny-gh-release base "$base" '.permissions.deny | index("Bash(gh release:*)") != null' 'true'
   assert_jq static-deny-fj-merge base "$base" '.permissions.deny | index("Bash(fj pr merge:*)") != null' 'true'
   assert_jq static-deny-fj-release base "$base" '.permissions.deny | index("Bash(fj release:*)") != null' 'true'
   # Read(//Users/...): // marks filesystem-root-absolute (claude-code.nix).
   assert_jq static-deny-read-credentials base "$base" ".permissions.deny | index(\"Read(/$h/.claude/.credentials.json)\") != null" 'true'
+  assert_jq static-deny-read-credentials-bak base "$base" ".permissions.deny | index(\"Read(/$h/.claude/.credentials.json.bak)\") != null" 'true'
+  assert_jq static-deny-edit-credentials-bak base "$base" ".permissions.deny | index(\"Edit(/$h/.claude/.credentials.json.bak)\") != null" 'true'
   assert_jq static-ask-git-push base "$base" '.permissions.ask | index("Bash(git push:*)") != null' 'true'
   assert_jq static-ask-rm-rf base "$base" '.permissions.ask | index("Bash(rm -rf:*)") != null' 'true'
   assert_jq static-ask-git-reset base "$base" '.permissions.ask | index("Bash(git reset --hard:*)") != null' 'true'
@@ -57,7 +56,8 @@ static_settings_run() {
   assert_jq static-deny-rtk-gh-merge base "$base" '.permissions.deny | index("Bash(rtk gh pr merge:*)") != null' 'true'
   assert_jq static-deny-rtk-fj-release base "$base" '.permissions.deny | index("Bash(rtk fj release:*)") != null' 'true'
 
-  # claudio overlay: exactly the Obsidian socket grants and nothing else — canonical-JSON equality so any accidental extra key fails loudly.
+  # claudio overlay: exactly the Obsidian socket grants and nothing else — canonical-JSON equality so any accidental
+  # extra key fails loudly.
   local claudio_expected
   claudio_expected=$(jq -Sc . <<EOF
 {"sandbox":{"filesystem":{"allowRead":["$h/.obsidian-cli.sock"]},"network":{"allowUnixSockets":["$h/.obsidian-cli.sock"]}}}

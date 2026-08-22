@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Orchestrator: static assertions run serially and free; dynamic probes fan out as (case, profile) jobs, each a subshell spawning one headless claude session, throttled by --jobs. Everything derives from results.jsonl alone.
+# Orchestrator: static assertions run serially and free; dynamic probes fan out as (case, profile) jobs, each a subshell
+# spawning one headless claude session, throttled by --jobs. Everything derives from results.jsonl alone.
 
 set -euo pipefail
 
@@ -131,7 +132,8 @@ if [[ $STATIC_ONLY == 0 ]]; then
   # Build each profile's merged --settings once, serially, before forking probe jobs.
   prebuild_probe_settings "${PROFILE_FILTER[@]}"
 
-  # Each job is a forked subshell: it inherits the sourced functions and resolved arrays, runs one probe, and appends one line to results.jsonl.
+  # Each job is a forked subshell: it inherits the sourced functions and resolved arrays, runs one probe, and appends
+  # one line to results.jsonl.
   while IFS=$'\t' read -r fn case_id profile; do
     while (($(jobs -rp | wc -l) >= JOBS)); do
       wait -n || true

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Filesystem enforcement probes, wrapped by probe_script. Reads prove access via byte counts, not content, so nothing sensitive lands in a probe's context; write canaries self-clean.
+# Filesystem enforcement probes, wrapped by probe_script. Reads prove access via byte counts, not content, so nothing
+# sensitive lands in a probe's context; write canaries self-clean.
 
 set -euo pipefail
 
@@ -39,7 +40,8 @@ fs_run_case() {
       probe_script "$profile" "$case_id" 'touch "$HOME/.claude/.credentials.json"'
       ;;
     fs-write-keychain)
-      # Branch reverted the keychain allowWrite; skip if the active base still grants it (stale config), the revert itself is asserted statically (static-no-allowwrite-keychains).
+      # Branch reverted the keychain allowWrite; skip if the active base still grants it (stale config), the revert
+      # itself is asserted statically (static-no-allowwrite-keychains).
       if [[ $profile != claude-yolo ]] && skip_if_base_drift "$case_id" "$profile" \
         ".sandbox.filesystem.allowWrite | index(\"$HOME/Library/Keychains\") != null" \
         "active base still grants the reverted Keychains allowWrite; re-run after just switch"; then

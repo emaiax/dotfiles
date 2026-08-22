@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Network enforcement probes: egress allowlist, nix daemon socket, TLS through Security.framework.
 #
-# net-nix-socket doubles as claudio's settings-merge canary — if --settings replaced the whole network object instead of merging, the base's nix socket grant would vanish exactly there.
+# net-nix-socket doubles as claudio's settings-merge canary — if --settings replaced the whole network object instead of
+# merging, the base's nix socket grant would vanish exactly there.
 #
-# net-tls-sandboxed wraps gh in case.sh deliberately, since excludedCommands only matches top-level commands — a wrapped gh runs fully sandboxed, exercising the trustd fix on its own.
+# net-tls-sandboxed wraps gh in case.sh deliberately, since excludedCommands only matches top-level commands — a wrapped
+# gh runs fully sandboxed, exercising the trustd fix on its own.
 
 set -euo pipefail
 

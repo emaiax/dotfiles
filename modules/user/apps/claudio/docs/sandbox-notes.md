@@ -1,6 +1,6 @@
 # Claude Code sandbox: investigation notes
 
-Background for the terse pointer comments in `claude-sandbox.nix`. Anything here is either a confirmed root cause worth the full trail, or an open question flagged as such — check the date/status before trusting it.
+Background for the terse pointer comments in `permissions.nix` and `claude-code/default.nix`. Anything here is either a confirmed root cause worth the full trail, or an open question flagged as such — check the date/status before trusting it.
 
 ## `git-credential-osxkeychain` fails with `100001` on `store`
 
@@ -18,16 +18,16 @@ Seatbelt blocks mach-lookup to trustd, the daemon Security.framework's `SecTrust
 
 Bare command names (`"gh"`, `"fj"`) are *not* respected — matching requires a glob covering the arguments, per the docs' own `"docker *"` example and confirmed by anthropics/claude-code#10524 (bare `"uv"` silently ignored). Bare `"docker"` was never actually verified working; only the rm/write denials were tested there.
 
-rtk twins: the PreToolUse hook rewrites `gh …` to `rtk gh …` (verified for `gh api`, `gh pr view`; not `fj`, not the gh/fj deny targets), and exclusion matching runs on the rewritten command — so `gh *` never matches `rtk gh api …` and `gh` runs fully sandboxed after all, surviving only via the trustd `allowMachLookup` plus the two allowlisted github domains (any `gh` call to another host still dies on the egress block). Same rewrite-defeats-the-rule bug the permission gates hit (see `claude-code.nix`'s `withRtkTwin`); the `rtk gh *`/`rtk fj *` twins restore the intended full bypass. rtk doesn't rewrite `docker` today, but the twin is harmless and future-proofs the same way, since the rewrite inventory is rtk's to change.
+rtk twins: the PreToolUse hook rewrites `gh …` to `rtk gh …` (verified for `gh api`, `gh pr view`; not `fj`, not the gh/fj deny targets), and exclusion matching runs on the rewritten command — so `gh *` never matches `rtk gh api …` and `gh` runs fully sandboxed after all, surviving only via the trustd `allowMachLookup` plus the two allowlisted github domains (any `gh` call to another host still dies on the egress block). Same rewrite-defeats-the-rule bug the permission gates hit (see `permissions.nix`'s `withRtkTwin`); the `rtk gh *`/`rtk fj *` twins restore the intended full bypass. rtk doesn't rewrite `docker` today, but the twin is harmless and future-proofs the same way, since the rewrite inventory is rtk's to change.
 
 ## PreToolUse hooks run unsandboxed — the write-escape trap
 
 Verified directly: a hook writing to the denyWrite'd `$HOME` root succeeds while a sandboxed Bash command cannot. That means any file a sandboxed command can write, which a hook later executes or which governs the next session's policy, is an escape hatch:
 
-- `~/.claude/hooks` holds the scripts invoked as `bash ~/.claude/hooks/*.sh` (`claude-code.nix`). Left writable via the `~/.claude` `allowWrite`, a sandboxed or prompt-injected command could overwrite `rtk-hook.sh` and get arbitrary unsandboxed execution on the next Bash call.
-- The settings state path is the real file `~/.claude/settings.json` resolves to (`mkOutOfStoreSymlink` into `~/.local/state`, covered by the same `allowWrite`). A sandboxed command running the same jq+mv pattern `rtk-hook.sh` uses could set `permissions.deny = []` or `sandbox.enabled = false` for the next session.
+- The hook scripts themselves. `claude-code/default.nix` invokes them as `bash "<checkout>/modules/user/apps/claudio/hooks/*.sh"`, and `~/.claude/hooks` is an `mkOutOfStoreSymlink` to the same directory. Overwrite `rtk-hook.sh` and you get arbitrary unsandboxed execution on the next Bash call.
+- `~/.claude/settings.json`, another `mkOutOfStoreSymlink` into the checkout. Rewriting it sets `permissions.deny = []` or `sandbox.enabled = false` for the next session.
 
-Both are in `denyWrite` as a result. This doesn't hinder rtk itself — it patches `settings.json` from the hook, which runs unsandboxed.
+Both were in `denyWrite` until the live-editable rework: they now live under `~/code`, which is `allowWrite` so the agent can work on this repo at all, and `~/.claude` is `allowWrite` so rtk can bootstrap. A `denyWrite` on either path would break the thing it is there to enable, so the escape is currently open and accepted. Anything that closes it has to keep rtk's own patching working, since rtk edits `settings.json` from the hook, which runs unsandboxed.
 
 ## `allowWrite` needing a matching `allowRead` (2026-08-19, unconfirmed)
 
@@ -37,9 +37,9 @@ Unverified hypothesis, untested against source: every `allowWrite` entry that wo
 
 ## `claude-yolo`: what it actually trades away
 
-`sandbox.enabled = false` is enough on its own — with the sandbox off, none of `claude-sandbox.nix`'s other `sandbox.*` keys do anything, so this profile doesn't replicate any of them.
+`sandbox.enabled = false` is enough on its own — with the sandbox off, none of the base profile's other `sandbox.*` keys do anything, so this profile doesn't replicate any of them.
 
-`permissions.ask` (git push, `rm -rf`, git reset --hard, ...) is what disappears: `--dangerously-skip-permissions` (bypassPermissions mode) skips every prompt. `permissions.deny` does *not* disappear — deny rules block in every mode including bypassPermissions (confirmed against code.claude.com/docs/en/permission-modes.md), so `gates.nix`'s `denyHard` and `claude-code.nix`'s `credentialDenyRules` still hold. Sandbox and permission-bypass are independent axes (code.claude.com/docs/en/sandboxing.md) — disabling one doesn't disable the other, hence needing both.
+`permissions.ask` (git push, `rm -rf`, git reset --hard, ...) is what disappears: `--dangerously-skip-permissions` (bypassPermissions mode) skips every prompt. `permissions.deny` does *not* disappear — deny rules block in every mode including bypassPermissions (confirmed against code.claude.com/docs/en/permission-modes.md), so `permissions.nix`'s `denyHard` and `credentialDenyRules` still hold. Sandbox and permission-bypass are independent axes (code.claude.com/docs/en/sandboxing.md) — disabling one doesn't disable the other, hence needing both.
 
 The official docs describe bypassPermissions as meant for an isolated container/VM, not a trusted host machine — this runs it on the host anyway, deliberately. With no sandbox and no ask, the global CLAUDE.md hard rules (never push/commit/destroy without approval, never touch main) have no harness backstop left besides `denyHard`/`credentialDenyRules`; they hold only as long as the model chooses to follow them. Use this profile only when that trade-off is wanted for that session, not as a default.
 

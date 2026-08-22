@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Digests results.jsonl into a terminal summary and results/<run>/compare.md (the observed-verdict grid, sandboxed × yolo). Exits nonzero if any FAIL exists, so run.sh's exit code is trustworthy for automation.
+# Digests results.jsonl into a terminal summary and results/<run>/compare.md (the observed-verdict grid, sandboxed ×
+# yolo). Exits nonzero if any FAIL exists, so run.sh's exit code is trustworthy for automation.
 
 set -euo pipefail
 
@@ -34,7 +35,8 @@ profiles=(claude claudio claudio-thebot claude-yolo)
   echo
   echo "## Observed verdicts (dynamic probes)"
   echo
-  # String append, not printf: a format starting with '---' is parsed as options. Header and delimiter need the same cell count or GFM won't render the table.
+  # String append, not printf: a format starting with '---' is parsed as options. Header and delimiter need the same
+  # cell count or GFM won't render the table.
   header='| case |'
   delim='|---|'
   for p in "${profiles[@]}"; do

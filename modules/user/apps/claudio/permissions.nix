@@ -1,9 +1,10 @@
-# Permissions for commands, filesystem paths, and network domains policy shared across every coding agent and profile in this repo.
-# These are the loosest any profile will ever be, since they land in the user layer and a higher-precedence layer cannot loosen them.
+# Permissions for commands, filesystem paths, and network domains policy shared across every coding agent and
+# profile in this repo. These are the loosest any profile will ever be, since they land in the user layer and a
+# higher-precedence layer cannot loosen them.
 #
 # Structure: `policy` is the single source of truth, grouped by domain (commands, credentials, filesystem,
 # network, sandbox). mkClaudeCodePermissions, mkClaudeCodeSandbox, and mkOpencodePermissions each take that one
-# policy and render it into one consumer's native settings shape, so claude-code.nix, sandbox.nix, and
+# policy and render it into one consumer's native settings shape, so claude-code/default.nix and
 # opencode/default.nix each just wire in their own branch instead of carrying their own translation logic.
 { home, lib, ... }:
 let
@@ -166,8 +167,8 @@ let
 
     # sandbox: network egress and IPC the sandbox otherwise blocks by default
     network = {
-      # homelab domain is patched in at runtime by hooks/homelab-network-hook.sh
       allowedDomains = [
+        "*.emx.casa" # homelab forgejo, LAN-only; already public in the README badges and CI workflows
         "api.github.com" # gh api
         "github.com" # git-over-https
       ];
