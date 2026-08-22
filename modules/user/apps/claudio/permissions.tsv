@@ -1,38 +1,41 @@
 rule	namespace	kind	consumers
-ask	commands.ask	raw	claudeCode.permissions.ask, opencode.permission.bash
-askExact	commands.askExact	raw	claudeCode.permissions.ask, opencode.permission.bash
-denyHard	commands.denyHard	raw	claudeCode.permissions.deny, opencode.permission.bash
-denySoft	commands.denySoft	raw	opencode.permission.bash (claude-code's soft tier is hand-written prose in auto-mode.nix, not read from here)
-opencodePatterns	commands.opencodePatterns	raw	opencode.permission.bash
-dirs	credentials.dirs	raw	claudeCode.permissions.deny, claudeCode.sandbox.filesystem.denyRead
-files	credentials.files	raw	claudeCode.permissions.deny, claudeCode.sandbox.filesystem.denyRead, claudeCode.sandbox.filesystem.denyWrite
+ask	policy.commands.ask	raw	claudeCode.permissions.ask, opencode.permission.bash
+askExact	policy.commands.askExact	raw	claudeCode.permissions.ask, opencode.permission.bash
+denyHard	policy.commands.denyHard	raw	claudeCode.permissions.deny, opencode.permission.bash
+denySoft	policy.commands.denySoft	raw	opencode.permission.bash (claude-code's soft tier is hand-written prose in auto-mode.nix, not read from here)
+opencodePatterns	policy.commands.opencodePatterns	raw	opencode.permission.bash
+dirs	policy.credentials.dirs	raw	claudeCode.permissions.deny, claudeCode.sandbox.filesystem.denyRead
+files	policy.credentials.files	raw	claudeCode.permissions.deny, claudeCode.sandbox.filesystem.denyRead, claudeCode.sandbox.filesystem.denyWrite
+nixReads	policy.filesystem.nixReads	raw	claudeCode.sandbox.filesystem.allowRead
+toolchainReadWrite	policy.filesystem.toolchainReadWrite	raw	claudeCode.sandbox.filesystem.allowRead, claudeCode.sandbox.filesystem.allowWrite
+toolchainReadOnly	policy.filesystem.toolchainReadOnly	raw	claudeCode.sandbox.filesystem.allowRead
+sshSigningReads	policy.filesystem.sshSigningReads	raw	claudeCode.sandbox.filesystem.allowRead
+allowedDomains	policy.network.allowedDomains	raw	claudeCode.sandbox.network.allowedDomains
+allowUnixSockets	policy.network.allowUnixSockets	raw	claudeCode.sandbox.network.allowUnixSockets
+allowMachLookup	policy.network.allowMachLookup	raw	claudeCode.sandbox.network.allowMachLookup
+excludedCommands	policy.sandbox.excludedCommands	raw	claudeCode.sandbox.excludedCommands
+settingsFile	policy.sandbox.paths.settingsFile	raw	claudeCode.sandbox.filesystem.denyWrite, claudeCode.sandbox.paths.settingsFile, claude-code.nix's claudeSettingsStatePath
+hooksDir	policy.sandbox.paths.hooksDir	raw	claudeCode.sandbox.filesystem.denyWrite, claudeCode.sandbox.paths.hooksDir
 credentialBaks	credentialBaks (internal)	internal	claudeCode.permissions.deny, claudeCode.sandbox.filesystem.denyRead, claudeCode.sandbox.filesystem.denyWrite
-nixReads	nixReads (internal)	internal	claudeCode.sandbox.filesystem.allowRead
-toolchainReadWrite	toolchainReadWrite (internal)	internal	claudeCode.sandbox.filesystem.allowRead, claudeCode.sandbox.filesystem.allowWrite
-toolchainReadOnly	toolchainReadOnly (internal)	internal	claudeCode.sandbox.filesystem.allowRead
-sshSigningReads	sshSigningReads (internal)	internal	claudeCode.sandbox.filesystem.allowRead
-allowedDomains	allowedDomains (internal)	internal	claudeCode.sandbox.network.allowedDomains
-settingsFile	sandboxPaths.settingsFile	internal	claudeCode.sandbox.filesystem.denyWrite, claudeCode.sandbox.paths.settingsFile, claude-code.nix's claudeSettingsStatePath
-hooksDir	sandboxPaths.hooksDir	internal	claudeCode.sandbox.filesystem.denyWrite, claudeCode.sandbox.paths.hooksDir
-ask	claudeCode.permissions.ask	rendered	claude-code.nix (programs.claude-code.settings.permissions.ask)
-deny	claudeCode.permissions.deny	rendered	claude-code.nix (programs.claude-code.settings.permissions.deny)
-excludedCommands	claudeCode.sandbox.excludedCommands	rendered	sandbox.nix (programs.claude-code.settings.sandbox.excludedCommands)
-denyRead	claudeCode.sandbox.filesystem.denyRead	rendered	sandbox.nix
-allowRead	claudeCode.sandbox.filesystem.allowRead	rendered	sandbox.nix
-allowWrite	claudeCode.sandbox.filesystem.allowWrite	rendered	sandbox.nix
-denyWrite	claudeCode.sandbox.filesystem.denyWrite	rendered	sandbox.nix
-allowedDomains	claudeCode.sandbox.network.allowedDomains	rendered	sandbox.nix
-allowUnixSockets	claudeCode.sandbox.network.allowUnixSockets	rendered	sandbox.nix
-allowMachLookup	claudeCode.sandbox.network.allowMachLookup	rendered	sandbox.nix
-paths	claudeCode.sandbox.paths	rendered	claude-code.nix (claudeSettingsStatePath)
-read	opencode.permission.read	rendered	opencode/default.nix
-glob	opencode.permission.glob	rendered	opencode/default.nix
-grep	opencode.permission.grep	rendered	opencode/default.nix
-lsp	opencode.permission.lsp	rendered	opencode/default.nix
-edit	opencode.permission.edit	rendered	opencode/default.nix
-webfetch	opencode.permission.webfetch	rendered	opencode/default.nix
-websearch	opencode.permission.websearch	rendered	opencode/default.nix
-task	opencode.permission.task	rendered	opencode/default.nix
-external_directory	opencode.permission.external_directory	rendered	opencode/default.nix
-doom_loop	opencode.permission.doom_loop	rendered	opencode/default.nix
-bash	opencode.permission.bash	rendered	opencode/default.nix
+ask	claudeCode.permissions.ask	rendered	claude-code.nix (programs.claude-code.settings.permissions.ask), built by mkClaudeCodePermissions
+deny	claudeCode.permissions.deny	rendered	claude-code.nix (programs.claude-code.settings.permissions.deny), built by mkClaudeCodePermissions
+excludedCommands	claudeCode.sandbox.excludedCommands	rendered	sandbox.nix (programs.claude-code.settings.sandbox.excludedCommands), built by mkClaudeCodeSandbox
+denyRead	claudeCode.sandbox.filesystem.denyRead	rendered	sandbox.nix, built by mkClaudeCodeSandbox
+allowRead	claudeCode.sandbox.filesystem.allowRead	rendered	sandbox.nix, built by mkClaudeCodeSandbox
+allowWrite	claudeCode.sandbox.filesystem.allowWrite	rendered	sandbox.nix, built by mkClaudeCodeSandbox
+denyWrite	claudeCode.sandbox.filesystem.denyWrite	rendered	sandbox.nix, built by mkClaudeCodeSandbox
+allowedDomains	claudeCode.sandbox.network.allowedDomains	rendered	sandbox.nix, built by mkClaudeCodeSandbox
+allowUnixSockets	claudeCode.sandbox.network.allowUnixSockets	rendered	sandbox.nix, built by mkClaudeCodeSandbox
+allowMachLookup	claudeCode.sandbox.network.allowMachLookup	rendered	sandbox.nix, built by mkClaudeCodeSandbox
+paths	claudeCode.sandbox.paths	rendered	claude-code.nix (claudeSettingsStatePath), built by mkClaudeCodeSandbox
+read	opencode.permission.read	rendered	opencode/default.nix, built by mkOpencodePermissions
+glob	opencode.permission.glob	rendered	opencode/default.nix, built by mkOpencodePermissions
+grep	opencode.permission.grep	rendered	opencode/default.nix, built by mkOpencodePermissions
+lsp	opencode.permission.lsp	rendered	opencode/default.nix, built by mkOpencodePermissions
+edit	opencode.permission.edit	rendered	opencode/default.nix, built by mkOpencodePermissions
+webfetch	opencode.permission.webfetch	rendered	opencode/default.nix, built by mkOpencodePermissions
+websearch	opencode.permission.websearch	rendered	opencode/default.nix, built by mkOpencodePermissions
+task	opencode.permission.task	rendered	opencode/default.nix, built by mkOpencodePermissions
+external_directory	opencode.permission.external_directory	rendered	opencode/default.nix, built by mkOpencodePermissions
+doom_loop	opencode.permission.doom_loop	rendered	opencode/default.nix, built by mkOpencodePermissions
+bash	opencode.permission.bash	rendered	opencode/default.nix, built by mkOpencodePermissions
