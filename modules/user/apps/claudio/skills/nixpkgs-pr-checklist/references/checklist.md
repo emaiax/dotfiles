@@ -1,4 +1,4 @@
-# Nixpkgs PR Checklist — Full Commands
+# Nixpkgs PR Checklist: Full Commands
 
 Detailed version of the 14-step checklist in SKILL.md. Run these for real;
 don't infer results from memory of a previous session.
@@ -20,7 +20,7 @@ git rebase upstream/master  # or upstream/<target-branch>
 
 If conflicts appear in a file that's clearly been mechanically reformatted
 upstream (e.g. a whole block converted from `name = { ... };` to
-`name = { ... }: { ... };`), don't trust the conflict markers line-by-line —
+`name = { ... }: { ... };`), don't trust the conflict markers line-by-line,
 diff your target commit against the pre-rebase merge-base to see exactly
 what content you're supposed to add, then reconstruct that insertion against
 the *current* upstream file directly.
@@ -56,8 +56,8 @@ If a package links a NixOS test via `passthru.tests = { inherit
 nix build -L .#nixosTests.<name> --no-link
 ```
 Requires `kvm` (Linux) or `apple-virt` (macOS, via a configured Linux
-builder — e.g. nix-darwin's `nix.linux-builder.enable`). On macOS without
-that set up, this will fail for environment reasons, not code reasons — say
+builder, e.g. nix-darwin's `nix.linux-builder.enable`). On macOS without
+that set up, this will fail for environment reasons, not code reasons, so say
 so explicitly, don't check the box, and don't call it a code bug either.
 
 ## 7. New/changed lints
@@ -65,7 +65,7 @@ so explicitly, don't check the box, and don't call it a code bug either.
 Nixpkgs lint rules change over time (new nixpkgs-vet checks, structuredAttrs
 requirements, etc.). If a lint fails that predates your branch's base commit
 by months, check whether it's a *new* requirement rather than something you
-broke — search recently-touched sibling packages for the pattern they now
+broke: search recently-touched sibling packages for the pattern they now
 use (e.g. `grep -rl "__structuredAttrs = true" pkgs/by-name/`) before writing
 a fix from scratch.
 
@@ -76,7 +76,7 @@ nix shell nixpkgs#nixpkgs-review --run "nixpkgs-review pr <N> --print-result --n
 # uncommitted local changes:
 nix shell nixpkgs#nixpkgs-review --run "nixpkgs-review wip --print-result --no-shell"
 ```
-Never `--post-result` / `--approve-pr` / `--merge-pr` — see SKILL.md
+Never `--post-result` / `--approve-pr` / `--merge-pr`, see SKILL.md
 Guardrails. Read the printed markdown yourself and summarize it back to the
 user in chat.
 
@@ -98,7 +98,7 @@ Check against `pkgs/README.md#meta-attributes`: `description` (no leading
 ls nixos/doc/manual/release-notes/ | tail -3   # find current dev-cycle file
 grep -n "<analogous keyword, e.g. exporter>" nixos/doc/manual/release-notes/rl-<current>.section.md
 ```
-If a recent, similarly-scoped addition (same category — e.g. another
+If a recent, similarly-scoped addition (same category, e.g. another
 Prometheus exporter) has an entry under "New Modules" and yours doesn't,
 draft one in the same format and flag it to the user before adding.
 
@@ -127,17 +127,17 @@ For any FAILURE, pull the real log before proposing a fix:
 gh api /repos/NixOS/nixpkgs/actions/jobs/<job-id>/logs
 ```
 Distinguish:
-- **Real regression** — the log shows your change caused it. Fix it.
-- **Rebase/reformat noise** — a lint/parse failure in a file you touched but
+- **Real regression**: the log shows your change caused it. Fix it.
+- **Rebase/reformat noise**: a lint/parse failure in a file you touched but
   whose content you didn't actually author; the file just needs
   reformatting to current conventions.
-- **Hiccup** — e.g. a `Test / prepare` job timing out while polling GitHub's
+- **Hiccup**: e.g. a `Test / prepare` job timing out while polling GitHub's
   own mergeability computation ("GitHub is still computing whether this PR
   can be merged... Not retrying anymore"). Confirm by checking `mergeable`
-  directly via `gh pr view` — if it now resolves to `MERGEABLE`, the
+  directly via `gh pr view`, if it now resolves to `MERGEABLE`, the
   underlying state is fine and the job's retry loop just gave up too early.
   Required "PR" workflow checks matter; auxiliary "Test" workflow jobs
-  usually don't block merge — say so, don't treat it as a blocker.
+  usually don't block merge, so say so, don't treat it as a blocker.
 
 ## Common Mistakes
 
