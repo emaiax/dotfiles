@@ -59,8 +59,7 @@ let
       defaultMode = "auto";
 
       # ask/deny hold in every mode, unlike allow and autoMode.
-      ask =
-        map prefixRule (withRtkTwin perms.ask) ++ map exactRule (withRtkTwin perms.askExact);
+      ask = map prefixRule (withRtkTwin perms.ask) ++ map exactRule (withRtkTwin perms.askExact);
 
       # hard tier only; reversible ones are soft_deny in auto-mode.nix
       deny = map prefixRule (withRtkTwin perms.denyHard) ++ credentialDenyRules;

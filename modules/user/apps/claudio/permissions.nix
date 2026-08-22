@@ -7,164 +7,164 @@
 let
   raw = {
     allow = [
-    "git commit" # local and reversible
-  ];
+      "git commit" # local and reversible
+    ];
 
-  ask = [
-    "git push"
+    ask = [
+      "git push"
 
-    # Destructive and hard to undo.
-    "git reset --hard"
-    "git checkout --"
-    "git restore"
-    "git clean"
-    "git rebase"
-    "rm -rf"
-  ];
+      # Destructive and hard to undo.
+      "git reset --hard"
+      "git checkout --"
+      "git restore"
+      "git clean"
+      "git rebase"
+      "rm -rf"
+    ];
 
-  # Irreversible, so these go to `permissions.deny` where nothing overrides them.
-  denyHard = [
-    "gh pr merge"
-    "gh release"
-    "fj pr merge"
-    "fj release"
-  ];
+    # Irreversible, so these go to `permissions.deny` where nothing overrides them.
+    denyHard = [
+      "gh pr merge"
+      "gh release"
+      "fj pr merge"
+      "fj release"
+    ];
 
-  # Reversible, so these become prose in auto-mode.nix's soft_deny, which claudio-thebot can carve an exception out
-  # of. OpenCode has no classifier and renders them as plain denies instead.
-  denySoft = [
-    "gh pr create"
-    "gh pr ready"
-    "gh pr review"
-    "gh pr comment"
-    "gh pr close"
-    "gh issue create"
-    "gh issue edit"
-    "gh issue comment"
+    # Reversible, so these become prose in auto-mode.nix's soft_deny, which claudio-thebot can carve an exception out
+    # of. OpenCode has no classifier and renders them as plain denies instead.
+    denySoft = [
+      "gh pr create"
+      "gh pr ready"
+      "gh pr review"
+      "gh pr comment"
+      "gh pr close"
+      "gh issue create"
+      "gh issue edit"
+      "gh issue comment"
 
-    "fj pr create"
-    "fj pr review"
-    "fj pr close"
-    "fj pr comment"
-    "fj issue create"
-    "fj issue edit"
-    "fj issue comment"
-  ];
+      "fj pr create"
+      "fj pr review"
+      "fj pr close"
+      "fj pr comment"
+      "fj issue create"
+      "fj issue edit"
+      "fj issue comment"
+    ];
 
-  # Matched literally rather than as a prefix.
-  askExact = [ "git checkout ." ];
+    # Matched literally rather than as a prefix.
+    askExact = [ "git checkout ." ];
 
-  # No allowlist: `ls` and `cat` are aliases resolving to nix store paths that no name-based rule matches, so an
-  # allowlist blocks them however it is written.
+    # No allowlist: `ls` and `cat` are aliases resolving to nix store paths that no name-based rule matches, so an
+    # allowlist blocks them however it is written.
 
-  # derived globs that would widen the rule
-  opencodePatterns = {
-    "git checkout --" = "git checkout -- *"; # avoids swallowing `--track` and `--force`
-  };
+    # derived globs that would widen the rule
+    opencodePatterns = {
+      "git checkout --" = "git checkout -- *"; # avoids swallowing `--track` and `--force`
+    };
 
-  ## Filesystem paths that must stay out of every agent's reach, no matter which tool asks for them. sandbox.nix
-  ## denies these to the sandboxed Bash subprocess via sandbox.filesystem.denyRead/denyWrite, and claude-code.nix
-  ## denies them to the native Read/Edit tools via permissions.deny, which the sandbox never sees.
+    ## Filesystem paths that must stay out of every agent's reach, no matter which tool asks for them. sandbox.nix
+    ## denies these to the sandboxed Bash subprocess via sandbox.filesystem.denyRead/denyWrite, and claude-code.nix
+    ## denies them to the native Read/Edit tools via permissions.deny, which the sandbox never sees.
 
-  # Directories: Read/Edit deny rules need a /** suffix to reach files nested inside.
-  dirs = [
-    "${home}/.aws"
-    "${home}/.config/1Password"
-    "${home}/.config/sops"
-    "${home}/.gnupg"
-  ];
+    # Directories: Read/Edit deny rules need a /** suffix to reach files nested inside.
+    dirs = [
+      "${home}/.aws"
+      "${home}/.config/1Password"
+      "${home}/.config/sops"
+      "${home}/.gnupg"
+    ];
 
-  # Single files.
-  files = [
-    "${home}/.claude/.credentials.json"
+    # Single files.
+    files = [
+      "${home}/.claude/.credentials.json"
 
-    # Deny the credential file, never the config directory around it: denying ~/.config/gh stopped gh starting at
-    # all, and ~/.config/opencode holds only config while opencode keeps its tokens under ~/.local/share.
-    "${home}/.local/share/opencode/auth.json"
-    "${home}/.local/share/opencode/mcp-auth.json"
-    "${home}/.docker/config.json"
-    "${home}/.netrc"
-    "${home}/.npmrc"
-  ];
+      # Deny the credential file, never the config directory around it: denying ~/.config/gh stopped gh starting at
+      # all, and ~/.config/opencode holds only config while opencode keeps its tokens under ~/.local/share.
+      "${home}/.local/share/opencode/auth.json"
+      "${home}/.local/share/opencode/mcp-auth.json"
+      "${home}/.docker/config.json"
+      "${home}/.netrc"
+      "${home}/.npmrc"
+    ];
 
-  # Files above nested inside an allowRead/allowWrite tree by name, not a wholesale-denied directory, so a sibling
-  # `.bak` (backupFileExtension = "bak") could ride the same grant back in and needs its own carve-out. Only
-  # .credentials.json qualifies today.
-  bakCarveouts = [
-    "${home}/.claude/.credentials.json"
-  ];
+    # Files above nested inside an allowRead/allowWrite tree by name, not a wholesale-denied directory, so a sibling
+    # `.bak` (backupFileExtension = "bak") could ride the same grant back in and needs its own carve-out. Only
+    # .credentials.json qualifies today.
+    bakCarveouts = [
+      "${home}/.claude/.credentials.json"
+    ];
 
-  ## Sandbox policy for Claude Code's Seatbelt boundary: filesystem paths every profile needs read access to, plus
-  ## the commands and domains that sit outside it. Only claude-code/sandbox.nix consumes this half, OpenCode has no
-  ## sandbox mechanism.
+    ## Sandbox policy for Claude Code's Seatbelt boundary: filesystem paths every profile needs read access to, plus
+    ## the commands and domains that sit outside it. Only claude-code/sandbox.nix consumes this half, OpenCode has no
+    ## sandbox mechanism.
 
-  # nix breaks under the sandbox without these: the fetcher cache, the state dir, and the daemon socket (wired
-  # separately in sandbox.nix).
-  nixReads = [
-    "${home}/.cache/nix"
-    "${home}/.local/state/nix"
-  ];
+    # nix breaks under the sandbox without these: the fetcher cache, the state dir, and the daemon socket (wired
+    # separately in sandbox.nix).
+    nixReads = [
+      "${home}/.cache/nix"
+      "${home}/.local/state/nix"
+    ];
 
-  # Toolchains, not personal data: denying $HOME wholesale takes out npm/node/asdf too.
-  toolchainReads = [
-    "${home}/code"
-    "${home}/.cache"
-    "${home}/.config"
-    "${home}/.local"
-    "${home}/Library/Caches" # treefmt, which `nix fmt` runs, caches here rather than under XDG
-    "${home}/.gitconfig"
+    # Toolchains, not personal data: denying $HOME wholesale takes out npm/node/asdf too.
+    toolchainReads = [
+      "${home}/code"
+      "${home}/.cache"
+      "${home}/.config"
+      "${home}/.local"
+      "${home}/Library/Caches" # treefmt, which `nix fmt` runs, caches here rather than under XDG
+      "${home}/.gitconfig"
 
-    # The Bash tool runs commands through the login shell.
-    "${home}/.zshrc"
-    "${home}/.zshenv"
+      # The Bash tool runs commands through the login shell.
+      "${home}/.zshrc"
+      "${home}/.zshenv"
 
-    "${home}/.asdf"
-    "${home}/.bun"
-    "${home}/.npm"
-    "${home}/.gem"
-    "${home}/.bundle"
-    "${home}/.mix"
-    "${home}/.hex"
-    "${home}/go"
-    "${home}/.terraform.d"
-    "${home}/.nix-profile"
-    "${home}/.nix-defexpr"
+      "${home}/.asdf"
+      "${home}/.bun"
+      "${home}/.npm"
+      "${home}/.gem"
+      "${home}/.bundle"
+      "${home}/.mix"
+      "${home}/.hex"
+      "${home}/go"
+      "${home}/.terraform.d"
+      "${home}/.nix-profile"
+      "${home}/.nix-defexpr"
 
-    # Needed just to reach the normal per-item ACL prompt; doesn't bypass it. `git push`'s credential store still
-    # fails here with a known, accepted gap (docs/sandbox-notes.md).
-    "${home}/Library/Keychains"
+      # Needed just to reach the normal per-item ACL prompt; doesn't bypass it. `git push`'s credential store still
+      # fails here with a known, accepted gap (docs/sandbox-notes.md).
+      "${home}/Library/Keychains"
 
-    # allowWrite alone wasn't enough for either (docs/sandbox-notes.md); .credentials.json under ~/.claude stays
-    # denied regardless: narrower wins for reads, same as writes.
-    "${home}/.claude"
-    "${home}/Library/Application Support/rtk"
-  ];
+      # allowWrite alone wasn't enough for either (docs/sandbox-notes.md); .credentials.json under ~/.claude stays
+      # denied regardless: narrower wins for reads, same as writes.
+      "${home}/.claude"
+      "${home}/Library/Application Support/rtk"
+    ];
 
-  # ~/.ssh is denied outright otherwise; commit.gpgSign uses gpg.format = "ssh" (git/git.nix).
-  sshSigningReads = [
-    "${home}/.ssh/allowed_signers"
-    "${home}/.ssh/config"
-    "${home}/.ssh/github"
-    "${home}/.ssh/github.pub"
-    "${home}/.ssh/known_hosts"
-  ];
+    # ~/.ssh is denied outright otherwise; commit.gpgSign uses gpg.format = "ssh" (git/git.nix).
+    sshSigningReads = [
+      "${home}/.ssh/allowed_signers"
+      "${home}/.ssh/config"
+      "${home}/.ssh/github"
+      "${home}/.ssh/github.pub"
+      "${home}/.ssh/known_hosts"
+    ];
 
-  # docker doesn't compose with the sandbox; gh/fj fail cert validation under it (trustd mach-lookup blocked).
-  # Excluded commands run fully unwrapped: a hole, not a containment. Each needs a glob (bare names aren't matched)
-  # and an `rtk `-prefixed twin, since the PreToolUse hook rewrites gh/fj commands before this matches against
-  # them. Full background: docs/sandbox-notes.md.
-  excludedCommands = [
-    "docker *"
-    "rtk docker *"
-    "gh *"
-    "rtk gh *"
-    "fj *"
-    "rtk fj *"
-  ];
+    # docker doesn't compose with the sandbox; gh/fj fail cert validation under it (trustd mach-lookup blocked).
+    # Excluded commands run fully unwrapped: a hole, not a containment. Each needs a glob (bare names aren't matched)
+    # and an `rtk `-prefixed twin, since the PreToolUse hook rewrites gh/fj commands before this matches against
+    # them. Full background: docs/sandbox-notes.md.
+    excludedCommands = [
+      "docker *"
+      "rtk docker *"
+      "gh *"
+      "rtk gh *"
+      "fj *"
+      "rtk fj *"
+    ];
 
-  # homelab domain is patched in at runtime in hooks/homelab-network-hook.sh
-  #
-  allowedDomains = [
+    # homelab domain is patched in at runtime in hooks/homelab-network-hook.sh
+    #
+    allowedDomains = [
       "github.com" # git-over-https
       "api.github.com" # gh api
     ];
