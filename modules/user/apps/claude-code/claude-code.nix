@@ -8,7 +8,7 @@ let
   home = config.home.homeDirectory;
 
   # Shared with opencode.nix.
-  gates = import ./gates.nix;
+  gates = import ../agent-shared/gates.nix;
 
   # `Bash(x:*)` matches any arguments; `Bash(x)` matches only that literal invocation.
   prefixRule = cmd: "Bash(${cmd}:*)";
@@ -133,7 +133,7 @@ let
   claudeConfigDir = config.programs.claude-code.configDir;
 
   # same convention as vscode/default.nix and iterm2/default.nix: always the main checkout, deliberately, not wherever this was evaluated from
-  agentsSourcePath = "${home}/code/dotfiles/modules/user/apps/coding-agents/AGENTS.md";
+  agentsSourcePath = "${home}/code/dotfiles/modules/user/apps/agent-shared/AGENTS.md";
 in
 {
   # Out-of-store: rtk init -g writes an RTK.md pointer into CLAUDE.md at runtime, which EACCESs against the read-only store. force = true lets rtk replace the symlink with a plain file without the next switch refusing to reclaim it.
@@ -156,10 +156,10 @@ in
     enable = true;
 
     # Symlinked to ~/.claude/hooks/. Wired into settings.hooks below — dropping a script here does nothing on its own.
-    hooksDir = ./claude-hooks;
+    hooksDir = ./hooks;
 
     skills = {
-      nixpkgs-pr-checklist = ./skills/nixpkgs-pr-checklist;
+      nixpkgs-pr-checklist = ../agent-shared/skills/nixpkgs-pr-checklist;
     };
 
     settings = claudeSettings;

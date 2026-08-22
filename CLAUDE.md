@@ -1,6 +1,6 @@
 # dotfiles — project context
 
-Declarative macOS configuration built on Nix flakes: nix-darwin + home-manager + nix-homebrew. This file documents the repo itself. Personal / user-level preferences are configured separately (published to `~/.claude/CLAUDE.md` and OpenCode's global context from `modules/user/apps/coding-agents/AGENTS.md`).
+Declarative macOS configuration built on Nix flakes: nix-darwin + home-manager + nix-homebrew. This file documents the repo itself. Personal / user-level preferences are configured separately (published to `~/.claude/CLAUDE.md` and OpenCode's global context from `modules/user/apps/agent-shared/AGENTS.md`).
 
 ## Layout
 
@@ -8,7 +8,7 @@ Declarative macOS configuration built on Nix flakes: nix-darwin + home-manager +
 - `nix/hosts/` — per-host overrides: `dudumini` (Intel), `dudupro` (Apple Silicon).
 - `nix/profiles/` — user bundles (`emaiax.nix`) and host Homebrew (`brew.nix`).
 - `modules/` — `core/`, `system/` (`common` + `darwin`), `pkgs/`, and `user/` (home-manager: `apps/`, `cli/`, `git/`, `shell/`, `packages/`).
-- `modules/user/apps/coding-agents/` — Claude Code, OpenCode, and the shared agent `skills/`.
+- `modules/user/apps/claude-code/`, `modules/user/apps/opencode/` — generic Claude Code and OpenCode wiring, no dependency on `claudio/`. `modules/user/apps/agent-shared/` — AGENTS.md, command gates, and `skills/`, shared between the two. `modules/user/apps/claudio/` — the opinionated profile layer on top (`claudio`, `claudio-yolo`, `claudio-bot`, plus their test harness).
 - `modules/user/apps/agent-jail/` — generic multi-profile Docker jail for running coding agents against an allowlisted directory (profile structure is public; real paths live in an encrypted secret).
 
 ## Working in this repo
@@ -30,4 +30,4 @@ Declarative macOS configuration built on Nix flakes: nix-darwin + home-manager +
 ## Conventions
 
 - Conventional commits, imperative mood, no trailing period, no `Co-authored-by`.
-- Scope commits by module path, e.g. `feat(user/apps/coding-agents): ...`.
+- Scope commits by module path, e.g. `feat(user/apps/claude-code): ...`.

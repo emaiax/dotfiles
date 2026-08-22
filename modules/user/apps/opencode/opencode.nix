@@ -1,7 +1,7 @@
 { lib, ... }:
 let
   # Shared with claude-code.nix.
-  gates = import ./gates.nix;
+  gates = import ../agent-shared/gates.nix;
 
   # last-matching-rule-wins, evaluated in *declaration* order — Nix attrsets don't preserve that order when serialized to JSON (keys come out alphabetical), so every rule after the "*" catch-all has to be pinned with entryAfter or it can silently reorder ahead of it.
   prefixRule = action: cmd: {
@@ -24,11 +24,11 @@ in
     enable = true;
 
     # Personal agent operating context as the global AGENTS.md; same source as programs.claude-code's ~/.claude/CLAUDE.md.
-    context = ./AGENTS.md;
+    context = ../agent-shared/AGENTS.md;
 
     skills = {
       # Shared vendored skills dir; same source as programs.claude-code.skills.
-      nixpkgs-pr-checklist = ./skills/nixpkgs-pr-checklist;
+      nixpkgs-pr-checklist = ../agent-shared/skills/nixpkgs-pr-checklist;
     };
 
     settings = {

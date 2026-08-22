@@ -41,7 +41,7 @@ in
       cat = "bat -pp"; # bat: cat on steroids
       j = "just"; # just: task runner
 
-      # claude: `claude-trust` and `claude-remote` dropped, both pinned a weaker posture than the default now provides. See coding-agents/claude-sandbox.nix.
+      # claude: `claude-trust` and `claude-remote` dropped, both pinned a weaker posture than the default now provides. See claude-code/sandbox.nix.
 
       # claude-mem: semantic memory across sessions (see claude-mem.nix)
       claude-mem = "bun \"$(ls -dt ~/.claude/plugins/cache/thedotmack/claude-mem/*/scripts/worker-service.cjs 2>/dev/null | head -1)\"";

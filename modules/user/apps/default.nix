@@ -1,9 +1,11 @@
 {
   imports = [
     ./agent-jail
-    ./coding-agents
+    ./claude-code
+    ./claudio
     ./cursor
     ./iterm2
+    ./opencode
     ./raycast
     ./vscode
     ./zed.nix
