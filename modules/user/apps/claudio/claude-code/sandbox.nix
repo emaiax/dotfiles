@@ -1,7 +1,7 @@
 # Default sandbox layer for every Claude Code session (see #121). Confines Bash and its children only.
 # Read/Edit/Write go through claude-code.nix's permissions.deny instead (see #126), both built from
 # claudio/permissions.nix. Profiles layer on top via `--settings`, which merges, so they inherit every deny here.
-# Background/investigation notes: docs/sandbox-notes.md.
+# Background/investigation notes: ../docs/sandbox-notes.md.
 #
 # Two ways to write a rule that silently does nothing: a trailing slash voids the entry on 2.1.222 (fixed in
 # 2.1.224), and a glob like `$HOME/*` matches nothing and fails open.
@@ -9,7 +9,7 @@
 let
   home = config.home.homeDirectory;
 
-  # Shared with claude-code.nix and opencode.nix.
+  # Shared with claude-code.nix and opencode/default.nix.
   perms = import ../permissions.nix { inherit home lib; };
   inherit (perms)
     nixReads
@@ -83,7 +83,7 @@ in
       # bakCarveouts/credentialBaks: the credentialDenies entries nested under an allowWrite path need denying
       # again here, plus their .bak sibling (see #126). ~/.claude/hooks and the settings state path close a
       # same-session escape: PreToolUse hooks run unsandboxed, so a sandboxed command could otherwise overwrite
-      # rtk-hook.sh or flip permissions.deny/sandbox.enabled for the next session. Full trail: docs/sandbox-notes.md.
+      # rtk-hook.sh or flip permissions.deny/sandbox.enabled for the next session. Full trail: ../docs/sandbox-notes.md.
       denyWrite =
         perms.bakCarveouts
         ++ credentialBaks

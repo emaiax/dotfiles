@@ -7,8 +7,11 @@
 let
   home = config.home.homeDirectory;
 
-  # Shared with opencode.nix and sandbox.nix.
+  # Shared with opencode/default.nix and sandbox.nix.
   perms = import ../permissions.nix { inherit home lib; };
+
+  # Shared with opencode/default.nix.
+  settingsValues = import ../settings.nix;
 
   # `Bash(x:*)` matches any arguments; `Bash(x)` matches only that literal invocation.
   prefixRule = cmd: "Bash(${cmd}:*)";
@@ -49,12 +52,7 @@ let
     ];
   };
 
-  claudeSettings = {
-    model = "sonnet";
-
-    includeCoAuthoredBy = false;
-    theme = "dark";
-
+  claudeSettings = settingsValues.claudeCode // {
     permissions = {
       defaultMode = "auto";
 
@@ -69,32 +67,11 @@ let
       SessionStart = [ homelabNetworkHook ];
       PreToolUse = [ rtkHook ];
     };
-
-    extraKnownMarketplaces = {
-      obsidian-skills = {
-        source = {
-          source = "github";
-          repo = "kepano/obsidian-skills";
-        };
-      };
-      thedotmack = {
-        source = {
-          source = "github";
-          repo = "thedotmack/claude-mem";
-        };
-      };
-    };
-
-    enabledPlugins = {
-      "claude-mem@thedotmack" = true; # semantic memory across sessions
-      "obsidian@obsidian-skills" = true; # obsidian markdown, bases, JSON Canvas and `obsidian` CLI
-      "superpowers@claude-plugins-official" = true; # superpowers: code analysis, refactoring, and generation
-    };
   };
 
   # This is a generated file, not a source file. It is generated from config.programs.claude-code.settings, not
-  # claudeSettings above because claude-sandbox.nix and claude-automode.nix merge their own keys (sandbox, autoMode)
-  # into the same option
+  # claudeSettings above because sandbox.nix and auto-mode.nix merge their own keys (sandbox, autoMode) into the
+  # same option
   #
   claudeSettingsJson = (pkgs.formats.json { }).generate "claude-code-settings.json" (
     config.programs.claude-code.settings

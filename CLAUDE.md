@@ -8,6 +8,7 @@
 
 - ALWAYS write in prose and be succinct: direct, low density, no filler. Bullets don't need a trailing period
 - ALWAYS hard-wrap comments in code at 120 columns, this is the one and only exception to the rule above
+- NEVER reference PRs or issues numbers in code comments
 - NEVER use AI-slop characters: no em dashes, no smart/curly quotes, no other telltale AI punctuation. Use a comma, a colon, or a period instead
 
 ## Layout

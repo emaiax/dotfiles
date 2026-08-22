@@ -2,7 +2,7 @@
 # These are the loosest any profile will ever be, since they land in the user layer and a higher-precedence layer cannot loosen them.
 #
 # Also renders that raw policy into each backend's native settings shape (claudeCodeCredentialDenyRules,
-# opencodeBashRules), so claude-code.nix and opencode.nix don't each carry their own copy of the same translation.
+# opencodeBashRules), so claude-code.nix and opencode/default.nix don't each carry their own copy of the same translation.
 { home, lib }:
 let
   raw = {
