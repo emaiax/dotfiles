@@ -9,20 +9,9 @@
 let
   home = config.home.homeDirectory;
 
-  # Shared with claude-code.nix and opencode/default.nix.
+  # Shared with claude-code.nix and opencode/default.nix. filesystem/network policy lives entirely in
+  # permissions.nix, this file only wires it plus the Seatbelt toggles that aren't data.
   perms = import ../permissions.nix { inherit home lib; };
-  inherit (perms)
-    nixReads
-    toolchainReads
-    sshSigningReads
-    excludedCommands
-    allowedDomains
-    ;
-
-  # Nested inside allowRead above; reads honour narrower-wins but denyWrite beats allowWrite unconditionally, so
-  # never pair the two.
-  credentialDenies = perms.dirs ++ perms.files;
-  credentialBaks = map (p: "${p}.bak") perms.bakCarveouts;
 in
 {
   programs.claude-code.settings.sandbox = {
@@ -36,60 +25,13 @@ in
     autoAllowBashIfSandboxed = true;
 
     # docker/gh/fj policy: permissions.nix's excludedCommands.
-    inherit excludedCommands;
+    inherit (perms) excludedCommands;
 
     # Without this, `open -a <App>` fails with kLSUnknownErr: launching another app's process needs a mach-lookup
     # to RunningBoard/launchservicesd that the sandbox blocks.
     allowAppleEvents = true;
 
-    network = {
-      inherit allowedDomains;
-
-      # Without this every nix subcommand fails to reach its daemon.
-      allowUnixSockets = [ "/nix/var/nix/daemon-socket/socket" ];
-
-      # gh/terraform/kubectl validate TLS via Security.framework → trustd, which Seatbelt blocks by default
-      # (`x509: OSStatus -26276`, even for a valid cert; curl/git/Node verify in-process and are unaffected).
-      # anthropics/claude-code#26466.
-      allowMachLookup = [ "com.apple.trustd.agent" ];
-    };
-
-    filesystem = {
-      # Reads are allow-everything by default upstream; deny $HOME, allow back the toolchain.
-      # credentialBaks: same reasoning as the denyWrite carve-out below.
-      denyRead = [ home ] ++ credentialDenies ++ credentialBaks;
-      allowRead = toolchainReads ++ nixReads ++ sshSigningReads;
-
-      # Writes are already deny-by-default, and cwd is writable implicitly. Package managers need to write where
-      # they install.
-      allowWrite = [
-        "${home}/code"
-        "${home}/.cache"
-        "${home}/.local/state"
-        "${home}/Library/Caches"
-        "${home}/.asdf"
-        "${home}/.bun"
-        "${home}/.npm"
-        "${home}/.gem"
-        "${home}/go"
-
-        # rtk's global init writes RTK.md and its filters template into these; denyWrite below still keeps
-        # .credentials.json out of reach.
-        "${home}/.claude"
-        "${home}/Library/Application Support/rtk"
-      ];
-
-      # bakCarveouts/credentialBaks: the credentialDenies entries nested under an allowWrite path need denying
-      # again here, plus their .bak sibling (see #126). ~/.claude/hooks and the settings state path close a
-      # same-session escape: PreToolUse hooks run unsandboxed, so a sandboxed command could otherwise overwrite
-      # rtk-hook.sh or flip permissions.deny/sandbox.enabled for the next session. Full trail: ../docs/sandbox-notes.md.
-      denyWrite =
-        perms.bakCarveouts
-        ++ credentialBaks
-        ++ [
-          perms.sandbox.hooksPath
-          perms.sandbox.settingsPath
-        ];
-    };
+    network = perms.claudeCodeSandboxNetwork;
+    filesystem = perms.claudeCodeSandboxFilesystem;
   };
 }
