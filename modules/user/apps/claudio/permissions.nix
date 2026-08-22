@@ -5,20 +5,8 @@
 # network, sandbox). mkClaudeCodePermissions, mkClaudeCodeSandbox, and mkOpencodePermissions each take that one
 # policy and render it into one consumer's native settings shape, so claude-code.nix, sandbox.nix, and
 # opencode/default.nix each just wire in their own branch instead of carrying their own translation logic.
-{
-  home,
-  lib,
-  dotfilesPath,
-}:
+{ home, lib, ... }:
 let
-  # Plain path constants. claude-code.nix and opencode/default.nix each generate their own settings.json into
-  # these, and neither is denyWrite-protected: the point is a session can overwrite its own settings.json to
-  # install a plugin or tweak config without a `just switch`.
-  paths = {
-    claudeSettingsFile = "${dotfilesPath}/modules/user/apps/claudio/claude-code/settings.json";
-    opencodeSettingsFile = "${dotfilesPath}/modules/user/apps/claudio/opencode/settings.json";
-  };
-
   policy = {
     commands = {
       ask = [
@@ -305,7 +293,7 @@ let
   };
 in
 {
-  inherit policy paths;
+  inherit policy;
 
   claudeCode = {
     permissions = mkClaudeCodePermissions policy;

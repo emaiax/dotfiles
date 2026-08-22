@@ -1,8 +1,8 @@
 {
+  claudioPath,
   config,
   lib,
   pkgs,
-  dotfilesPath,
   ...
 }:
 let
@@ -10,33 +10,27 @@ let
 
   # Shared with claude-code.nix and sandbox.nix. permission (including bash's dag-entry rendering) comes back
   # fully assembled, this file only wires it in.
-  perms = import ../permissions.nix { inherit home lib dotfilesPath; };
+  perms = import ../permissions.nix { inherit home lib; };
 
   opencodeSettingsJson = (pkgs.formats.json { }).generate "opencode-settings.json" (
     config.programs.opencode.settings
   );
 in
 {
-  # Must match the upstream module's own home.file key, or home-manager sees two attrs targeting the same file
-  # and refuses to build instead of letting mkForce win.
   home.file."${config.xdg.configHome}/opencode/opencode.json" = lib.mkForce {
-    source = config.lib.file.mkOutOfStoreSymlink perms.paths.opencodeSettingsFile;
+    source = config.lib.file.mkOutOfStoreSymlink "${claudioPath}/opencode/settings.json";
     force = true;
   };
 
   home.activation.opencodeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    install -Dm644 ${opencodeSettingsJson} ${perms.paths.opencodeSettingsFile}
+    install -Dm644 ${opencodeSettingsJson} "${claudioPath}/opencode/settings.json"
   '';
 
   programs.opencode = {
     enable = true;
 
-    # Personal agent operating context as the global AGENTS.md; same source as programs.claude-code's claudio AGENTS.md
     context = ../AGENTS.md;
-
-    skills = {
-      nixpkgs-pr-checklist = ../skills/nixpkgs-pr-checklist;
-    };
+    skills = ../skills;
 
     # A separate option, not a settings.json key: the upstream module writes this to its own tui.json instead.
     tui.theme = "system"; # respect the system appearance setting on macOS.
