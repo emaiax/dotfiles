@@ -1,33 +1,45 @@
-# dotfiles — project context
+# 🏡 dotfiles
 
-Declarative macOS configuration built on Nix flakes: nix-darwin + home-manager + nix-homebrew. This file documents the repo itself. Personal / user-level preferences are configured separately (published to `~/.claude/CLAUDE.md` and OpenCode's global context from `modules/user/apps/agent-shared/AGENTS.md`).
+- Declarative macOS configuration built on Nix flakes: nix-darwin + home-manager + nix-homebrew
+- This file documents the repo itself
+- User-level preferences live separately: published to `~/.claude/CLAUDE.md`, and to OpenCode's global context from `modules/user/apps/agent-shared/AGENTS.md`
+
+## Writing
+
+- Never use AI-slop characters: no em dashes, no smart/curly quotes, no other telltale AI punctuation. Use a comma, a colon, or a period instead
+- Be succinct: direct, low density, no filler. Bullets don't need a trailing period
 
 ## Layout
 
-- `flake.nix` — entrypoint. The only output is `darwinConfigurations`, built from `nix/inventory.nix` (per-host and per-user variables). No devShell.
-- `nix/hosts/` — per-host overrides: `dudumini` (Intel), `dudupro` (Apple Silicon).
-- `nix/profiles/` — user bundles (`emaiax.nix`) and host Homebrew (`brew.nix`).
-- `modules/` — `core/`, `system/` (`common` + `darwin`), `pkgs/`, and `user/` (home-manager: `apps/`, `cli/`, `git/`, `shell/`, `packages/`).
-- `modules/user/apps/claude-code/`, `modules/user/apps/opencode/` — generic Claude Code and OpenCode wiring, no dependency on `claudio/`. `modules/user/apps/agent-shared/` — AGENTS.md, command gates, and `skills/`, shared between the two. `modules/user/apps/claudio/` — the opinionated profile layer on top (`claudio`, `claudio-yolo`, `claudio-bot`, plus their test harness).
-- `modules/user/apps/agent-jail/` — generic multi-profile Docker jail for running coding agents against an allowlisted directory (profile structure is public; real paths live in an encrypted secret).
+- `flake.nix`: entrypoint. Builds `darwinConfigurations` from `nix/inventory.nix` (per-host and per-user settings). No `devShell`, no `nix develop` here
+- `nix/hosts/`: per-Mac settings. `dudumini` (Intel), `dudupro` (Apple Silicon)
+- `nix/profiles/`: per-user settings. `emaiax.nix` for packages/config that follow the user across hosts, `brew.nix` for Homebrew casks per host
+- `modules/`: the actual configuration, split by scope
+  - `core/`: baseline shared by everything else
+  - `system/`: OS-level config. `common/` is OS-agnostic, `darwin/` is macOS-specific (nix-darwin)
+  - `pkgs/`: custom packages not in nixpkgs
+  - `user/`: home-manager config, scoped to the user's home. `apps/` (one entry per app), `cli/`, `git/`, `shell/`, `packages/` (general CLI tools)
 
 ## Working in this repo
 
-- Apply: `just switch` (`git add . && sudo darwin-rebuild switch --flake .`). Validate without activating: `just build`. Update inputs: `just update`.
-- `just switch` / `just build` stage everything with `git add .` — that is not a commit. Never commit or push without explicit confirmation; always branch first.
-- Configure via a home-manager module rather than editing files under `~` directly.
-- `home-manager.backupFileExtension = "bak"` — on activation, pre-existing real files are backed up to `*.bak` instead of blocking the switch.
-- Format Nix with `nix fmt`. When moving a module, fix its relative `import` / `source` paths (they resolve from the file's own directory).
+- Consider `main` branch as read-only, always `worktree` first if you need to create or change anything
+- Never push without asking, unless there's already an open PR for the branch, then pushing to keep it current is fine
+- Change things through a home-manager module, not by hand-editing files under `$HOME`
+- Activation backs up a pre-existing real file to `*.bak` instead of refusing (`home-manager.backupFileExtension = "bak"`)
+- Format Nix with `nix fmt` before committing
+- Moved a module? Fix its relative `import`/`source` paths too, they resolve from the file's own location, not from wherever it used to live
 
-## CI
+## Check and Apply the changes
 
-- `.forgejo/workflows/fast-ci.yml` — self-hosted, cheap: `nix fmt`, `nix flake check`, an eval-only check of the aarch64-darwin closure. Runs on this Forgejo instance's `docker` runner label.
-- `.github/workflows/build.yml` — the real aarch64-darwin build, on GitHub's `macos-15` hosted runner (this instance has no macOS runner and can't build Darwin outputs cross-platform). Triggered by the automatic push-mirror to `github.com/emaiax/dotfiles`, not by direct pushes here.
-- `.forgejo/workflows/gh-build-status.yml` — relays `build.yml`'s result onto this repo's commit status, from the Forgejo side. `forgejo.emx.casa` is LAN-only, so GitHub's runner has no path back here (a prior attempt at reporting status directly from GitHub always timed out); this self-hosted `docker` runner has both outbound internet, to poll the run via GitHub's public Actions API, and local access to post the result via this instance's own API using its automatic per-job token.
-- Dependency updates: Renovate, run cross-repo from `emaiax/dudumox`'s own scheduled workflow (autodiscovers any repo the `renovate-bot` account has collaborator access to) — not a workflow in this repo, just `renovate.json`.
-- `fast-ci.yml` depends on infrastructure that lives outside this repo: the repo variable `CI_IMAGE_REGISTRY`, the `homelab/dudumox-ci:latest` image (built in `emaiax/dudumox`'s `homelab/images` sibling), and a persistent `/nix` store volume allow-listed for the `docker` runner label. See `docs/superpowers/specs/2026-08-03-ci-forgejo-cutover-design.md` (local, gitignored) for the full design.
+- Runs `git add .` first to stage everything for Nix, that's staging, not a commit
+- `just build`: build without applying, to check it's valid
+- `just switch`: apply and activates the config. Needs sudo, leave that for the user unless told otherwise
+- `just update`: update the flake's pinned dependency versions
 
-## Conventions
+## How to test your changes
 
-- Conventional commits, imperative mood, no trailing period, no `Co-authored-by`.
-- Scope commits by module path, e.g. `feat(user/apps/claude-code): ...`.
+- Run `nix fmt`, then `just build` (or `darwin-rebuild build --flake .#dudupro` or other host) to validate without activating
+- New or moved files must be `git add`ed first, this is a git flake, untracked files are invisible to Nix and silently break relative imports
+- `nix flake check` mirrors `fast-ci.yml`: format check, full flake check, evaluation-only build of the aarch64-darwin config
+- Touched `modules/user/apps/claudio/profiles/`? Run its `tests/run.sh`, it probes actual sandbox/permission behavior for the coding-agent profiles
+- Never claim a change works without having watched one of the above pass this session
