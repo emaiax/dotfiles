@@ -5,13 +5,18 @@
 #
 # Two ways to write a rule that silently does nothing: a trailing slash voids the entry on 2.1.222 (fixed in
 # 2.1.224), and a glob like `$HOME/*` matches nothing and fails open.
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  dotfilesPath,
+  ...
+}:
 let
   home = config.home.homeDirectory;
 
   # Shared with claude-code.nix and opencode/default.nix. filesystem/network policy lives entirely in
   # permissions.nix, this file only wires it plus the Seatbelt toggles that aren't data.
-  perms = import ../permissions.nix { inherit home lib; };
+  perms = import ../permissions.nix { inherit home lib dotfilesPath; };
 in
 {
   programs.claude-code.settings.sandbox = {

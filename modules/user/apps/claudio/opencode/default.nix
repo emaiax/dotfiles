@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  dotfilesPath,
   ...
 }:
 let
@@ -8,7 +9,7 @@ let
 
   # Shared with claude-code.nix and sandbox.nix. permission (including bash's dag-entry rendering) comes back
   # fully assembled, this file only wires it in.
-  perms = import ../permissions.nix { inherit home lib; };
+  perms = import ../permissions.nix { inherit home lib dotfilesPath; };
 
   # Shared with claude-code.nix.
   settingsValues = import ../settings.nix;

@@ -4,7 +4,7 @@
 # Structure: `commands` and `credentials` are raw, backend-agnostic input. `claudeCode` and `opencode` are each
 # backend's own tree, already rendered into its native settings shape, so claude-code.nix, sandbox.nix, and
 # opencode/default.nix each just wire in their own branch instead of carrying their own translation logic.
-{ home, lib }:
+{ home, lib, dotfilesPath }:
 let
   commands = {
     ask = [
@@ -206,7 +206,7 @@ let
   # sandbox.filesystem.denyWrite below: PreToolUse hooks run unsandboxed, so a sandboxed command could otherwise
   # overwrite a hook script or flip permissions.deny/sandbox.enabled for the next session.
   sandboxPaths = {
-    settingsFile = "${home}/code/dotfiles/modules/user/apps/claudio/claude-code/settings.json";
+    settingsFile = "${dotfilesPath}/modules/user/apps/claudio/claude-code/settings.json";
     hooksDir = "${home}/.claude/hooks";
   };
 in
