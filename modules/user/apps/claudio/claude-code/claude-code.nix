@@ -2,7 +2,6 @@
   config,
   lib,
   pkgs,
-  dotfilesPath,
   ...
 }:
 let
@@ -81,15 +80,17 @@ let
     }
   );
 
-  # Outside the repo and untracked: content gets regenerated from claudeSettings on every `home-manager switch`, so there's no point versioning it.
-  claudeSettingsStatePath = "${config.home.homeDirectory}/.local/state/claude-code/settings.json";
+  # Same convention as vscode/default.nix: a real, writable file inside the main checkout, not a store copy, so
+  # both halves of what touches it show up in `git status`/`git diff`. Regenerated from claudeSettings on every
+  # `home-manager switch`, and separately patched at runtime by rtk-hook.sh and homelab-network-hook.sh, both land
+  # on this same file since it's the actual symlink target, not a copy.
+  claudeSettingsStatePath = "${home}/code/dotfiles/modules/user/apps/claudio/claude-code/settings.json";
 
   # Must match the upstream module's own home.file keys (absolute, under configDir), or home-manager sees two attrs targeting the same file and refuses to build instead of letting mkForce win.
   claudeConfigDir = config.programs.claude-code.configDir;
 
-  # same convention as vscode/default.nix and iterm2/default.nix: always the main checkout (dotfilesPath, from
-  # nix/inventory.nix), deliberately, not wherever this was evaluated from
-  agentsSourcePath = "${dotfilesPath}/modules/user/apps/claudio/AGENTS.md";
+  # same convention as vscode/default.nix and iterm2/default.nix: always the main checkout, deliberately, not wherever this was evaluated from
+  agentsSourcePath = "${home}/code/dotfiles/modules/user/apps/claudio/AGENTS.md";
 in
 {
   # Out-of-store: rtk init -g writes an RTK.md pointer into CLAUDE.md at runtime, which EACCESs against the read-only store. force = true lets rtk replace the symlink with a plain file without the next switch refusing to reclaim it.
@@ -98,7 +99,7 @@ in
     force = true;
   };
 
-  # Same EACCES problem as CLAUDE.md, but settings.json has no source file — generated into the store, then copied to a writable state path and symlinked there so rtk can patch it.
+  # Same EACCES problem as CLAUDE.md, but settings.json has no source file: generated into the store, then copied to claudeSettingsStatePath and symlinked there so rtk can patch it.
   home.file."${claudeConfigDir}/settings.json" = lib.mkForce {
     source = config.lib.file.mkOutOfStoreSymlink claudeSettingsStatePath;
     force = true;
