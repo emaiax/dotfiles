@@ -7,29 +7,12 @@
 let
   home = config.home.homeDirectory;
 
-  # Shared with opencode/default.nix and sandbox.nix.
+  # Shared with opencode/default.nix and sandbox.nix. ask/deny already come back fully rendered to Claude's
+  # native Bash(x:*) syntax, credential denies folded in, so this file only wires perms.claudeCode in.
   perms = import ../permissions.nix { inherit home lib; };
 
   # Shared with opencode/default.nix.
   settingsValues = import ../settings.nix;
-
-  # `Bash(x:*)` matches any arguments; `Bash(x)` matches only that literal invocation.
-  prefixRule = cmd: "Bash(${cmd}:*)";
-  exactRule = cmd: "Bash(${cmd})";
-
-  # rtk's PreToolUse hook rewrites recognized commands to `rtk <cmd>`, and permission rules match against that rewritten
-  # string, so a bare-command gate is silently defeated for anything rtk rewrites. A twin per gate rather than a fixed
-  # list, since rtk's rewrite inventory can grow.
-  withRtkTwin =
-    cmds:
-    lib.concatMap (cmd: [
-      cmd
-      "rtk ${cmd}"
-    ]) cmds;
-
-  # Read/Edit is only half of the credential policy: denyRead/denyWrite only confines Bash in sandbox. Write(path) rules
-  # are silently never checked, so Edit covers Write too. Rendered by permissions.nix's claudeCodeCredentialDenyRules.
-  credentialDenyRules = perms.claudeCodeCredentialDenyRules;
 
   # `bash "path"`, not direct exec: hooksDir symlinks don't reliably keep the executable bit, and a non-executable hook fails silently.
   rtkHook = {
@@ -53,14 +36,9 @@ let
   };
 
   claudeSettings = settingsValues.claudeCode // {
-    permissions = {
+    # ask/deny hold in every mode, unlike allow and autoMode.
+    permissions = perms.claudeCode.permissions // {
       defaultMode = "auto";
-
-      # ask/deny hold in every mode, unlike allow and autoMode.
-      ask = map prefixRule (withRtkTwin perms.ask) ++ map exactRule (withRtkTwin perms.askExact);
-
-      # hard tier only; reversible ones are soft_deny in auto-mode.nix
-      deny = map prefixRule (withRtkTwin perms.denyHard) ++ credentialDenyRules;
     };
 
     hooks = {
@@ -85,7 +63,7 @@ let
   # `home-manager switch`, and separately patched at runtime by rtk-hook.sh and homelab-network-hook.sh, both land
   # on this same file since it's the actual symlink target, not a copy. Shared with sandbox.nix's denyWrite via
   # permissions.nix, since the two files can't otherwise agree on the same path.
-  claudeSettingsStatePath = perms.sandbox.settingsPath;
+  claudeSettingsStatePath = perms.claudeCode.sandbox.paths.settingsFile;
 
   # Must match the upstream module's own home.file keys (absolute, under configDir), or home-manager sees two attrs targeting the same file and refuses to build instead of letting mkForce win.
   claudeConfigDir = config.programs.claude-code.configDir;

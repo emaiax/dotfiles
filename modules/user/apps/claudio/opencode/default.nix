@@ -7,7 +7,7 @@ let
   home = config.home.homeDirectory;
 
   # Shared with claude-code.nix and sandbox.nix. Rendered into OpenCode's dag-entry shape by
-  # permissions.nix's opencodeBashRules.
+  # permissions.nix's opencode.bash.
   perms = import ../permissions.nix { inherit home lib; };
 
   # Shared with claude-code.nix.
@@ -50,7 +50,7 @@ in
         bash = {
           "*" = "allow";
         }
-        // perms.opencodeBashRules;
+        // perms.opencode.bash;
       };
     };
 

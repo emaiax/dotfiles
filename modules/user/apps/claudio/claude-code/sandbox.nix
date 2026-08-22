@@ -24,14 +24,14 @@ in
 
     autoAllowBashIfSandboxed = true;
 
-    # docker/gh/fj policy: permissions.nix's excludedCommands.
-    inherit (perms) excludedCommands;
+    # docker/gh/fj policy: permissions.nix's claudeCode.sandbox.excludedCommands.
+    inherit (perms.claudeCode.sandbox) excludedCommands;
 
     # Without this, `open -a <App>` fails with kLSUnknownErr: launching another app's process needs a mach-lookup
     # to RunningBoard/launchservicesd that the sandbox blocks.
     allowAppleEvents = true;
 
-    network = perms.claudeCodeSandboxNetwork;
-    filesystem = perms.claudeCodeSandboxFilesystem;
+    network = perms.claudeCode.sandbox.network;
+    filesystem = perms.claudeCode.sandbox.filesystem;
   };
 }
