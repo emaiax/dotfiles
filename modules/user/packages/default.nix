@@ -7,6 +7,7 @@
     pkgs.btop
     pkgs.curl
     pkgs.jq
+    pkgs.moreutils
     pkgs.neovim
     pkgs.nixfmt
     pkgs.sops
