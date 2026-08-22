@@ -6,8 +6,8 @@
 let
   home = config.home.homeDirectory;
 
-  # Shared with claude-code.nix and sandbox.nix. Rendered into OpenCode's dag-entry shape by
-  # permissions.nix's opencode.bash.
+  # Shared with claude-code.nix and sandbox.nix. permission (including bash's dag-entry rendering) comes back
+  # fully assembled, this file only wires it in.
   perms = import ../permissions.nix { inherit home lib; };
 
   # Shared with claude-code.nix.
@@ -27,31 +27,7 @@ in
     };
 
     settings = settingsValues.opencode // {
-      permission = {
-        read = {
-          "*" = "allow";
-          # Keep the default .env protection explicit — a bare "allow" string here isn't documented to preserve it.
-          "*.env" = "deny";
-          "*.env.*" = "deny";
-          "*.env.example" = "allow";
-        };
-        glob = "allow";
-        grep = "allow";
-        lsp = "allow";
-        edit = "allow";
-        webfetch = "allow";
-        websearch = "allow";
-        task = "allow";
-        # Touching paths outside the project — flag it.
-        external_directory = "ask";
-        # Same tool call repeated 3x with identical input — kill it, don't ask.
-        doom_loop = "deny";
-
-        bash = {
-          "*" = "allow";
-        }
-        // perms.opencode.bash;
-      };
+      inherit (perms.opencode) permission;
     };
 
     tui = {

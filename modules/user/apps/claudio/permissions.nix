@@ -213,7 +213,9 @@ in
   claudeCode = {
     permissions = {
       # ask/deny hold in every mode, unlike allow and autoMode.
-      ask = map claudeCodePrefixRule (withRtkTwin commands.ask) ++ map claudeCodeExactRule (withRtkTwin commands.askExact);
+      ask =
+        map claudeCodePrefixRule (withRtkTwin commands.ask)
+        ++ map claudeCodeExactRule (withRtkTwin commands.askExact);
 
       # hard tier only; reversible ones are soft_deny in auto-mode.nix
       deny = map claudeCodePrefixRule (withRtkTwin commands.denyHard) ++ claudeCodeCredentialDenyRules;
@@ -262,10 +264,13 @@ in
         # again here, plus their .bak sibling (see #126). hooksDir and settingsFile close a same-session escape:
         # PreToolUse hooks run unsandboxed, so a sandboxed command could otherwise overwrite rtk-hook.sh or flip
         # permissions.deny/sandbox.enabled for the next session. Full trail: docs/sandbox-notes.md.
-        denyWrite = credentials.bakCarveouts ++ credentialBaks ++ [
-          sandboxPaths.hooksDir
-          sandboxPaths.settingsFile
-        ];
+        denyWrite =
+          credentials.bakCarveouts
+          ++ credentialBaks
+          ++ [
+            sandboxPaths.hooksDir
+            sandboxPaths.settingsFile
+          ];
       };
 
       network = {
@@ -285,10 +290,34 @@ in
   };
 
   opencode = {
-    bash = builtins.listToAttrs (
-      map (opencodePrefixRule "ask") commands.ask
-      ++ map (opencodePrefixRule "deny") (commands.denyHard ++ commands.denySoft)
-      ++ map (opencodeExactRule "ask") commands.askExact
-    );
+    permission = {
+      read = {
+        "*" = "allow";
+        # Keep the default .env protection explicit: a bare "allow" string here isn't documented to preserve it.
+        "*.env" = "deny";
+        "*.env.*" = "deny";
+        "*.env.example" = "allow";
+      };
+      glob = "allow";
+      grep = "allow";
+      lsp = "allow";
+      edit = "allow";
+      webfetch = "allow";
+      websearch = "allow";
+      task = "allow";
+      # Touching paths outside the project: flag it.
+      external_directory = "ask";
+      # Same tool call repeated 3x with identical input: kill it, don't ask.
+      doom_loop = "deny";
+
+      bash = {
+        "*" = "allow";
+      }
+      // builtins.listToAttrs (
+        map (opencodePrefixRule "ask") commands.ask
+        ++ map (opencodePrefixRule "deny") (commands.denyHard ++ commands.denySoft)
+        ++ map (opencodeExactRule "ask") commands.askExact
+      );
+    };
   };
 }
