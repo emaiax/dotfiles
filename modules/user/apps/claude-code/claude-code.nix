@@ -7,8 +7,8 @@
 let
   home = config.home.homeDirectory;
 
-  # Shared with opencode.nix.
-  gates = import ../agent-shared/gates.nix;
+  # Shared with opencode.nix and sandbox.nix.
+  perms = import ../claudio/permissions.nix { inherit home lib; };
 
   # `Bash(x:*)` matches any arguments; `Bash(x)` matches only that literal invocation.
   prefixRule = cmd: "Bash(${cmd}:*)";
@@ -25,31 +25,8 @@ let
     ]) cmds;
 
   # Read/Edit is only half of the credential policy: denyRead/denyWrite only confines Bash in sandbox. Write(path) rules
-  # are silently never checked, so Edit covers Write too.
-  #
-  # `//path` is filesystem-root-absolute;
-  # `/path` matches nothing.
-  #
-  # Dirs need `/**` for nested files.
-  #
-  credentialPaths = import ./credential-paths.nix home;
-  absRule = path: lib.removePrefix "/" path;
-
-  fileDenyRules = path: [
-    "Read(//${absRule path})"
-    "Edit(//${absRule path})"
-  ];
-
-  dirDenyRules = path: [
-    "Read(//${absRule path}/**)"
-    "Edit(//${absRule path}/**)"
-  ];
-
-  credentialDenyRules =
-    lib.concatMap fileDenyRules (
-      credentialPaths.files ++ map (p: "${p}.bak") credentialPaths.bakCarveouts
-    )
-    ++ lib.concatMap dirDenyRules credentialPaths.dirs;
+  # are silently never checked, so Edit covers Write too. Rendered by permissions.nix's claudeCodeCredentialDenyRules.
+  credentialDenyRules = perms.claudeCodeCredentialDenyRules;
 
   # `bash "path"`, not direct exec: hooksDir symlinks don't reliably keep the executable bit, and a non-executable hook fails silently.
   rtkHook = {
@@ -82,10 +59,11 @@ let
       defaultMode = "auto";
 
       # ask/deny hold in every mode, unlike allow and autoMode.
-      ask = map prefixRule (withRtkTwin gates.ask) ++ map exactRule (withRtkTwin gates.askExact);
+      ask =
+        map prefixRule (withRtkTwin perms.ask) ++ map exactRule (withRtkTwin perms.askExact);
 
-      # hard tier only; reversible ones are soft_deny in claude-automode.nix
-      deny = map prefixRule (withRtkTwin gates.denyHard) ++ credentialDenyRules;
+      # hard tier only; reversible ones are soft_deny in auto-mode.nix
+      deny = map prefixRule (withRtkTwin perms.denyHard) ++ credentialDenyRules;
     };
 
     hooks = {
@@ -133,7 +111,7 @@ let
   claudeConfigDir = config.programs.claude-code.configDir;
 
   # same convention as vscode/default.nix and iterm2/default.nix: always the main checkout, deliberately, not wherever this was evaluated from
-  agentsSourcePath = "${home}/code/dotfiles/modules/user/apps/agent-shared/AGENTS.md";
+  agentsSourcePath = "${home}/code/dotfiles/modules/user/apps/claudio/AGENTS.md";
 in
 {
   # Out-of-store: rtk init -g writes an RTK.md pointer into CLAUDE.md at runtime, which EACCESs against the read-only store. force = true lets rtk replace the symlink with a plain file without the next switch refusing to reclaim it.
@@ -156,10 +134,10 @@ in
     enable = true;
 
     # Symlinked to ~/.claude/hooks/. Wired into settings.hooks below — dropping a script here does nothing on its own.
-    hooksDir = ./hooks;
+    hooksDir = ../claudio/hooks;
 
     skills = {
-      nixpkgs-pr-checklist = ../agent-shared/skills/nixpkgs-pr-checklist;
+      nixpkgs-pr-checklist = ../claudio/skills/nixpkgs-pr-checklist;
     };
 
     settings = claudeSettings;

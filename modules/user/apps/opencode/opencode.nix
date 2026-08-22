@@ -1,34 +1,26 @@
-{ lib, ... }:
+{
+  config,
+  lib,
+  ...
+}:
 let
-  # Shared with claude-code.nix.
-  gates = import ../agent-shared/gates.nix;
+  home = config.home.homeDirectory;
 
-  # last-matching-rule-wins, evaluated in *declaration* order — Nix attrsets don't preserve that order when serialized to JSON (keys come out alphabetical), so every rule after the "*" catch-all has to be pinned with entryAfter or it can silently reorder ahead of it.
-  prefixRule = action: cmd: {
-    name = gates.opencodePatterns.${cmd} or "${cmd}*";
-    value = lib.hm.dag.entryAfter [ "*" ] action;
-  };
-  exactRule = action: cmd: {
-    name = cmd;
-    value = lib.hm.dag.entryAfter [ "*" ] action;
-  };
-  gateRules = builtins.listToAttrs (
-    map (prefixRule "ask") gates.ask
-    # Both tiers: OpenCode has no classifier for the soft tier to live in.
-    ++ map (prefixRule "deny") (gates.denyHard ++ gates.denySoft)
-    ++ map (exactRule "ask") gates.askExact
-  );
+  # Shared with claude-code.nix and sandbox.nix. Rendered into OpenCode's dag-entry shape by
+  # permissions.nix's opencodeBashRules.
+  perms = import ../claudio/permissions.nix { inherit home lib; };
 in
 {
   programs.opencode = {
     enable = true;
 
-    # Personal agent operating context as the global AGENTS.md; same source as programs.claude-code's ~/.claude/CLAUDE.md.
-    context = ../agent-shared/AGENTS.md;
+    # Personal agent operating context as the global AGENTS.md; same source as programs.claude-code's
+    # ~/.claude/CLAUDE.md.
+    context = ../claudio/AGENTS.md;
 
     skills = {
       # Shared vendored skills dir; same source as programs.claude-code.skills.
-      nixpkgs-pr-checklist = ../agent-shared/skills/nixpkgs-pr-checklist;
+      nixpkgs-pr-checklist = ../claudio/skills/nixpkgs-pr-checklist;
     };
 
     settings = {
@@ -73,7 +65,7 @@ in
         bash = {
           "*" = "allow";
         }
-        // gateRules;
+        // perms.opencodeBashRules;
       };
 
       # Plugins loaded at startup. superpowers: brainstorming, planning, and execution workflow skills. supermemory: persistent cross-session memory (requires `bunx opencode-supermemory@latest login`).

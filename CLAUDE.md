@@ -2,12 +2,13 @@
 
 - Declarative macOS configuration built on Nix flakes: nix-darwin + home-manager + nix-homebrew
 - This file documents the repo itself
-- User-level preferences live separately: published to `~/.claude/CLAUDE.md`, and to OpenCode's global context from `modules/user/apps/agent-shared/AGENTS.md`
+- User-level preferences live separately: published to `~/.claude/CLAUDE.md`, and to OpenCode's global context from `modules/user/apps/claudio/AGENTS.md`
 
 ## Writing
 
 - Never use AI-slop characters: no em dashes, no smart/curly quotes, no other telltale AI punctuation. Use a comma, a colon, or a period instead
 - Be succinct: direct, low density, no filler. Bullets don't need a trailing period
+- Hard-wrap comments in code at 120 columns, you should always write in prose
 
 ## Layout
 

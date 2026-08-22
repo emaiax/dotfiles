@@ -18,7 +18,7 @@
       "Additional context: this machine is a personal workstation, not a shared or production host."
     ];
 
-    # Counterpart of gates.nix's denySoft. Phrase as a category, never as an absolute: "under any circumstances" makes it unoverridable and claudio-thebot needs to override this one. Do not mention that stating intent clears it, which reads as permission to ignore the rule.
+    # Counterpart of permissions.nix's denySoft. Phrase as a category, never as an absolute: "under any circumstances" makes it unoverridable and claudio-thebot needs to override this one. Do not mention that stating intent clears it, which reads as permission to ignore the rule.
     soft_deny = [
       "$defaults"
 
