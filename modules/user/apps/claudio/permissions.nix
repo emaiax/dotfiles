@@ -93,15 +93,8 @@ let
       ];
     };
 
-    # Sandbox policy for Claude Code's Seatbelt boundary: filesystem paths every profile needs read access to.
-    # OpenCode has no sandbox mechanism, so none of this applies there.
+    # sandbox: claude's Seatbelt boundary policy for filesystem paths every profile needs access to
     filesystem = {
-      # nix breaks under the sandbox without these: the fetcher cache and the state dir
-      nixReads = [
-        "${home}/.cache/nix"
-        "${home}/.local/state/nix"
-      ];
-
       # Toolchains, not personal data: denying $HOME wholesale takes out npm/node/asdf too. These need both read
       # and write access, so mkClaudeCodeSandbox's allowRead and allowWrite both draw from this one list instead
       # of each retyping it, which is how allowWrite drifted out of sync with allowRead before.
@@ -110,6 +103,7 @@ let
         "${home}/.bun"
         "${home}/.bundle"
         "${home}/.cache"
+        "${home}/.claude"
         "${home}/.config"
         "${home}/.gem"
         "${home}/.gitconfig"
@@ -117,16 +111,14 @@ let
         "${home}/.local"
         "${home}/.mix"
         "${home}/.npm"
+        "${home}/.terraform.d"
+
+        "${home}/Library/Application Support/rtk" # RTK's global init writes RTK.md and its filters template here
         "${home}/Library/Caches" # treefmt, which `nix fmt` runs, caches here rather than under XDG
 
         # workspaces
         "${home}/code"
         "${home}/go"
-
-        # allowWrite alone wasn't enough for either (docs/sandbox-notes.md); .credentials.json under ~/.claude
-        # stays denied regardless: narrower wins for reads, same as writes.
-        "${home}/.claude"
-        "${home}/Library/Application Support/rtk"
       ];
 
       # Read-only additions on top of toolchainReadWrite.
@@ -138,37 +130,34 @@ let
         "${home}/.zshrc"
         "${home}/.zshenv"
 
+        # nix breaks under the sandbox if can't read its cache and state dirs
+        "${home}/.cache/nix"
+        "${home}/.local/state/nix"
         "${home}/.nix-defexpr"
         "${home}/.nix-profile"
-        "${home}/.terraform.d"
-      ];
 
-      # ~/.ssh is denied outright otherwise; commit.gpgSign uses gpg.format = "ssh" (git/git.nix).
-      sshSigningReads = [
-        "${home}/.ssh/*.pub" # agents can read SSH config and public keys to sign commits
-
+        # ssh agent signing: the agent socket is ephemeral, so the sandbox can't allowWrite it,
+        # but it can allowRead the public keys and config that the agent reads to sign commits
+        "${home}/.ssh/*.pub"
         "${home}/.ssh/allowed_signers"
         "${home}/.ssh/config"
         "${home}/.ssh/known_hosts"
       ];
     };
 
-    # Network egress and IPC the sandbox otherwise blocks by default. Only claudeCode.sandbox.network consumes
-    # this, same reason as filesystem above.
+    # sandbox: network egress and IPC the sandbox otherwise blocks by default
     network = {
       # homelab domain is patched in at runtime by hooks/homelab-network-hook.sh
       allowedDomains = [
-        "github.com" # git-over-https
         "api.github.com" # gh api
+        "github.com" # git-over-https
       ];
 
-      # Without this every nix subcommand fails to reach its daemon.
-      allowUnixSockets = [ "/nix/var/nix/daemon-socket/socket" ];
+      allowUnixSockets = [ "/nix/var/nix/daemon-socket/socket" ]; # allow nix subcommand to reach its daemon
 
       # gh/terraform/kubectl validate TLS via Security.framework -> trustd, which Seatbelt blocks by default
-      # (`x509: OSStatus -26276`, even for a valid cert; curl/git/Node verify in-process and are unaffected).
-      # anthropics/claude-code#26466.
-      allowMachLookup = [ "com.apple.trustd.agent" ];
+      # (`x509: OSStatus -26276`, even for a valid cert; curl/git/Node verify in-process and are unaffected)
+      allowMachLookup = [ "com.apple.trustd.agent" ]; # anthropics/claude-code#26466.
     };
 
     # Config for the Seatbelt mechanism itself, not policy in the commands/credentials/filesystem/network sense.
@@ -264,38 +253,17 @@ let
   mkClaudeCodeSandbox = policy: {
     inherit (policy.sandbox) excludedCommands;
 
+    # Reads: allow-everything by default upstream
+    # Writes: deny-by-default, and cwd is writable implicitly
     filesystem = {
-      # Reads are allow-everything by default upstream; deny $HOME, allow back the toolchain. credentialBaks:
-      # same reasoning as the denyWrite carve-out below.
-      denyRead = [ home ] ++ policy.credentials.dirs ++ policy.credentials.files ++ credentialBaks;
-      allowRead =
-        policy.filesystem.toolchainReadWrite
-        ++ policy.filesystem.toolchainReadOnly
-        ++ policy.filesystem.nixReads
-        ++ policy.filesystem.sshSigningReads;
-
-      # Writes are already deny-by-default, and cwd is writable implicitly. Package managers need to write
-      # where they install. rtk's global init writes RTK.md and its filters template under ~/.claude; denyWrite
-      # below still keeps .credentials.json out of reach there.
+      allowRead = policy.filesystem.toolchainReadOnly ++ policy.filesystem.toolchainReadWrite;
       allowWrite = policy.filesystem.toolchainReadWrite;
 
-      # credentials.files/credentialBaks: the entries nested under an allowWrite path need denying again here,
-      # raw and their .bak sibling alike (see #126). hooksDir and settingsFile close a same-session escape:
-      # PreToolUse hooks run unsandboxed, so a sandboxed command could otherwise overwrite rtk-hook.sh or flip
-      # permissions.deny/sandbox.enabled for the next session. Full trail: docs/sandbox-notes.md.
-      denyWrite =
-        policy.credentials.files
-        ++ credentialBaks
-        ++ [
-          policy.sandbox.paths.hooksDir
-          policy.sandbox.paths.settingsFile
-        ];
+      denyRead = [ home ] ++ policy.credentials.dirs ++ policy.credentials.files;
+      denyWrite = [ home ] ++ policy.credentials.dirs ++ policy.credentials.files; # [ home ] is redundant but explicit
     };
 
-    network = {
-      inherit (policy.network) allowedDomains allowUnixSockets allowMachLookup;
-    };
-
+    network = policy.network;
     paths = policy.sandbox.paths;
   };
 
