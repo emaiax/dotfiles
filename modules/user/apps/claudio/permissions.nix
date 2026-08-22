@@ -5,7 +5,11 @@
 # network, sandbox). mkClaudeCodePermissions, mkClaudeCodeSandbox, and mkOpencodePermissions each take that one
 # policy and render it into one consumer's native settings shape, so claude-code.nix, sandbox.nix, and
 # opencode/default.nix each just wire in their own branch instead of carrying their own translation logic.
-{ home, lib, dotfilesPath }:
+{
+  home,
+  lib,
+  dotfilesPath,
+}:
 let
   policy = {
     commands = {
@@ -54,9 +58,6 @@ let
         "fj issue comment"
       ];
 
-      # No allowlist: `ls` and `cat` are aliases resolving to nix store paths that no name-based rule matches, so
-      # an allowlist blocks them however it is written.
-
       # Derived globs that would widen the rule if applied as a plain prefix. `git checkout --` would become
       # `git checkout --*`, swallowing `--track` and `--force`. Only opencode.permission.bash consumes this.
       opencodePatterns = {
@@ -95,8 +96,7 @@ let
     # Sandbox policy for Claude Code's Seatbelt boundary: filesystem paths every profile needs read access to.
     # OpenCode has no sandbox mechanism, so none of this applies there.
     filesystem = {
-      # nix breaks under the sandbox without these: the fetcher cache and the state dir (the daemon socket
-      # itself is under network.allowUnixSockets).
+      # nix breaks under the sandbox without these: the fetcher cache and the state dir
       nixReads = [
         "${home}/.cache/nix"
         "${home}/.local/state/nix"
@@ -106,13 +106,21 @@ let
       # and write access, so mkClaudeCodeSandbox's allowRead and allowWrite both draw from this one list instead
       # of each retyping it, which is how allowWrite drifted out of sync with allowRead before.
       toolchainReadWrite = [
-        "${home}/code"
-        "${home}/.cache"
-        "${home}/Library/Caches" # treefmt, which `nix fmt` runs, caches here rather than under XDG
         "${home}/.asdf"
         "${home}/.bun"
-        "${home}/.npm"
+        "${home}/.bundle"
+        "${home}/.cache"
+        "${home}/.config"
         "${home}/.gem"
+        "${home}/.gitconfig"
+        "${home}/.hex"
+        "${home}/.local"
+        "${home}/.mix"
+        "${home}/.npm"
+        "${home}/Library/Caches" # treefmt, which `nix fmt` runs, caches here rather than under XDG
+
+        # workspaces
+        "${home}/code"
         "${home}/go"
 
         # allowWrite alone wasn't enough for either (docs/sandbox-notes.md); .credentials.json under ~/.claude
@@ -123,32 +131,24 @@ let
 
       # Read-only additions on top of toolchainReadWrite.
       toolchainReadOnly = [
-        "${home}/.config"
-        "${home}/.local"
-        "${home}/.gitconfig"
+        # needed just to reach the normal per-item ACL prompt; doesn't bypass it
+        "${home}/Library/Keychains" # git push`'s credential store still fails here with a known, accepted gap (docs/sandbox-notes.md)
 
-        # The Bash tool runs commands through the login shell.
+        # the Bash tool runs commands through the login shell
         "${home}/.zshrc"
         "${home}/.zshenv"
 
-        "${home}/.bundle"
-        "${home}/.mix"
-        "${home}/.hex"
-        "${home}/.terraform.d"
-        "${home}/.nix-profile"
         "${home}/.nix-defexpr"
-
-        # Needed just to reach the normal per-item ACL prompt; doesn't bypass it. `git push`'s credential store
-        # still fails here with a known, accepted gap (docs/sandbox-notes.md).
-        "${home}/Library/Keychains"
+        "${home}/.nix-profile"
+        "${home}/.terraform.d"
       ];
 
       # ~/.ssh is denied outright otherwise; commit.gpgSign uses gpg.format = "ssh" (git/git.nix).
       sshSigningReads = [
+        "${home}/.ssh/*.pub" # agents can read SSH config and public keys to sign commits
+
         "${home}/.ssh/allowed_signers"
         "${home}/.ssh/config"
-        "${home}/.ssh/github"
-        "${home}/.ssh/github.pub"
         "${home}/.ssh/known_hosts"
       ];
     };
@@ -277,16 +277,19 @@ let
       # Writes are already deny-by-default, and cwd is writable implicitly. Package managers need to write
       # where they install. rtk's global init writes RTK.md and its filters template under ~/.claude; denyWrite
       # below still keeps .credentials.json out of reach there.
-      allowWrite = policy.filesystem.toolchainReadWrite ++ [ "${home}/.local/state" ];
+      allowWrite = policy.filesystem.toolchainReadWrite;
 
       # credentials.files/credentialBaks: the entries nested under an allowWrite path need denying again here,
       # raw and their .bak sibling alike (see #126). hooksDir and settingsFile close a same-session escape:
       # PreToolUse hooks run unsandboxed, so a sandboxed command could otherwise overwrite rtk-hook.sh or flip
       # permissions.deny/sandbox.enabled for the next session. Full trail: docs/sandbox-notes.md.
-      denyWrite = policy.credentials.files ++ credentialBaks ++ [
-        policy.sandbox.paths.hooksDir
-        policy.sandbox.paths.settingsFile
-      ];
+      denyWrite =
+        policy.credentials.files
+        ++ credentialBaks
+        ++ [
+          policy.sandbox.paths.hooksDir
+          policy.sandbox.paths.settingsFile
+        ];
     };
 
     network = {
