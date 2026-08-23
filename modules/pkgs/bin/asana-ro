@@ -5,8 +5,8 @@ usage() {
   cat <<'USAGE'
 asana-ro: read-only Asana API queries. No MCP, no OAuth app, no write code path.
 
-Setup (once):
-  security add-generic-password -a "$USER" -s asana-ro-pat -w <personal-access-token>
+Setup (also rotates an existing token):
+  security add-generic-password -U -a "$USER" -s asana-ro-pat -w <personal-access-token>
 
 Usage:
   asana-ro me
