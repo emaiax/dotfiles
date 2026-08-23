@@ -15,5 +15,8 @@
     pkgs.unixtools.watch # watch command for running a program periodically
     pkgs.watchexec # run a command when files change
     pkgs.wget
+
+    # Was building but never installed anywhere; see #129.
+    (pkgs.callPackage ../../pkgs { })
   ];
 }
