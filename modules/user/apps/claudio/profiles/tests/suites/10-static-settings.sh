@@ -18,6 +18,8 @@ static_settings_run() {
   assert_jq static-excluded-commands base "$base" '.sandbox.excludedCommands | sort | join(",")' 'docker *,fj *,gh *,rtk docker *,rtk fj *,rtk gh *'
 
   # Filesystem policy: the deny wall and the carve-outs the PR is about.
+  # allowWrite is a no-op upstream (docs/sandbox-notes.md), so filesystem isolation is off; network sandbox stays on.
+  assert_jq static-filesystem-disabled base "$base" '.sandbox.filesystem.disabled' 'true'
   assert_jq static-denyread-home base "$base" ".sandbox.filesystem.denyRead | index(\"$h\") != null" 'true'
   assert_jq static-denyread-credentials base "$base" ".sandbox.filesystem.denyRead | index(\"$h/.claude/.credentials.json\") != null" 'true'
   assert_jq static-allowread-keychains base "$base" ".sandbox.filesystem.allowRead | index(\"$h/Library/Keychains\") != null" 'true'

@@ -254,6 +254,8 @@ let
     # Reads: allow-everything by default upstream
     # Writes: deny-by-default, and cwd is writable implicitly
     filesystem = {
+      disabled = true; # allowWrite is a no-op upstream, docs/sandbox-notes.md; network sandbox stays on
+
       allowRead = policy.filesystem.toolchainReadOnly ++ policy.filesystem.toolchainReadWrite;
       allowWrite = policy.filesystem.toolchainReadWrite;
 

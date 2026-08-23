@@ -77,7 +77,9 @@ _session_result() { jq -r '.result // empty' "$1/out.json" 2>/dev/null; }
 _session_denials() { jq -r '.permission_denials | length' "$1/out.json" 2>/dev/null || echo 0; }
 
 # probe_script PROFILE CASE_ID BODY [WORKDIR]: sandbox-layer probe. BODY runs inside a generated case.sh whose exit
-# code is the verdict: 0 EXECUTED, nonzero BLOCKED.
+# code is the verdict: 0 EXECUTED, nonzero BLOCKED. Markers land in workdir, not outdir: outdir sits under this repo,
+# which the sandboxed Bash tool call can't write to (only cwd/temp are implicitly writable, see #133), while workdir
+# is the probe's own cwd. They're copied into outdir below so results stay in the usual per-run layout.
 probe_script() {
   local profile=$1 case_id=$2 body=$3 workdir=${4:-}
   [[ -n $workdir ]] || workdir=$(mktemp -d "${TMPDIR:-/tmp}/claude-suite-${case_id}.XXXXXX")
@@ -86,12 +88,12 @@ probe_script() {
 
   cat >"$outdir/case.sh" <<EOF
 #!/usr/bin/env bash
-echo ran >"$outdir/ran"
+echo ran >"$workdir/ran"
 set +e
 (
 $body
-) >"$outdir/stdout" 2>"$outdir/stderr"
-echo \$? >"$outdir/exit"
+) >"$workdir/stdout" 2>"$workdir/stderr"
+echo \$? >"$workdir/exit"
 EOF
   chmod +x "$outdir/case.sh"
 
@@ -102,6 +104,11 @@ Then reply with only the word DONE."
     verdict_vs_expected "$case_id" "$profile" "INFRA"
     return 0
   fi
+
+  local f
+  for f in ran stdout stderr exit; do
+    [[ -f "$workdir/$f" ]] && cp -f "$workdir/$f" "$outdir/$f"
+  done
 
   if [[ ! -f "$outdir/ran" ]]; then
     verdict_vs_expected "$case_id" "$profile" "NOTRUN"
