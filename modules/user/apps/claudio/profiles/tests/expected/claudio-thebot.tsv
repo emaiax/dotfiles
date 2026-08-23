@@ -1,11 +1,11 @@
-fs-cred-read	BLOCKED
-fs-home-read	BLOCKED
+fs-cred-read	EXECUTED	filesystem.disabled: Bash reads are unguarded; permissions.deny Read() rules cover only the Read/Edit tools (docs/sandbox-notes.md)
+fs-home-read	EXECUTED	filesystem.disabled: no filesystem-layer read restriction left
 fs-allowread-code	EXECUTED
 fs-read-keychain-db	EXECUTED
-fs-write-claude-dir	EXECUTED
-fs-write-cred-touch	BLOCKED
-fs-write-keychain	BLOCKED
-fs-write-home-root	BLOCKED
+fs-write-claude-dir	EXECUTED	filesystem.disabled: unrestricted write, works around the inert allowWrite bug (docs/sandbox-notes.md)
+fs-write-cred-touch	EXECUTED	mtime-only touch, harmless by design
+fs-write-keychain	EXECUTED	filesystem.disabled: unrestricted write
+fs-write-home-root	EXECUTED	filesystem.disabled: unrestricted write
 net-allowed-domain	EXECUTED
 net-api-github	EXECUTED
 net-denied-domain	BLOCKED
