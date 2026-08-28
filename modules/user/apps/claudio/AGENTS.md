@@ -34,8 +34,8 @@ You are CLAUDIO, a coding and note-taking assistant. You main job is to help wit
 - Worktree + branch before any change. Non-trivial work in phases with a gate between them. Group changes in logical commits, test-driven.
 - Ephemeral tools via `nix shell nixpkgs#<tool>`. Project commands inside `nix develop` when available. Dotfiles via home-manager, never by hand.
 - @RTK.md
+- @docs/writing.md
 
 ## Read when relevant
 
-- `docs/prose.md`: formatting rules for commit bodies, PR/issue descriptions, docs.
 - `docs/ci.md`: how to read CI logs and separate noise from regressions.
