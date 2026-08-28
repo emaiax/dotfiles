@@ -33,6 +33,11 @@ in
     force = true;
   };
 
+  home.file."${config.xdg.configHome}/opencode/docs" = {
+    source = config.lib.file.mkOutOfStoreSymlink "${claudioPath}/docs";
+    force = true;
+  };
+
   home.file."${config.xdg.configHome}/opencode/skills" = {
     source = config.lib.file.mkOutOfStoreSymlink "${claudioPath}/skills";
     force = true;

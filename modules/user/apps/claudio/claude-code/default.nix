@@ -55,6 +55,11 @@ in
     force = true;
   };
 
+  home.file."${config.programs.claude-code.configDir}/docs" = {
+    source = config.lib.file.mkOutOfStoreSymlink "${claudioPath}/docs";
+    force = true;
+  };
+
   home.file."${config.programs.claude-code.configDir}/skills" = {
     source = config.lib.file.mkOutOfStoreSymlink "${claudioPath}/skills";
     force = true;
