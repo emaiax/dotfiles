@@ -35,8 +35,11 @@ let
 in
 {
   home.activation.claudeCodeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    if [[ ! -e "${claudioPath}/claude-code/settings.json" ]]; then
-      install -Dm644 ${claudeSettingsJson} "${claudioPath}/claude-code/settings.json"
+    existing="${claudioPath}/claude-code/settings.json"
+    if [[ ! -e "$existing" ]]; then
+      install -Dm644 ${claudeSettingsJson} "$existing"
+    elif ! diff -q ${claudeSettingsJson} "$existing" >/dev/null; then
+      echo "claude-code: $existing differs from the generated settings, leaving it alone" >&2
     fi
   '';
 

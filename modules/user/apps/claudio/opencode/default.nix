@@ -18,8 +18,11 @@ let
 in
 {
   home.activation.opencodeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    if [[ ! -e "${claudioPath}/opencode/settings.json" ]]; then
-      install -Dm644 ${opencodeSettingsJson} "${claudioPath}/opencode/settings.json"
+    existing="${claudioPath}/opencode/settings.json"
+    if [[ ! -e "$existing" ]]; then
+      install -Dm644 ${opencodeSettingsJson} "$existing"
+    elif ! diff -q ${opencodeSettingsJson} "$existing" >/dev/null; then
+      echo "opencode: $existing differs from the generated settings, leaving it alone" >&2
     fi
   '';
 
