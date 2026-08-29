@@ -50,7 +50,7 @@ in
     tui.theme = "system"; # respect the system appearance setting on macOS.
 
     settings = {
-      model = "anthropic/claude-opus-5";
+      model = "anthropic/claude-sonnet-5";
       small_model = "anthropic/claude-haiku-4-5-20251001"; # cheap/routine tasks (title generation, etc.), skip the primary model
 
       autoupdate = "notify"; # managed by Nix, so this never auto-updates, it only checks and prints a notice instead
