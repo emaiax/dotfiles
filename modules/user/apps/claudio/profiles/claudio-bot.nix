@@ -1,6 +1,12 @@
 # The `claudio-thebot` profile: publishes into claudio-core, layered over the base settings via `--settings`
 # (see #121). Adds `--add-dir` since it can be invoked from anywhere, not just from inside the target repos,
-# and Read/Edit/Write only see the launch cwd by default.
+# and Read/Edit/Write only see the launch cwd by default. `--plugin-dir` loads claudio-core's own skills/ on
+# top of the operator's base CLAUDIO persona, namespaced as `claudio-core:<skill-name>` — claudio-core carries
+# a `.claude-plugin/plugin.json` manifest for exactly this.
+#
+# `--add-dir` does NOT auto-load a CLAUDE.md from the directories it grants, despite what `claude --bare
+# --help` implies (verified empirically: a live session had no knowledge of claudio-core's AGENTS.md content
+# until this flag was added). `--append-system-prompt-file` is the one that actually merges it in.
 {
   config,
   pkgs,
@@ -42,6 +48,8 @@ in
         exec claude \
           --settings ${settingsFile} \
           ${addDirArgs} \
+          --plugin-dir "${publishTarget}" \
+          --append-system-prompt-file "${publishTarget}/AGENTS.md" \
           "$@"
       '';
     })
