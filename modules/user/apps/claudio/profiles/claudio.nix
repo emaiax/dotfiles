@@ -9,15 +9,13 @@
   ...
 }:
 let
+  obsidianSocket = "${home}/.obsidian-cli.sock";
   home = config.home.homeDirectory;
 
   settings = {
     sandbox = {
-      # allowUnixSockets covers connecting, not stat'ing the path
-      filesystem.allowRead = [ "${home}/.obsidian-cli.sock" ];
-
-      # Unix sockets are governed separately from domains, so this is needed even though the network is otherwise open
-      network.allowUnixSockets = [ "${home}/.obsidian-cli.sock" ];
+      filesystem.allowRead = [ obsidianSocket ];
+      network.allowUnixSockets = [ obsidianSocket ];
     };
   };
 
