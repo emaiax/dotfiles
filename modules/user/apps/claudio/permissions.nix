@@ -174,9 +174,11 @@ let
     # sandbox: network egress and IPC the sandbox otherwise blocks by default
     network = {
       allowedDomains = [
-        "*.emx.casa" # homelab forgejo, LAN-only; already public in the README badges and CI workflows
+        "*.emx.casa"
         "api.github.com" # gh api
+        "app.asana.com" # asana api
         "github.com" # git-over-https
+        "registry.yarnpkg.com" # yarn install
       ];
 
       # gh/terraform/kubectl validate TLS via Security.framework -> trustd, which Seatbelt blocks by default
