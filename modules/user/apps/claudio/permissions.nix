@@ -8,6 +8,12 @@
 # opencode/default.nix each just wire in their own branch instead of carrying their own translation logic.
 { home, lib, ... }:
 let
+  # allowUnixSockets covers connecting and stat'ing the path
+  unixSockets = [
+    "/nix/var/nix/daemon-socket/socket" # allow nix subcommand to reach its daemon
+    "${home}/.docker/run/docker.sock" # allow docker subcommand to reach its daemon
+  ];
+
   policy = {
     commands = {
       ask = [
@@ -173,11 +179,11 @@ let
         "github.com" # git-over-https
       ];
 
-      allowUnixSockets = [ "/nix/var/nix/daemon-socket/socket" ]; # allow nix subcommand to reach its daemon
-
       # gh/terraform/kubectl validate TLS via Security.framework -> trustd, which Seatbelt blocks by default
       # (`x509: OSStatus -26276`, even for a valid cert; curl/git/Node verify in-process and are unaffected)
       allowMachLookup = [ "com.apple.trustd.agent" ]; # anthropics/claude-code#26466.
+
+      allowUnixSockets = unixSockets;
     };
   };
 
@@ -256,7 +262,9 @@ let
     filesystem = {
       disabled = true; # allowWrite is a no-op upstream, docs/sandbox-notes.md; network sandbox stays on
 
-      allowRead = policy.filesystem.toolchainReadOnly ++ policy.filesystem.toolchainReadWrite;
+      allowRead =
+        unixSockets ++ policy.filesystem.toolchainReadOnly ++ policy.filesystem.toolchainReadWrite;
+
       allowWrite = policy.filesystem.toolchainReadWrite;
 
       denyRead = [ home ] ++ policy.filesystem.credentials.dirs ++ policy.filesystem.credentials.files;
