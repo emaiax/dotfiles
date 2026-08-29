@@ -13,6 +13,7 @@ allowedDomains	policy.network.allowedDomains	raw	claudeCode.sandbox.network.allo
 allowUnixSockets	policy.network.allowUnixSockets	raw	claudeCode.sandbox.network.allowUnixSockets
 allowMachLookup	policy.network.allowMachLookup	raw	claudeCode.sandbox.network.allowMachLookup
 credentialBaks	credentialBaks (internal, derived from filesystem.credentials.files)	internal	claudeCode.permissions.deny only, via mkClaudeCodePermissions's credentialDenyRules. Not read by mkClaudeCodeSandbox, so a Bash subprocess isn't blocked from a credential file's .bak twin, only the native Read/Edit tools are.
+unixSockets	unixSockets (internal, the nix daemon socket + docker daemon socket)	internal	claudeCode.sandbox.network.allowUnixSockets, claudeCode.sandbox.filesystem.allowRead. Shared so a socket added to one can't drift out of sync with the other.
 ask	claudeCode.permissions.ask	rendered	claude-code/default.nix (programs.claude-code.settings.permissions.ask), built by mkClaudeCodePermissions
 deny	claudeCode.permissions.deny	rendered	claude-code/default.nix (programs.claude-code.settings.permissions.deny), built by mkClaudeCodePermissions
 excludedCommands	claudeCode.sandbox.excludedCommands	rendered	claude-code/default.nix (programs.claude-code.settings.sandbox.excludedCommands), built by mkClaudeCodeSandbox
