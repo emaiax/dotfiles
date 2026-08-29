@@ -1,0 +1,224 @@
+{
+  "autoupdate": "notify",
+  "compaction": {
+    "auto": true
+  },
+  "model": "anthropic/claude-sonnet-5",
+  "permission": {
+    "bash": {
+      "*": "allow",
+      "fj issue comment*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "deny"
+      },
+      "fj issue create*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "deny"
+      },
+      "fj issue edit*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "deny"
+      },
+      "fj pr close*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "deny"
+      },
+      "fj pr comment*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "deny"
+      },
+      "fj pr create*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "deny"
+      },
+      "fj pr merge*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "deny"
+      },
+      "fj pr review*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "deny"
+      },
+      "fj release*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "deny"
+      },
+      "gh issue comment*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "deny"
+      },
+      "gh issue create*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "deny"
+      },
+      "gh issue edit*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "deny"
+      },
+      "gh pr close*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "deny"
+      },
+      "gh pr comment*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "deny"
+      },
+      "gh pr create*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "deny"
+      },
+      "gh pr merge*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "deny"
+      },
+      "gh pr ready*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "deny"
+      },
+      "gh pr review*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "deny"
+      },
+      "gh release*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "deny"
+      },
+      "git checkout -- *": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "ask"
+      },
+      "git checkout .": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "ask"
+      },
+      "git clean*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "ask"
+      },
+      "git push*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "ask"
+      },
+      "git rebase*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "ask"
+      },
+      "git reset --hard*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "ask"
+      },
+      "git restore*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "ask"
+      },
+      "rm -rf*": {
+        "after": [
+          "*"
+        ],
+        "before": [],
+        "data": "ask"
+      }
+    },
+    "doom_loop": "deny",
+    "edit": "allow",
+    "external_directory": "ask",
+    "glob": "allow",
+    "grep": "allow",
+    "lsp": "allow",
+    "read": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.env.example": "allow"
+    },
+    "task": "allow",
+    "webfetch": "allow",
+    "websearch": "allow"
+  },
+  "plugin": [
+    "superpowers@git+https://github.com/obra/superpowers.git",
+    "opencode-supermemory"
+  ],
+  "share": "disabled",
+  "shell": "zsh",
+  "small_model": "anthropic/claude-haiku-4-5-20251001",
+  "snapshot": true
+}
