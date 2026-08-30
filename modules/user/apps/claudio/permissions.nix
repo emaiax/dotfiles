@@ -125,6 +125,7 @@ let
         "${home}/.bundle"
         "${home}/.cache"
         "${home}/.claude"
+        "${home}/.claude-mem"
         "${home}/.config"
         "${home}/.gem"
         "${home}/.gitconfig"

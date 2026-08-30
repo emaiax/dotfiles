@@ -15,15 +15,7 @@
 }:
 let
   home = config.home.homeDirectory;
-
-  # AGENTS.md here does not exist yet. A path that does not exist is inert.
-  contextRepo = "${home}/code/claudio";
-  publishTarget = "${home}/code/claudio-thebot/claudio-core";
-
-  reads = [
-    contextRepo
-    publishTarget
-  ];
+  claudioCore = "${home}/code/claudio-thebot/claudio-core";
 
   settings = {
     # Presence rules are soft_deny, not permissions.deny, precisely so this profile can carve itself an
@@ -31,25 +23,29 @@ let
     autoMode.allow = [
       "$defaults"
 
-      "This session is a publishing agent working in ${publishTarget} and posting under its own bot identity rather than the operator's. Opening pull requests, creating and editing issues, and commenting on them are its purpose there, so the rule reserving published presence to the operator does not apply to that repository. It still applies everywhere else."
+      "This session is a publishing agent working in ${claudioCore} and posting under its own bot identity rather than the operator's.
+       Opening pull requests, creating and editing issues, and commenting on them are its purpose there, so the rule reserving published
+       presence to the operator does not apply to that repository. It still applies everywhere else."
     ];
   };
 
   settingsFile = (pkgs.formats.json { }).generate "claudio-thebot-settings.json" settings;
 
-  addDirArgs = lib.concatMapStringsSep " " (d: ''--add-dir "${d}"'') reads;
+  claudioCoreArgs = ''
+    --add-dir "${claudioCore}" \
+    --plugin-dir "${claudioCore}" \
+    --append-system-prompt-file "${claudioCore}/AGENTS.md"
+  '';
 in
 {
   home.packages = [
     (pkgs.writeShellApplication {
-      name = "claudio-thebot";
       runtimeInputs = [ config.programs.claude-code.package ];
+
+      name = "claudio-thebot";
       text = ''
-        exec claude \
-          --settings ${settingsFile} \
-          ${addDirArgs} \
-          --plugin-dir "${publishTarget}" \
-          --append-system-prompt-file "${publishTarget}/AGENTS.md" \
+        exec claude --settings ${settingsFile} \
+          ${claudioCoreArgs} \
           "$@"
       '';
     })
