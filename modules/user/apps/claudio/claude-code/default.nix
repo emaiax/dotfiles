@@ -32,6 +32,10 @@ let
   claudeSettingsJson = (pkgs.formats.json { }).generate "claude-code-settings.json" (
     config.programs.claude-code.settings
   );
+
+  # Claude Code's installer can leave installed_plugins.json pinned older than what's already cached,
+  # breaking every DB write. Bump this to move the pin; the activation below fixes the pointer.
+  claudeMemVersion = "13.15.2";
 in
 {
   home.activation.claudeCodeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -41,6 +45,38 @@ in
       install -Dm644 ${claudeSettingsJson} "$existing"
     elif ! diff -q ${claudeSettingsJson} "$existing" >/dev/null; then
       echo "[claude-code] settings has local changes, skipping it: $existing" >&2
+    fi
+  '';
+
+  # Idempotent past claudeMemVersion matching. Install has no version arg, so it just fetches latest;
+  # the real job here is fixing drift, a cached version installed_plugins.json never got pointed at.
+  home.activation.claudeMemVersionPin = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    pluginsJson="$HOME/.claude/plugins/installed_plugins.json"
+    targetDir="$HOME/.claude/plugins/cache/thedotmack/claude-mem/${claudeMemVersion}"
+
+    if [[ ! -d "$targetDir" ]]; then
+      echo "[claude-mem] ${claudeMemVersion} not in cache, running claude plugin install" >&2
+      "${config.programs.claude-code.package}/bin/claude" plugin install claude-mem@thedotmack -s user -y >/dev/null 2>&1 || true
+    fi
+
+    if [[ -d "$targetDir" && -f "$pluginsJson" ]]; then
+      current="$(${pkgs.jq}/bin/jq -r '.plugins["claude-mem@thedotmack"][0].version // empty' "$pluginsJson" 2>/dev/null || true)"
+
+      if [[ "$current" != "${claudeMemVersion}" ]]; then
+        echo "[claude-mem] pinning installed_plugins.json to ${claudeMemVersion} (was: ''${current:-none})" >&2
+        tmp="$(mktemp)"
+        ${pkgs.jq}/bin/jq \
+          --arg version "${claudeMemVersion}" \
+          --arg path "$targetDir" \
+          '.plugins["claude-mem@thedotmack"][0].version = $version | .plugins["claude-mem@thedotmack"][0].installPath = $path' \
+          "$pluginsJson" > "$tmp" && mv "$tmp" "$pluginsJson"
+
+        pkill -f "claude-mem/.*/scripts/worker-service.cjs" 2>/dev/null || true
+        pkill -f "claude-mem/.*/scripts/mcp-server.cjs" 2>/dev/null || true
+        echo "[claude-mem] killed stale daemons, they respawn on next use" >&2
+      fi
+    elif [[ ! -d "$targetDir" ]]; then
+      echo "[claude-mem] ${claudeMemVersion} still not cached after install attempt, leaving installed_plugins.json alone" >&2
     fi
   '';
 
