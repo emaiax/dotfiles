@@ -33,10 +33,8 @@ let
     config.programs.claude-code.settings
   );
 
-  # Claude Code's own plugin installer can leave ~/.claude/plugins/installed_plugins.json pointing at a
-  # version older than what it already downloaded into the cache, so every DB write from the stale
-  # binary fails against a schema newer code already migrated forward. Bump this string to move the pin;
-  # the activation below corrects the pointer and restarts the daemons, no manual intervention needed.
+  # Claude Code's installer can leave installed_plugins.json pinned older than what's already cached,
+  # breaking every DB write. Bump this to move the pin; the activation below fixes the pointer.
   claudeMemVersion = "13.15.2";
 in
 {
@@ -50,10 +48,8 @@ in
     fi
   '';
 
-  # Idempotent: does nothing once installed_plugins.json already points at claudeMemVersion. Installing
-  # doesn't accept a version argument, so it always fetches whatever the marketplace currently calls
-  # latest; that only lands on claudeMemVersion by coincidence. Its real job is fixing the drift this
-  # module already caused once: a version present in the cache dir but never pointed at.
+  # Idempotent past claudeMemVersion matching. Install has no version arg, so it just fetches latest;
+  # the real job here is fixing drift, a cached version installed_plugins.json never got pointed at.
   home.activation.claudeMemVersionPin = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     pluginsJson="$HOME/.claude/plugins/installed_plugins.json"
     targetDir="$HOME/.claude/plugins/cache/thedotmack/claude-mem/${claudeMemVersion}"
