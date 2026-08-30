@@ -9,5 +9,14 @@
       "enabled": true,
       "schedule": ["* 2 * * *"]
     }
-  }
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^modules/user/apps/claudio/claude-code/default\\.nix$/"],
+      "matchStrings": ["claudeMemVersion = \"(?<currentValue>[^\"]+)\";"],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "thedotmack/claude-mem"
+    }
+  ]
 }
