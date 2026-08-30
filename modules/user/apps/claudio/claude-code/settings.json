@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "deny": [
+      "Bash(gh pr merge:*)",
+      "Bash(rtk gh pr merge:*)",
+      "Bash(gh release:*)",
+      "Bash(rtk gh release:*)",
+      "Bash(fj pr merge:*)",
+      "Bash(rtk fj pr merge:*)",
+      "Bash(fj release:*)",
+      "Bash(rtk fj release:*)",
+      "Read(//Users/emaiax/.claude/.credentials.json)",
+      "Edit(//Users/emaiax/.claude/.credentials.json)",
+      "Read(//Users/emaiax/.netrc)",
+      "Edit(//Users/emaiax/.netrc)",
+      "Read(//Users/emaiax/.npmrc)",
+      "Edit(//Users/emaiax/.npmrc)",
+      "Read(//Users/emaiax/.local/share/opencode/auth.json)",
+      "Edit(//Users/emaiax/.local/share/opencode/auth.json)",
+      "Read(//Users/emaiax/.local/share/opencode/mcp-auth.json)",
+      "Edit(//Users/emaiax/.local/share/opencode/mcp-auth.json)",
+      "Read(//Users/emaiax/.claude/.credentials.json.bak)",
+      "Edit(//Users/emaiax/.claude/.credentials.json.bak)",
+      "Read(//Users/emaiax/.netrc.bak)",
+      "Edit(//Users/emaiax/.netrc.bak)",
+      "Read(//Users/emaiax/.npmrc.bak)",
+      "Edit(//Users/emaiax/.npmrc.bak)",
+      "Read(//Users/emaiax/.local/share/opencode/auth.json.bak)",
+      "Edit(//Users/emaiax/.local/share/opencode/auth.json.bak)",
+      "Read(//Users/emaiax/.local/share/opencode/mcp-auth.json.bak)",
+      "Edit(//Users/emaiax/.local/share/opencode/mcp-auth.json.bak)",
+      "Read(//Users/emaiax/.aws/**)",
+      "Edit(//Users/emaiax/.aws/**)",
+      "Read(//Users/emaiax/.config/1Password/**)",
+      "Edit(//Users/emaiax/.config/1Password/**)",
+      "Read(//Users/emaiax/.config/sops/**)",
+      "Edit(//Users/emaiax/.config/sops/**)",
+      "Read(//Users/emaiax/.gnupg/**)",
+      "Edit(//Users/emaiax/.gnupg/**)",
+      "Read(//Users/emaiax/.ssh/**)",
+      "Edit(//Users/emaiax/.ssh/**)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(rtk git push:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(rtk git reset --hard:*)",
+      "Bash(git checkout --:*)",
+      "Bash(rtk git checkout --:*)",
+      "Bash(git restore:*)",
+      "Bash(rtk git restore:*)",
+      "Bash(git clean:*)",
+      "Bash(rtk git clean:*)",
+      "Bash(git rebase:*)",
+      "Bash(rtk git rebase:*)",
+      "Bash(rm -rf:*)",
+      "Bash(rtk rm -rf:*)",
+      "Bash(git checkout .)",
+      "Bash(rtk git checkout .)"
+    ],
+    "defaultMode": "auto"
+  },
+  "model": "sonnet",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"/Users/emaiax/code/dotfiles/modules/user/apps/claudio/hooks/rtk-hook.sh\"",
+            "statusMessage": "Applying RTK token-reduction filter"
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "claude-mem@thedotmack": true,
+    "obsidian@obsidian-skills": true,
+    "superpowers@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "obsidian-skills": {
+      "source": {
+        "source": "github",
+        "repo": "kepano/obsidian-skills"
+      }
+    },
+    "thedotmack": {
+      "source": {
+        "source": "github",
+        "repo": "thedotmack/claude-mem"
+      }
+    }
+  },
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "autoAllowBashIfSandboxed": true,
+    "allowUnsandboxedCommands": false,
+    "network": {
+      "allowedDomains": [
+        "*.emx.casa",
+        "api.github.com",
+        "app.asana.com",
+        "github.com",
+        "registry.yarnpkg.com"
+      ],
+      "allowUnixSockets": [
+        "/nix/var/nix/daemon-socket/socket",
+        "/Users/emaiax/.docker/run/docker.sock"
+      ],
+      "allowMachLookup": [
+        "com.apple.trustd.agent"
+      ]
+    },
+    "filesystem": {
+      "allowWrite": [
+        "/Users/emaiax/.asdf",
+        "/Users/emaiax/.bun",
+        "/Users/emaiax/.bundle",
+        "/Users/emaiax/.cache",
+        "/Users/emaiax/.claude",
+        "/Users/emaiax/.claude-mem",
+        "/Users/emaiax/.config",
+        "/Users/emaiax/.gem",
+        "/Users/emaiax/.gitconfig",
+        "/Users/emaiax/.hex",
+        "/Users/emaiax/.local",
+        "/Users/emaiax/.mix",
+        "/Users/emaiax/.npm",
+        "/Users/emaiax/.terraform.d",
+        "/Users/emaiax/Library/Application Support/rtk",
+        "/Users/emaiax/Library/Caches",
+        "/Users/emaiax/code",
+        "/Users/emaiax/go"
+      ],
+      "denyWrite": [
+        "/Users/emaiax",
+        "/Users/emaiax/.aws",
+        "/Users/emaiax/.config/1Password",
+        "/Users/emaiax/.config/sops",
+        "/Users/emaiax/.gnupg",
+        "/Users/emaiax/.ssh",
+        "/Users/emaiax/.claude/.credentials.json",
+        "/Users/emaiax/.netrc",
+        "/Users/emaiax/.npmrc",
+        "/Users/emaiax/.local/share/opencode/auth.json",
+        "/Users/emaiax/.local/share/opencode/mcp-auth.json"
+      ],
+      "denyRead": [
+        "/Users/emaiax",
+        "/Users/emaiax/.aws",
+        "/Users/emaiax/.config/1Password",
+        "/Users/emaiax/.config/sops",
+        "/Users/emaiax/.gnupg",
+        "/Users/emaiax/.ssh",
+        "/Users/emaiax/.claude/.credentials.json",
+        "/Users/emaiax/.netrc",
+        "/Users/emaiax/.npmrc",
+        "/Users/emaiax/.local/share/opencode/auth.json",
+        "/Users/emaiax/.local/share/opencode/mcp-auth.json"
+      ],
+      "allowRead": [
+        "/nix/var/nix/daemon-socket/socket",
+        "/Users/emaiax/.docker/run/docker.sock",
+        "/Users/emaiax/Library/Keychains",
+        "/Users/emaiax/.zshrc",
+        "/Users/emaiax/.zshenv",
+        "/Users/emaiax/.cache/nix",
+        "/Users/emaiax/.local/state/nix",
+        "/Users/emaiax/.nix-defexpr",
+        "/Users/emaiax/.nix-profile",
+        "/Users/emaiax/.ssh/*.pub",
+        "/Users/emaiax/.ssh/allowed_signers",
+        "/Users/emaiax/.ssh/config",
+        "/Users/emaiax/.ssh/known_hosts",
+        "/Users/emaiax/.asdf",
+        "/Users/emaiax/.bun",
+        "/Users/emaiax/.bundle",
+        "/Users/emaiax/.cache",
+        "/Users/emaiax/.claude",
+        "/Users/emaiax/.claude-mem",
+        "/Users/emaiax/.config",
+        "/Users/emaiax/.gem",
+        "/Users/emaiax/.gitconfig",
+        "/Users/emaiax/.hex",
+        "/Users/emaiax/.local",
+        "/Users/emaiax/.mix",
+        "/Users/emaiax/.npm",
+        "/Users/emaiax/.terraform.d",
+        "/Users/emaiax/Library/Application Support/rtk",
+        "/Users/emaiax/Library/Caches",
+        "/Users/emaiax/code",
+        "/Users/emaiax/go"
+      ],
+      "disabled": true
+    },
+    "allowAppleEvents": true,
+    "excludedCommands": [
+      "docker *",
+      "rtk docker *",
+      "gh *",
+      "rtk gh *",
+      "fj *",
+      "rtk fj *"
+    ]
+  },
+  "theme": "dark",
+  "autoMode": {
+    "soft_deny": [
+      "$defaults",
+      "Anything that appears publicly under the operator's name on a code forge, including opening or closing pull requests, submitting reviews, creating or editing issues, and commenting on any of them, is theirs to initiate rather than the agent's. Do not do these unprompted."
+    ],
+    "environment": [
+      "$defaults",
+      "Organization: personal single-developer setup, no company. Primary use of Claude Code: software development plus Nix-based infrastructure automation.",
+      "Internal package registry: none. Nix is the package manager, so its configured substituters are the expected download sources and flake inputs are fetched from their upstream forges.",
+      "Repository visibility: assume a repository is public unless something in the session shows otherwise, since several are mirrored publicly. Treat anything committed as published.",
+      "Additional context: this machine is a personal workstation, not a shared or production host."
+    ]
+  },
+  "agentPushNotifEnabled": true
+}
