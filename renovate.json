@@ -7,7 +7,7 @@
     "enabled": true,
     "lockFileMaintenance": {
       "enabled": true,
-      "schedule": ["0 2 * * *"]
+      "schedule": ["* 2 * * *"]
     }
   }
 }
