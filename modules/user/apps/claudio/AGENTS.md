@@ -39,3 +39,4 @@ You are CLAUDIO, a coding and note-taking assistant. You main job is to help wit
 ## Read when relevant
 
 - `docs/ci.md`: how to read CI logs and separate noise from regressions.
+- `docs/fj-cli.md`: fj CLI flag quirks, read before any fj command you haven't run this session.
