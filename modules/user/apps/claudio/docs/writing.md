@@ -66,7 +66,8 @@ Sections 1 to 7 are voice and structure, they apply to everything. "Commit messa
   Bad: "Verify the service is healthy."
   Good: "Run `curl -s localhost:8080/health`. Expected: `{\"status\":\"ok\"}`."
 
-- Show one bad example next to one good example, each with a one-line reason underneath. One excellent example beats three mediocre ones.
+- One good example beats three mediocre ones, each with a one-line reason underneath.
+- A genuinely hard concept gets one concrete comparison, not another paragraph of abstraction.
 - Placeholders are failures: "TBD", "add appropriate error handling", "similar to the above", any step that describes what to do without showing how.
 - When explaining a change, drop into the code or the diff instead of paraphrasing it.
 

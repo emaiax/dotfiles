@@ -15,9 +15,9 @@ Format, one item per block:
 ## Open
 
 ## 2026-08-27 Spun up an isolated docker project instead of reusing main's shared stack
-- What happened: Ran `make rspec FILE_LIST=...` directly inside a `saf` worktree (`em-iban-client-validation-rule`) to test a CI failure theory. That implicitly booted a whole isolated docker-compose project for the worktree (own Postgres ×3, Redis, S3, IDP, Sidekiq) instead of reusing the main checkout's already-running `saf` stack. Duplicated DB/volumes — the exact past-failure pattern (disk blowup, duplicated data) Eduardo flagged as a recurring problem.
+- What happened: Ran `make rspec FILE_LIST=...` directly inside a `saf` worktree (`em-iban-client-validation-rule`) to test a CI failure theory. That implicitly booted a whole isolated docker-compose project for the worktree (own Postgres ×3, Redis, S3, IDP, Sidekiq) instead of reusing the main checkout's already-running `saf` stack. Duplicated DB/volumes: the exact past-failure pattern (disk blowup, duplicated data) Eduardo flagged as a recurring problem.
 - Rule missing or unclear: nothing told me to check for project-specific dev-environment tooling before running raw `docker`/`make` commands in an unfamiliar repo, or to default to reusing shared/already-running infra over spinning up isolated copies.
-- Proposed fix (file + diff): Workflow section of CLAUDE.md, add one line: "Before bringing up local dev infra (docker, DB) in a project, look for a project runbook/script first, and default to reusing shared/already-running resources over spinning up new isolated ones." Project-specific detail (which script, which mode) belongs in that project's own docs/vault note, not here — for `saf` that's now `70 - work/systems/saf-docker-dev-environment.md`.
+- Proposed fix (file + diff): Workflow section of CLAUDE.md, add one line: "Before bringing up local dev infra (docker, DB) in a project, look for a project runbook/script first, and default to reusing shared/already-running resources over spinning up new isolated ones." Project-specific detail (which script, which mode) belongs in that project's own docs/vault note, not here: for `saf` that's now `70 - work/systems/saf-docker-dev-environment.md`.
 - Remove or merge instead: none yet, first item logged.
 
 ## 2026-08-28 Superpowers session-start hook fights the Voice and Workflow rules
