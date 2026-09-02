@@ -125,6 +125,12 @@ in
             repo = "kepano/obsidian-skills";
           };
         };
+        humanizer = {
+          source = {
+            source = "github";
+            repo = "blader/humanizer";
+          };
+        };
         thedotmack = {
           source = {
             source = "github";
@@ -136,6 +142,7 @@ in
       enabledPlugins = {
         "claude-mem@thedotmack" = true; # semantic memory across sessions
         "obsidian@obsidian-skills" = true; # obsidian markdown, bases, JSON Canvas and `obsidian` CLI
+        "humanizer@humanizer" = true; # rewrites AI-generated text to strip telltale patterns
         "superpowers@claude-plugins-official" = true; # superpowers: code analysis, refactoring, and generation
       };
 
