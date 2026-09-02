@@ -34,7 +34,7 @@ let
   claudioCoreArgs = ''
     --add-dir "${claudioCore}" \
     --plugin-dir "${claudioCore}" \
-    --append-system-prompt-file "${claudioCore}/AGENTS.md"
+    --append-system-prompt-file "${claudioCore}/AGENTS.md" \
   '';
 in
 {
