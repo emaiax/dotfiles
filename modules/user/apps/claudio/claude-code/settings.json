@@ -16,10 +16,17 @@
   },
   "enabledPlugins": {
     "claude-mem@thedotmack": true,
+    "humanizer@humanizer": true,
     "obsidian@obsidian-skills": true,
     "superpowers@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
+    "humanizer": {
+      "source": {
+        "repo": "blader/humanizer",
+        "source": "github"
+      }
+    },
     "obsidian-skills": {
       "source": {
         "repo": "kepano/obsidian-skills",
