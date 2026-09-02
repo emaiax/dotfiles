@@ -14,6 +14,8 @@ let
 
   settings = {
     sandbox = {
+      enabled = false; # disable sandboxing for now, blocks ssh'ing into homelab guests
+
       filesystem.allowRead = [ obsidianSocket ];
       network.allowUnixSockets = [ obsidianSocket ];
     };

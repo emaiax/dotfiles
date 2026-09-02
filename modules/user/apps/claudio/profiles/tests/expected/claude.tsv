@@ -9,6 +9,7 @@ fs-write-home-root	EXECUTED	filesystem.disabled: unrestricted write
 net-allowed-domain	EXECUTED
 net-api-github	EXECUTED
 net-denied-domain	BLOCKED
+net-local-domain	EXECUTED
 net-nix-socket	EXECUTED
 net-tls-sandboxed	EXECUTED
 gate-git-push	BLOCKED
@@ -17,3 +18,4 @@ gate-git-reset-hard	BLOCKED
 gate-checkout-dot	BLOCKED
 gate-deny-gh-merge	BLOCKED
 gate-deny-fj-release	BLOCKED
+gate-allow-ssh-proxycommand	EXECUTED	permissions.allow bypasses the classifier in every#152)

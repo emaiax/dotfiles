@@ -16,6 +16,9 @@ let
 
   policy = {
     commands = {
+      # ssh is a special case: it needs to be allowed to run
+      allow = [ "ssh -o ProxyCommand=" ];
+
       ask = [
         "git push"
 
@@ -78,6 +81,8 @@ let
         "rtk gh *"
         "fj *"
         "rtk fj *"
+        "ssh *"
+        "rtk ssh *"
       ];
     };
 
@@ -176,6 +181,7 @@ let
     network = {
       allowedDomains = [
         "*.emx.casa"
+        "*.local" # homelab guests via mDNS
         "api.github.com" # gh api
         "app.asana.com" # asana api
         "github.com" # git-over-https
@@ -247,6 +253,8 @@ let
         ++ lib.concatMap claudeCodeDirDenyRules policy.filesystem.credentials.dirs;
     in
     {
+      allow = map claudeCodePrefixRule (withRtkTwin policy.commands.allow);
+
       ask =
         map claudeCodePrefixRule (withRtkTwin policy.commands.ask)
         ++ map claudeCodeExactRule (withRtkTwin policy.commands.askExact);
