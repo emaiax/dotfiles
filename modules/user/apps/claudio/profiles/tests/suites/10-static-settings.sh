@@ -15,7 +15,7 @@ static_settings_run() {
   assert_jq static-sandbox-autoallow-bash base "$base" '.sandbox.autoAllowBashIfSandboxed' 'true'
 
   # Must stay globs (bare names fail open) and keep the rtk twins (permissions.nix).
-  assert_jq static-excluded-commands base "$base" '.sandbox.excludedCommands | sort | join(",")' 'docker *,fj *,gh *,rtk docker *,rtk fj *,rtk gh *'
+  assert_jq static-excluded-commands base "$base" '.sandbox.excludedCommands | sort | join(",")' 'docker *,fj *,gh *,rtk docker *,rtk fj *,rtk gh *,rtk ssh *,ssh *'
 
   # Filesystem policy: the deny wall and the carve-outs the PR is about.
   # allowWrite is a no-op upstream (docs/sandbox-notes.md), so filesystem isolation is off; network sandbox stays on.
@@ -31,8 +31,8 @@ static_settings_run() {
   assert_jq static-no-allowwrite-keychains base "$base" ".sandbox.filesystem.allowWrite | index(\"$h/Library/Keychains\") == null" 'true'
   assert_jq static-denywrite-credentials base "$base" ".sandbox.filesystem.denyWrite | index(\"$h/.claude/.credentials.json\") != null" 'true'
 
-  assert_jq static-net-domains base "$base" '.sandbox.network.allowedDomains | sort | join(",")' '*.emx.casa,api.github.com,github.com'
-  assert_jq static-net-nix-socket base "$base" '.sandbox.network.allowUnixSockets | join(",")' '/nix/var/nix/daemon-socket/socket'
+  assert_jq static-net-domains base "$base" '.sandbox.network.allowedDomains | sort | join(",")' '*.emx.casa,*.local,api.github.com,app.asana.com,github.com,registry.yarnpkg.com'
+  assert_jq static-net-sockets base "$base" '.sandbox.network.allowUnixSockets | sort | join(",")' "$h/.docker/run/docker.sock,/nix/var/nix/daemon-socket/socket"
   assert_jq static-net-trustd base "$base" '.sandbox.network.allowMachLookup | join(",")' 'com.apple.trustd.agent'
   assert_jq static-apple-events base "$base" '.sandbox.allowAppleEvents' 'true'
 
@@ -58,17 +58,18 @@ static_settings_run() {
   assert_jq static-deny-rtk-gh-merge base "$base" '.permissions.deny | index("Bash(rtk gh pr merge:*)") != null' 'true'
   assert_jq static-deny-rtk-fj-release base "$base" '.permissions.deny | index("Bash(rtk fj release:*)") != null' 'true'
 
-  # claudio overlay: exactly the Obsidian socket grants and nothing else, canonical-JSON equality so any accidental
-  # extra key fails loudly.
+  # claudio overlay: the Obsidian socket grants plus the sandbox opt-out, and nothing else. Canonical-JSON equality so
+  # any accidental extra key fails loudly. `enabled: false` is deliberate (claudio.nix), the sandbox blocks ssh into
+  # homelab guests; drop it here the day that profile turns the sandbox back on.
   local claudio_expected
   claudio_expected=$(jq -Sc . <<EOF
-{"sandbox":{"filesystem":{"allowRead":["$h/.obsidian-cli.sock"]},"network":{"allowUnixSockets":["$h/.obsidian-cli.sock"]}}}
+{"sandbox":{"enabled":false,"filesystem":{"allowRead":["$h/.obsidian-cli.sock"]},"network":{"allowUnixSockets":["$h/.obsidian-cli.sock"]}}}
 EOF
   )
   if [[ $(jq -Sc . "${OVERLAY[claudio]}") == "$claudio_expected" ]]; then
     t_record PASS static-overlay-shape claudio
   else
-    t_record FAIL static-overlay-shape claudio "overlay diverged from the two expected socket grants: $(jq -Sc . "${OVERLAY[claudio]}")"
+    t_record FAIL static-overlay-shape claudio "overlay diverged from the sandbox opt-out plus two socket grants: $(jq -Sc . "${OVERLAY[claudio]}")"
   fi
 
   # claude-yolo overlay: exactly {sandbox:{enabled:false}}. Anything more means the profile grew scope nobody reviewed.
