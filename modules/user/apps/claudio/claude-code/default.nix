@@ -116,6 +116,10 @@ in
       includeCoAuthoredBy = false;
       theme = "dark";
 
+      # Was hand-added to settings.json only, never here, until deleting+regenerating that file (2026-08-31,
+      # sandbox *.local/ssh work) silently dropped it. Declared here now so it survives the next regeneration.
+      agentPushNotifEnabled = true;
+
       hooks.PreToolUse = [ rtkHook ];
 
       extraKnownMarketplaces = {
@@ -149,8 +153,7 @@ in
       sandbox = {
         enabled = true;
 
-        # Without both, the boundary is advisory: Claude may retry a blocked command unsandboxed, or continue if
-        # Seatbelt is unavailable.
+        # without both, the boundary is advisory: Claude may retry a blocked command unsandboxed, or continue if Seatbelt is unavailable
         allowUnsandboxedCommands = false;
         failIfUnavailable = true;
 
