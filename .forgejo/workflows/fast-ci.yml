@@ -1,6 +1,6 @@
 # Requires, all external to this repo (see docs/superpowers/specs/2026-08-03-ci-forgejo-cutover-design.md):
 #   - repo variable CI_IMAGE_REGISTRY = forgejo.emx.casa (Settings > Actions > Variables)
-#   - the homelab/dudumox-ci:latest image (built from emaiax/dudumox's homelab/images sibling)
+#   - the homelab/node-trixie-nix:latest image (built from the homelab/images repo)
 #   - /var/lib/forgejo-runner-nix-store allow-listed for the `docker` runner label
 name: fast-ci
 
@@ -19,7 +19,7 @@ jobs:
     runs-on: docker
     timeout-minutes: 15
     container:
-      image: ${{ vars.CI_IMAGE_REGISTRY }}/homelab/dudumox-ci:latest
+      image: ${{ vars.CI_IMAGE_REGISTRY }}/homelab/node-trixie-nix:latest
       volumes:
         - /var/lib/forgejo-runner-nix-store:/nix
     env:
