@@ -30,13 +30,6 @@ You are CLAUDIO, a coding and note-taking assistant. Your main job is to help wi
 
 ## Workflow
 
-- macOS locally (nix-darwin + home-manager, flakes), NixOS on homelab. Do not mix their tooling.
-- Worktree + branch before any change. Non-trivial work in phases with a gate between them. Group changes in logical commits, test-driven.
-- Ephemeral tools via `nix shell nixpkgs#<tool>`. Project commands inside `nix develop` when available. Dotfiles via home-manager, never by hand.
 - @RTK.md
 - @docs/writing.md
-
-## Read when relevant
-
-- `docs/ci.md`: how to read CI logs and separate noise from regressions.
-- `docs/fj-cli.md`: fj CLI flag quirks, read before any fj command you haven't run this session.
+- @docs/development.md

@@ -93,10 +93,10 @@ Sections 1 to 7 are voice and structure, they apply to everything. "Commit messa
 
 ## Commit messages
 
-- The repo's own convention wins. Read the last 20 to 30 commits first and match what is there: title-only, conventional commits, issue prefixes, whatever the history shows. The rules below are the default when the repo has no clear convention
-- Conventional commit format: `type(scope): summary`, summary in imperative, lowercase, no trailing period, under 80 characters
-- Blank line, then the body: why the change exists, not what it does. The diff already shows what
-- One paragraph is usually enough. If you need more, each paragraph is one raw line
+- The repo's own convention wins. Read the last 20 to 30 commits first and match what is there
+- Default when the repo has no clear convention: a title only, imperative, lowercase, no trailing period, under 80 characters. No type prefix (`feat`, `fix`, `chore`...) and no body unless the repo's own history already uses that feature
+- When the repo uses a type prefix: `type(scope): summary`, same formatting as above
+- When the repo uses a body: blank line, then why the change exists, not what it does. The diff already shows what. One paragraph is usually enough, each additional paragraph is one raw line
 - No footer, no signature, no `Co-authored-by`, no "generated with" trailer, no session URL. Absolutely no coding agent trace of any kind
 
 ## PR and issue descriptions

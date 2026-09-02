@@ -4,13 +4,6 @@
 - This file documents the repo itself
 - User-level preferences live separately: published to `~/.claude/CLAUDE.md`, and to OpenCode's global context from `modules/user/apps/claudio/AGENTS.md`
 
-## Writing
-
-- ALWAYS write in prose and be succinct: direct, low density, no filler. Bullets don't need a trailing period
-- ALWAYS hard-wrap comments in code at 120 columns, this is the one and only exception to the rule above
-- NEVER reference PRs or issues numbers in code comments
-- NEVER use AI-slop characters: no em dashes, no smart/curly quotes, no other telltale AI punctuation. Use a comma, a colon, or a period instead
-
 ## Layout
 
 - `flake.nix`: entrypoint. Builds `darwinConfigurations` from `nix/inventory.nix` (per-host and per-user settings). No `devShell`, no `nix develop` here
@@ -24,8 +17,6 @@
 
 ## Working in this repo
 
-- Consider `main` branch as read-only, always `worktree` first if you need to create or change anything
-- Never push without asking, unless there's already an open PR for the branch, then pushing to keep it current is fine
 - Change things through a home-manager module, not by hand-editing files under `$HOME`
 - Activation backs up a pre-existing real file to `*.bak` instead of refusing (`home-manager.backupFileExtension = "bak"`)
 - Format Nix with `nix fmt` before committing
