@@ -44,7 +44,7 @@ in
 
       name = "claudio-thebot";
       text = ''
-        exec claude --settings ${settingsFile} \
+        exec env CLAUDIO_THEBOT_SESSION=1 claude --settings ${settingsFile} \
           ${claudioCoreArgs} \
           "$@"
       '';
