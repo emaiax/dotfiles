@@ -1,3 +1,12 @@
+# The `claudio-thebot` profile: publishes into claudio-core, layered over the base settings via `--settings`
+# (see #121). Adds `--add-dir` since it can be invoked from anywhere, not just from inside the target repos,
+# and Read/Edit/Write only see the launch cwd by default. `--plugin-dir` loads claudio-core's own skills/ on
+# top of the operator's base CLAUDIO persona, namespaced as `claudio-core:<skill-name>` (claudio-core carries
+# a `.claude-plugin/plugin.json` manifest for exactly this).
+#
+# `--add-dir` does NOT auto-load a CLAUDE.md from the directories it grants, despite what `claude --bare
+# --help` implies (verified empirically: a live session had no knowledge of claudio-core's AGENTS.md content
+# until this flag was added). `--append-system-prompt-file` is the one that actually merges it in.
 {
   config,
   pkgs,
@@ -50,8 +59,6 @@ let
   '';
 in
 {
-  home.sessionPath = [ "${home}/${identityBinDir}" ];
-
   home.file = {
     "${claudioState}/git-identity.gitconfig".text = ''
       [user]
@@ -78,7 +85,7 @@ in
     "${identityBinDir}/fj" = {
       source = mkIdentityWrapper {
         name = "claudio-identity-fj";
-        activeExec = "env HOME=${home}/${fjIdentityHome} ${pkgs.forgejo-cli}/bin/fj";
+        activeExec = "HOME=${home}/${fjIdentityHome} ${pkgs.forgejo-cli}/bin/fj";
         passiveExec = "${pkgs.forgejo-cli}/bin/fj";
       };
       executable = true;
@@ -87,7 +94,7 @@ in
     "${identityBinDir}/gh" = {
       source = mkIdentityWrapper {
         name = "claudio-identity-gh";
-        activeExec = "env GH_CONFIG_DIR=${home}/${ghIdentityConfigDir} ${pkgs.gh}/bin/gh";
+        activeExec = "GH_CONFIG_DIR=${home}/${ghIdentityConfigDir} ${pkgs.gh}/bin/gh";
         passiveExec = "${pkgs.gh}/bin/gh";
       };
       executable = true;
@@ -99,7 +106,10 @@ in
       runtimeInputs = [ config.programs.claude-code.package ];
 
       name = "claudio-thebot";
-      text = "exec env CLAUDIO_THEBOT_SESSION=1 claude --settings ${settingsFile} ${claudioCoreArgs} \"$@\"";
+      text = ''
+        export PATH="${home}/${identityBinDir}:$PATH"
+        exec env CLAUDIO_THEBOT_SESSION=1 claude --settings ${settingsFile} ${claudioCoreArgs} "$@"
+      '';
     })
   ];
 }
