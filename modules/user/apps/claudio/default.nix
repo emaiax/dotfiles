@@ -2,7 +2,6 @@
 {
   imports = [
     ./claude-code
-    ./identity
     ./opencode
     ./profiles/claudio-bot.nix
     ./profiles/claudio-yolo.nix

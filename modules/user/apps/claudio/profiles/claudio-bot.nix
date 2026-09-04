@@ -1,12 +1,3 @@
-# The `claudio-thebot` profile: publishes into claudio-core, layered over the base settings via `--settings`
-# (see #121). Adds `--add-dir` since it can be invoked from anywhere, not just from inside the target repos,
-# and Read/Edit/Write only see the launch cwd by default. `--plugin-dir` loads claudio-core's own skills/ on
-# top of the operator's base CLAUDIO persona, namespaced as `claudio-core:<skill-name>` — claudio-core carries
-# a `.claude-plugin/plugin.json` manifest for exactly this.
-#
-# `--add-dir` does NOT auto-load a CLAUDE.md from the directories it grants, despite what `claude --bare
-# --help` implies (verified empirically: a live session had no knowledge of claudio-core's AGENTS.md content
-# until this flag was added). `--append-system-prompt-file` is the one that actually merges it in.
 {
   config,
   pkgs,
@@ -15,7 +6,28 @@
 }:
 let
   home = config.home.homeDirectory;
-  claudioCore = "${home}/code/claudio-thebot/claudio-core";
+  profile = "claudio-thebot";
+
+  claudioCore = "${home}/code/${profile}/claudio-core";
+  claudioState = ".local/share/${profile}";
+
+  identityBinDir = "${claudioState}/identity-bin";
+  fjIdentityHome = "${claudioState}/fj-identity";
+  ghIdentityConfigDir = "${claudioState}/gh-identity";
+
+  mkIdentityWrapper =
+    {
+      name,
+      activeExec,
+      passiveExec,
+    }:
+    pkgs.writeShellScript name ''
+      if [[ -n "''${CLAUDIO_THEBOT_SESSION:-}" ]]; then
+        exec ${activeExec} "$@"
+      else
+        exec ${passiveExec} "$@"
+      fi
+    '';
 
   settings = {
     # Presence rules are soft_deny, not permissions.deny, precisely so this profile can carve itself an
@@ -38,16 +50,56 @@ let
   '';
 in
 {
+  home.sessionPath = [ "${home}/${identityBinDir}" ];
+
+  home.file = {
+    "${claudioState}/git-identity.gitconfig".text = ''
+      [user]
+      	name = claudio-thebot
+      	email = claudio-thebot@users.noreply.github.com
+      	signingkey = ~/.ssh/claudio-codes.pub
+
+      [gpg]
+      	format = ssh
+
+      [commit]
+      	gpgsign = true
+    '';
+
+    "${identityBinDir}/git" = {
+      source = mkIdentityWrapper {
+        name = "claudio-identity-git";
+        activeExec = "${pkgs.git}/bin/git -c include.path=\"${home}/${claudioState}/git-identity.gitconfig\"";
+        passiveExec = "${pkgs.git}/bin/git";
+      };
+      executable = true;
+    };
+
+    "${identityBinDir}/fj" = {
+      source = mkIdentityWrapper {
+        name = "claudio-identity-fj";
+        activeExec = "env HOME=${home}/${fjIdentityHome} ${pkgs.forgejo-cli}/bin/fj";
+        passiveExec = "${pkgs.forgejo-cli}/bin/fj";
+      };
+      executable = true;
+    };
+
+    "${identityBinDir}/gh" = {
+      source = mkIdentityWrapper {
+        name = "claudio-identity-gh";
+        activeExec = "env GH_CONFIG_DIR=${home}/${ghIdentityConfigDir} ${pkgs.gh}/bin/gh";
+        passiveExec = "${pkgs.gh}/bin/gh";
+      };
+      executable = true;
+    };
+  };
+
   home.packages = [
     (pkgs.writeShellApplication {
       runtimeInputs = [ config.programs.claude-code.package ];
 
       name = "claudio-thebot";
-      text = ''
-        exec env CLAUDIO_THEBOT_SESSION=1 claude --settings ${settingsFile} \
-          ${claudioCoreArgs} \
-          "$@"
-      '';
+      text = "exec env CLAUDIO_THEBOT_SESSION=1 claude --settings ${settingsFile} ${claudioCoreArgs} \"$@\"";
     })
   ];
 }
