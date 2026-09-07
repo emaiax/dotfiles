@@ -37,6 +37,7 @@
       #
       "docker-desktop" # docker desktop for mac
       "github" # github desktop for mac
+      "postman" # postman for mac
       # "tableplus" # installed via setapp
 
       # Media
