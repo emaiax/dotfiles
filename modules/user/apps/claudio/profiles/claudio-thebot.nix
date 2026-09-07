@@ -105,9 +105,14 @@ in
     # race it. `fj auth list` is the idempotency check so re-running this doesn't re-add the token every call.
     "${identityBinDir}/fj" = {
       source = pkgs.writeShellScript "claudio-identity-fj" ''
+        set -euo pipefail
         if [[ -n "''${CLAUDIO_THEBOT_SESSION:-}" ]]; then
           export HOME="${home}/${fjIdentityHome}"
           if ! ${pkgs.forgejo-cli}/bin/fj auth list 2>/dev/null | grep -qx "${fjHost}"; then
+            if [[ ! -s "${fjTokenPath}" ]]; then
+              echo "claudio-identity-fj: token not ready at ${fjTokenPath} (sops-nix decrypt still pending?)" >&2
+              exit 1
+            fi
             ${pkgs.forgejo-cli}/bin/fj auth add-token --host "${fjHost}" < "${fjTokenPath}"
           fi
           exec ${pkgs.forgejo-cli}/bin/fj "$@"
@@ -120,12 +125,21 @@ in
 
     # gh reads GH_TOKEN straight from the environment (its own documented headless-auth path), so unlike fj
     # nothing needs to be persisted to gh's own config store. The token is exported fresh on every call.
+    # Not a mkIdentityWrapper: needs to fail loudly, not export an empty GH_TOKEN, if sops-nix's secret
+    # hasn't decrypted yet (same async-LaunchAgent race as fj's bootstrap above).
     "${identityBinDir}/gh" = {
-      source = mkIdentityWrapper {
-        name = "claudio-identity-gh";
-        activeExec = ''env GH_CONFIG_DIR=${home}/${ghIdentityConfigDir} GH_TOKEN="$(cat ${ghTokenPath})" ${pkgs.gh}/bin/gh'';
-        passiveExec = "${pkgs.gh}/bin/gh";
-      };
+      source = pkgs.writeShellScript "claudio-identity-gh" ''
+        set -euo pipefail
+        if [[ -n "''${CLAUDIO_THEBOT_SESSION:-}" ]]; then
+          if [[ ! -s "${ghTokenPath}" ]]; then
+            echo "claudio-identity-gh: token not ready at ${ghTokenPath} (sops-nix decrypt still pending?)" >&2
+            exit 1
+          fi
+          exec env GH_CONFIG_DIR="${home}/${ghIdentityConfigDir}" GH_TOKEN="$(cat "${ghTokenPath}")" ${pkgs.gh}/bin/gh "$@"
+        else
+          exec ${pkgs.gh}/bin/gh "$@"
+        fi
+      '';
       executable = true;
     };
   };
