@@ -107,10 +107,12 @@ in
     # fj has no env-var token override (unlike gh's GH_TOKEN), so the only non-interactive way in is
     # `fj auth add-token < token-file` against its isolated $HOME. Bootstraps itself from the sops secret on
     # first use instead of a home.activation script, since sops-nix decrypts secrets via an async LaunchAgent
-    # on Darwin (see modules/user/sops) and an activation-time write would race it. The marker file (not
-    # `fj auth list`) is the fast-path idempotency check on every call after the first; `fj auth list | grep`
-    # only runs once per fresh isolated $HOME, to self-heal if it was ever wiped without the marker surviving
-    # (they live in the same directory, so in practice they're wiped together).
+    # on Darwin (see modules/user/sops) and an activation-time write would race it. The marker file is the
+    # idempotency check on every call after the first; no fallback re-check against `fj auth list` if the
+    # marker goes missing without the auth store also going missing, since they live in the same directory
+    # and are wiped together in practice. Claude Code fires parallel Bash tool calls, so two `fj` invocations
+    # can both reach this bootstrap before the marker exists; `mkdir` is atomic and needs no extra package, so
+    # it doubles as the lock serializing them.
     "${identityBinDir}/fj" = {
       source = mkIdentityWrapper {
         name = "claudio-identity-fj";
@@ -118,14 +120,19 @@ in
           export HOME="${home}/${fjIdentityHome}"
           marker="$HOME/.claudio-thebot-fj-authenticated"
           if [[ ! -e "$marker" ]]; then
-            if ! ${pkgs.forgejo-cli}/bin/fj auth list 2>/dev/null | grep -qx "${fjHost}"; then
+            lockdir="$HOME/.claudio-thebot-fj-auth.lock"
+            trap 'rmdir "$lockdir" 2>/dev/null || true' EXIT
+            until mkdir "$lockdir" 2>/dev/null; do sleep 0.1; done
+            if [[ ! -e "$marker" ]]; then
               if [[ ! -s "${fjTokenPath}" ]]; then
                 echo "claudio-identity-fj: token not ready at ${fjTokenPath} (sops-nix decrypt still pending?)" >&2
                 exit 1
               fi
               ${pkgs.forgejo-cli}/bin/fj auth add-token --host "${fjHost}" < "${fjTokenPath}"
+              touch "$marker"
             fi
-            touch "$marker"
+            rmdir "$lockdir"
+            trap - EXIT
           fi
           exec ${pkgs.forgejo-cli}/bin/fj "$@"
         '';
@@ -146,7 +153,7 @@ in
             echo "claudio-identity-gh: token not ready at ${ghTokenPath} (sops-nix decrypt still pending?)" >&2
             exit 1
           fi
-          exec env GH_CONFIG_DIR="${home}/${ghIdentityConfigDir}" GH_TOKEN="$(cat "${ghTokenPath}")" ${pkgs.gh}/bin/gh "$@"
+          exec env GH_CONFIG_DIR="${home}/${ghIdentityConfigDir}" GH_TOKEN="$(<"${ghTokenPath}")" ${pkgs.gh}/bin/gh "$@"
         '';
         passive = "${pkgs.gh}/bin/gh";
       };
@@ -162,22 +169,14 @@ in
       text = ''
         export PATH="${home}/${identityBinDir}:$PATH"
 
-        # Catches a shell that shadows git/fj/gh ahead of identity-bin (e.g. a devshell listing them in its
-        # own nativeBuildInputs): fail loudly instead of silently publishing as the operator for the whole
-        # session. Does NOT catch a session that sets CLAUDIO_THEBOT_SESSION directly (e.g. a target repo's
-        # own .claude/settings.json) without going through this launcher — that path never runs this check,
-        # since it never runs this script at all; it must separately put identity-bin ahead on its own PATH.
-        for bin in git fj gh; do
-          resolved="$(command -v "$bin")"
-          case "$resolved" in
-            "${home}/${identityBinDir}"/*) ;;
-            *)
-              echo "claudio-thebot: $bin resolved to $resolved, not the identity wrapper — refusing to start under the wrong identity" >&2
-              exit 1
-              ;;
-          esac
-        done
-
+        # No runtime check here can catch a devshell shadowing git/fj/gh ahead of identity-bin: that
+        # shadowing, if it happens, happens in a later Bash tool call the running claude session makes, in a
+        # separate shell invocation, after this script has already exec'd claude. A `command -v` check right
+        # here would only confirm the PATH prepend on the line above took effect in this process, which is
+        # guaranteed by construction and proves nothing about later calls. Known limitation, not enforced
+        # anywhere: a target repo that sets CLAUDIO_THEBOT_SESSION=1 itself (e.g. its own
+        # .claude/settings.json), bypassing this launcher, must independently put identity-bin ahead on its
+        # own PATH.
         exec env CLAUDIO_THEBOT_SESSION=1 claude --settings ${settingsFile} ${claudioCoreArgs} "$@"
       '';
     })
