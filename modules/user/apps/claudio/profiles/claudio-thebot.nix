@@ -24,6 +24,10 @@ let
   fjIdentityHome = "${claudioState}/fj-identity";
   ghIdentityConfigDir = "${claudioState}/gh-identity";
 
+  fjHost = "forgejo.emx.casa";
+  fjTokenPath = config.sops.secrets."claudio-thebot-fj-token".path;
+  ghTokenPath = config.sops.secrets."claudio-thebot-gh-token".path;
+
   mkIdentityWrapper =
     {
       name,
@@ -59,6 +63,18 @@ let
   '';
 in
 {
+  sops.secrets = {
+    "claudio-thebot-fj-token" = {
+      key = "fj-token";
+      sopsFile = ./claudio-thebot.enc.yaml;
+
+    };
+    "claudio-thebot-gh-token" = {
+      key = "gh-token";
+      sopsFile = ./claudio-thebot.enc.yaml;
+    };
+  };
+
   home.file = {
     "${claudioState}/git-identity.gitconfig".text = ''
       [user]
@@ -82,19 +98,32 @@ in
       executable = true;
     };
 
+    # Not a mkIdentityWrapper: fj has no env-var token override (unlike gh's GH_TOKEN), so the only
+    # non-interactive way in is `fj auth add-token < token-file` against its isolated $HOME. Bootstraps
+    # itself from the sops secret on first use instead of a home.activation script, since sops-nix decrypts
+    # secrets via an async LaunchAgent on Darwin (see modules/user/sops) and an activation-time write would
+    # race it. `fj auth list` is the idempotency check so re-running this doesn't re-add the token every call.
     "${identityBinDir}/fj" = {
-      source = mkIdentityWrapper {
-        name = "claudio-identity-fj";
-        activeExec = "env HOME=${home}/${fjIdentityHome} ${pkgs.forgejo-cli}/bin/fj";
-        passiveExec = "${pkgs.forgejo-cli}/bin/fj";
-      };
+      source = pkgs.writeShellScript "claudio-identity-fj" ''
+        if [[ -n "''${CLAUDIO_THEBOT_SESSION:-}" ]]; then
+          export HOME="${home}/${fjIdentityHome}"
+          if ! ${pkgs.forgejo-cli}/bin/fj auth list 2>/dev/null | grep -qx "${fjHost}"; then
+            ${pkgs.forgejo-cli}/bin/fj auth add-token --host "${fjHost}" < "${fjTokenPath}"
+          fi
+          exec ${pkgs.forgejo-cli}/bin/fj "$@"
+        else
+          exec ${pkgs.forgejo-cli}/bin/fj "$@"
+        fi
+      '';
       executable = true;
     };
 
+    # gh reads GH_TOKEN straight from the environment (its own documented headless-auth path), so unlike fj
+    # nothing needs to be persisted to gh's own config store. The token is exported fresh on every call.
     "${identityBinDir}/gh" = {
       source = mkIdentityWrapper {
         name = "claudio-identity-gh";
-        activeExec = "env GH_CONFIG_DIR=${home}/${ghIdentityConfigDir} ${pkgs.gh}/bin/gh";
+        activeExec = ''env GH_CONFIG_DIR=${home}/${ghIdentityConfigDir} GH_TOKEN="$(cat ${ghTokenPath})" ${pkgs.gh}/bin/gh'';
         passiveExec = "${pkgs.gh}/bin/gh";
       };
       executable = true;
