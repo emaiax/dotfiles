@@ -85,7 +85,7 @@ in
     "${identityBinDir}/fj" = {
       source = mkIdentityWrapper {
         name = "claudio-identity-fj";
-        activeExec = "HOME=${home}/${fjIdentityHome} ${pkgs.forgejo-cli}/bin/fj";
+        activeExec = "env HOME=${home}/${fjIdentityHome} ${pkgs.forgejo-cli}/bin/fj";
         passiveExec = "${pkgs.forgejo-cli}/bin/fj";
       };
       executable = true;
@@ -94,7 +94,7 @@ in
     "${identityBinDir}/gh" = {
       source = mkIdentityWrapper {
         name = "claudio-identity-gh";
-        activeExec = "GH_CONFIG_DIR=${home}/${ghIdentityConfigDir} ${pkgs.gh}/bin/gh";
+        activeExec = "env GH_CONFIG_DIR=${home}/${ghIdentityConfigDir} ${pkgs.gh}/bin/gh";
         passiveExec = "${pkgs.gh}/bin/gh";
       };
       executable = true;
