@@ -35,7 +35,7 @@ let
 
   # Claude Code's installer can leave installed_plugins.json pinned older than what's already cached,
   # breaking every DB write. Bump this to move the pin; the activation below fixes the pointer.
-  claudeMemVersion = "13.15.2";
+  claudeMemVersion = "13.24.1";
 in
 {
   home.activation.claudeCodeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
