@@ -81,8 +81,19 @@ EOF
 
   # thebot overlay shape is asserted in 50-automode.sh (it is purely an autoMode override).
 
+  # claudio-thebot-yolo overlay: exactly {sandbox:{enabled:false}}, same as claude-yolo — the autoMode carve-out
+  # would be dead weight under bypassPermissions (see 50-automode.sh), so it must not ride along.
+  if [[ $(jq -Sc . "${OVERLAY[claudio-thebot-yolo]}") == '{"sandbox":{"enabled":false}}' ]]; then
+    t_record PASS static-overlay-shape claudio-thebot-yolo
+  else
+    t_record FAIL static-overlay-shape claudio-thebot-yolo "overlay is $(jq -Sc . "${OVERLAY[claudio-thebot-yolo]}")"
+  fi
+
   # Wrapper flags: the behavior-defining arguments each wrapper must carry.
   assert_contains static-wrapper-skip-permissions claude-yolo "$(readlink -f "${WRAPPER[claude-yolo]}")" '--dangerously-skip-permissions'
   assert_contains static-wrapper-adddir-context claudio-thebot "$(readlink -f "${WRAPPER[claudio-thebot]}")" "$h/code/claudio"
   assert_contains static-wrapper-adddir-publish claudio-thebot "$(readlink -f "${WRAPPER[claudio-thebot]}")" "$h/code/claudio-thebot/claudio-core"
+  assert_contains static-wrapper-skip-permissions claudio-thebot-yolo "$(readlink -f "${WRAPPER[claudio-thebot-yolo]}")" '--dangerously-skip-permissions'
+  assert_contains static-wrapper-adddir-context claudio-thebot-yolo "$(readlink -f "${WRAPPER[claudio-thebot-yolo]}")" "$h/code/claudio"
+  assert_contains static-wrapper-adddir-publish claudio-thebot-yolo "$(readlink -f "${WRAPPER[claudio-thebot-yolo]}")" "$h/code/claudio-thebot/claudio-core"
 }

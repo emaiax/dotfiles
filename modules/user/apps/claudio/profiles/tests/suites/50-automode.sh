@@ -32,6 +32,10 @@ automode_run() {
   # claude-yolo: bypassPermissions skips auto mode entirely, and the overlay must not pretend otherwise.
   assert_jq automode-overlay-absent claude-yolo "${OVERLAY[claude-yolo]}" 'has("autoMode")' 'false'
 
+  # claudio-thebot-yolo: same bypassPermissions reasoning as claude-yolo — the bot-identity carve-out that
+  # justifies claudio-thebot's autoMode.allow only matters when auto mode is even consulted.
+  assert_jq automode-overlay-absent claudio-thebot-yolo "${OVERLAY[claudio-thebot-yolo]}" 'has("autoMode")' 'false'
+
   # claudio-thebot: exactly one loosening (the bot-identity carve-out for its publish repo), layered as an allow that
   # keeps $defaults first and scopes itself to that one repository.
   assert_jq automode-thebot-allow-count claudio-thebot "${OVERLAY[claudio-thebot]}" '.autoMode.allow | length' '2'

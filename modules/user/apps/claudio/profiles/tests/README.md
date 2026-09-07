@@ -1,6 +1,6 @@
 # Profile test suite
 
-AFK test suite for the Claude Code profiles defined in this module: `claude` (default sandboxed), `claudio`, `claudio-thebot`, and `claude-yolo`. Every dynamic case runs identically against all four profiles; per-profile expectations live in `expected/<profile>.tsv`, so the comparison sandboxed × yolo falls out of the same run.
+AFK test suite for the Claude Code profiles defined in this module: `claude` (default sandboxed), `claudio`, `claudio-thebot`, `claude-yolo`, and `claudio-thebot-yolo`. Every dynamic case runs identically against all five profiles; per-profile expectations live in `expected/<profile>.tsv`, so the comparison sandboxed × yolo falls out of the same run.
 
 ## Running
 
@@ -11,7 +11,7 @@ tests/run.sh --profile claude-yolo --case 'gate-*'   # subset
 tests/run.sh --jobs 8        # probe parallelism (default 5)
 ```
 
-Requirements: `jq`, `git`, `nix`, bash >= 5 on PATH (the repo's home-manager env provides all of them). Dynamic probes spawn real headless `claude -p` sessions on the model in `$TESTS_MODEL` (default `haiku`); a full run is ~75 sessions, a few US dollars, 30-45 minutes at the default parallelism.
+Requirements: `jq`, `git`, `nix`, bash >= 5 on PATH (the repo's home-manager env provides all of them). Dynamic probes spawn real headless `claude -p` sessions on the model in `$TESTS_MODEL` (default `haiku`); a full run is ~95 sessions, a few US dollars, 35-50 minutes at the default parallelism.
 
 ## What is tested, and how
 

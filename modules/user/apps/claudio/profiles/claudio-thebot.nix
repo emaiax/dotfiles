@@ -62,6 +62,14 @@ let
 
   settingsFile = (pkgs.formats.json { }).generate "claudio-thebot-settings.json" settings;
 
+  # bypassPermissions skips auto mode entirely (see claude-yolo.nix), so the settings.autoMode carve-out
+  # above would be dead weight here — this overlay is exactly claude-yolo's, `sandbox.enabled = false`, no
+  # more. permissions.deny still holds in every mode, so fj/gh pr merge and release stay blocked same as
+  # everywhere else; see docs/sandbox-notes.md.
+  yoloSettingsFile = (pkgs.formats.json { }).generate "claudio-thebot-yolo-settings.json" {
+    sandbox.enabled = false;
+  };
+
   claudioCoreArgs = ''
     --add-dir "${claudioCore}" \
     --plugin-dir "${claudioCore}" \
@@ -178,6 +186,18 @@ in
         # .claude/settings.json), bypassing this launcher, must independently put identity-bin ahead on its
         # own PATH.
         exec env CLAUDIO_THEBOT_SESSION=1 claude --settings ${settingsFile} ${claudioCoreArgs} "$@"
+      '';
+    })
+
+    # No sandbox, no permission prompts (see claude-yolo.nix for the full trade-off). First interactive run
+    # shows a one-time disclaimer dialog; accept it before ever backgrounding a call, same gotcha as claude-yolo.
+    (pkgs.writeShellApplication {
+      runtimeInputs = [ config.programs.claude-code.package ];
+
+      name = "claudio-thebot-yolo";
+      text = ''
+        export PATH="${home}/${identityBinDir}:$PATH"
+        exec env CLAUDIO_THEBOT_SESSION=1 claude --dangerously-skip-permissions --settings ${yoloSettingsFile} ${claudioCoreArgs} "$@"
       '';
     })
   ];
