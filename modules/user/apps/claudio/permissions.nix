@@ -306,12 +306,13 @@ let
 
     bash = {
       "*" = "allow";
-    }
-    // builtins.listToAttrs (
-      map (opencodePrefixRule "ask") policy.commands.ask
-      ++ map (opencodePrefixRule "deny") (policy.commands.denyHard ++ policy.commands.denySoft)
-      ++ map (opencodeExactRule "ask") policy.commands.askExact
-    );
+
+    #  } // builtins.listToAttrs (
+    #    map (opencodePrefixRule "ask") policy.commands.ask
+    #    ++ map (opencodePrefixRule "deny") (policy.commands.denyHard ++ policy.commands.denySoft)
+    #    ++ map (opencodeExactRule "ask") policy.commands.askExact
+    #  );
+    };
   };
 in
 {
