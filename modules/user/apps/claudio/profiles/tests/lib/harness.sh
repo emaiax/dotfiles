@@ -10,7 +10,7 @@ set -euo pipefail
 
 # Consumed by run.sh after sourcing.
 # shellcheck disable=SC2034
-PROFILES=(claude claudio claudio-thebot claude-yolo)
+PROFILES=(claude claudio claudio-thebot claude-yolo claudio-thebot-yolo)
 
 _color() {
   local code=$1

@@ -62,6 +62,11 @@ let
 
   settingsFile = (pkgs.formats.json { }).generate "claudio-thebot-settings.json" settings;
 
+  # bypassPermissions skips auto mode entirely
+  yoloSettingsFile = (pkgs.formats.json { }).generate "claudio-thebot-yolo-settings.json" {
+    sandbox.enabled = false;
+  };
+
   claudioCoreArgs = ''
     --add-dir "${claudioCore}" \
     --plugin-dir "${claudioCore}" \
@@ -104,36 +109,32 @@ in
       executable = true;
     };
 
-    # fj has no env-var token override (unlike gh's GH_TOKEN), so the only non-interactive way in is
-    # `fj auth add-token < token-file` against its isolated $HOME. Bootstraps itself from the sops secret on
-    # first use instead of a home.activation script, since sops-nix decrypts secrets via an async LaunchAgent
-    # on Darwin (see modules/user/sops) and an activation-time write would race it. The marker file is the
-    # idempotency check on every call after the first; no fallback re-check against `fj auth list` if the
-    # marker goes missing without the auth store also going missing, since they live in the same directory
-    # and are wiped together in practice. Claude Code fires parallel Bash tool calls, so two `fj` invocations
-    # can both reach this bootstrap before the marker exists; `mkdir` is atomic and needs no extra package, so
-    # it doubles as the lock serializing them.
     "${identityBinDir}/fj" = {
       source = mkIdentityWrapper {
         name = "claudio-identity-fj";
         active = ''
           export HOME="${home}/${fjIdentityHome}"
           marker="$HOME/.claudio-thebot-fj-authenticated"
+
           if [[ ! -e "$marker" ]]; then
             lockdir="$HOME/.claudio-thebot-fj-auth.lock"
             trap 'rmdir "$lockdir" 2>/dev/null || true' EXIT
             until mkdir "$lockdir" 2>/dev/null; do sleep 0.1; done
+
             if [[ ! -e "$marker" ]]; then
               if [[ ! -s "${fjTokenPath}" ]]; then
                 echo "claudio-identity-fj: token not ready at ${fjTokenPath} (sops-nix decrypt still pending?)" >&2
                 exit 1
               fi
+
               ${pkgs.forgejo-cli}/bin/fj auth add-token --host "${fjHost}" < "${fjTokenPath}"
               touch "$marker"
             fi
+
             rmdir "$lockdir"
             trap - EXIT
           fi
+
           exec ${pkgs.forgejo-cli}/bin/fj "$@"
         '';
         passive = "${pkgs.forgejo-cli}/bin/fj";
@@ -141,10 +142,6 @@ in
       executable = true;
     };
 
-    # gh reads GH_TOKEN straight from the environment (its own documented headless-auth path), so unlike fj
-    # nothing needs to be persisted to gh's own config store. The token is exported fresh on every call.
-    # Fails loudly instead of exporting an empty GH_TOKEN if sops-nix's secret hasn't decrypted yet (same
-    # async-LaunchAgent race as fj's bootstrap above).
     "${identityBinDir}/gh" = {
       source = mkIdentityWrapper {
         name = "claudio-identity-gh";
@@ -153,6 +150,7 @@ in
             echo "claudio-identity-gh: token not ready at ${ghTokenPath} (sops-nix decrypt still pending?)" >&2
             exit 1
           fi
+
           exec env GH_CONFIG_DIR="${home}/${ghIdentityConfigDir}" GH_TOKEN="$(<"${ghTokenPath}")" ${pkgs.gh}/bin/gh "$@"
         '';
         passive = "${pkgs.gh}/bin/gh";
@@ -169,15 +167,26 @@ in
       text = ''
         export PATH="${home}/${identityBinDir}:$PATH"
 
-        # No runtime check here can catch a devshell shadowing git/fj/gh ahead of identity-bin: that
-        # shadowing, if it happens, happens in a later Bash tool call the running claude session makes, in a
-        # separate shell invocation, after this script has already exec'd claude. A `command -v` check right
-        # here would only confirm the PATH prepend on the line above took effect in this process, which is
-        # guaranteed by construction and proves nothing about later calls. Known limitation, not enforced
-        # anywhere: a target repo that sets CLAUDIO_THEBOT_SESSION=1 itself (e.g. its own
-        # .claude/settings.json), bypassing this launcher, must independently put identity-bin ahead on its
-        # own PATH.
-        exec env CLAUDIO_THEBOT_SESSION=1 claude --settings ${settingsFile} ${claudioCoreArgs} "$@"
+        exec env CLAUDIO_THEBOT_SESSION=1 claude \
+          --settings ${settingsFile} \
+          ${claudioCoreArgs} \
+          "$@"
+      '';
+    })
+
+    # no sandbox, no permission prompts
+    (pkgs.writeShellApplication {
+      runtimeInputs = [ config.programs.claude-code.package ];
+
+      name = "claudio-thebot-yolo";
+      text = ''
+        export PATH="${home}/${identityBinDir}:$PATH"
+
+        exec env CLAUDIO_THEBOT_SESSION=1 claude \
+          --dangerously-skip-permissions \
+          --settings ${yoloSettingsFile} \
+          ${claudioCoreArgs} \
+          "$@"
       '';
     })
   ];

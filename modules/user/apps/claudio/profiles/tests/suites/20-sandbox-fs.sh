@@ -42,7 +42,7 @@ fs_run_case() {
     fs-write-keychain)
       # Branch reverted the keychain allowWrite; skip if the active base still grants it (stale config), the revert
       # itself is asserted statically (static-no-allowwrite-keychains).
-      if [[ $profile != claude-yolo ]] && skip_if_base_drift "$case_id" "$profile" \
+      if [[ $profile != claude-yolo && $profile != claudio-thebot-yolo ]] && skip_if_base_drift "$case_id" "$profile" \
         ".sandbox.filesystem.allowWrite | index(\"$HOME/Library/Keychains\") != null" \
         "active base still grants the reverted Keychains allowWrite; re-run after just switch"; then
         return 0
