@@ -43,8 +43,8 @@ let
       ];
 
       # Reversible, so these become prose in auto-mode.nix's soft_deny, which claudio-thebot can carve an
-      # exception out of, and only claudeCode.permissions.deny renders them that way. OpenCode has no classifier,
-      # so opencode.permission.bash renders denyHard and denySoft both as plain denies.
+      # exception out of, and only claudeCode.permissions.deny renders them that way. OpenCode doesn't render
+      # this tier at all: opencode.permission.bash is a flat allow (see permissions.tsv).
       denySoft = [
         "gh pr create"
         "gh pr ready"
@@ -63,12 +63,6 @@ let
         "fj issue edit"
         "fj issue comment"
       ];
-
-      # Derived globs that would widen the rule if applied as a plain prefix. `git checkout --` would become
-      # `git checkout --*`, swallowing `--track` and `--force`. Only opencode.permission.bash consumes this.
-      opencodePatterns = {
-        "git checkout --" = "git checkout -- *";
-      };
 
       # docker doesn't compose with the sandbox; gh/fj fail cert validation under it (trustd mach-lookup
       # blocked). Excluded commands run fully unwrapped: a hole, not a containment. Each needs a glob (bare
@@ -230,19 +224,6 @@ let
     "Edit(//${claudeCodeAbsRule path}/**)"
   ];
 
-  # OpenCode has no ask/deny split by classifier, so denyHard and denySoft both render as plain denies here.
-  # last-matching-rule-wins, evaluated in *declaration* order: Nix attrsets don't preserve that order when
-  # serialized to JSON (keys come out alphabetical), so every rule after the "*" catch-all has to be pinned with
-  # entryAfter or it can silently reorder ahead of it.
-  opencodePrefixRule = action: cmd: {
-    name = policy.commands.opencodePatterns.${cmd} or "${cmd}*";
-    value = lib.hm.dag.entryAfter [ "*" ] action;
-  };
-  opencodeExactRule = action: cmd: {
-    name = cmd;
-    value = lib.hm.dag.entryAfter [ "*" ] action;
-  };
-
   # programs.claude-code.settings.permissions: the native Read/Edit/Bash gate, ask/deny hold in every mode,
   # unlike allow and autoMode.
   mkClaudeCodePermissions =
@@ -306,12 +287,6 @@ let
 
     bash = {
       "*" = "allow";
-
-    #  } // builtins.listToAttrs (
-    #    map (opencodePrefixRule "ask") policy.commands.ask
-    #    ++ map (opencodePrefixRule "deny") (policy.commands.denyHard ++ policy.commands.denySoft)
-    #    ++ map (opencodeExactRule "ask") policy.commands.askExact
-    #  );
     };
   };
 in
