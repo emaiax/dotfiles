@@ -121,7 +121,7 @@ Structural line breaks are fine and expected:
 Judge by the artifact the text ends up in, not by the file that produces it:
 
 - A heredoc, string literal, or template that builds a commit body, PR body, or doc produces prose. Its output is the artifact, so it must not be wrapped, even though it lives inside a script
-- A comment in source code is part of the code, not a prose artifact. Comments wrap at 120 columns, or at the project's own limit when it sets one
+- A comment in source code is not part of the code: it's a brief explanation of why that piece exists, at most 2 lines of 120 characters each
 
 The test: does the text get rendered by markdown or git, or does it get read inside the source file? Rendered means no wrap. Read in place means wrap.
 
