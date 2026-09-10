@@ -1,5 +1,5 @@
-# The `claudio-thebot` profile: publishes into claudio-core, layered over the base settings via `--settings`
-# (see #121). Adds `--add-dir` since it can be invoked from anywhere, not just from inside the target repos,
+# The `claudio-thebot` profile: publishes into claudio-core, layered over the base settings via `--settings`.
+# Adds `--add-dir` since it can be invoked from anywhere, not just from inside the target repos,
 # and Read/Edit/Write only see the launch cwd by default. `--plugin-dir` loads claudio-core's own skills/ on
 # top of the operator's base CLAUDIO persona, namespaced as `claudio-core:<skill-name>` (claudio-core carries
 # a `.claude-plugin/plugin.json` manifest for exactly this).

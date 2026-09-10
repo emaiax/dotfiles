@@ -1,10 +1,10 @@
 # The `claude-yolo` profile: no Seatbelt sandbox, no permission prompts, layered over the default profile via
-# `--settings` (see #121) plus `--dangerously-skip-permissions`. Doesn't opt into permissions.nix's
-# `hardDenyRules` either, unlike claudio/claudio-thebot; see sandbox-notes.md for what every trade-off costs.
+# `--settings` plus `--dangerously-skip-permissions`. Doesn't opt into permissions.nix's `hardDenyRules`
+# either, unlike claudio/claudio-thebot; see sandbox-notes.md for what every trade-off costs.
 #
 # First interactive run shows a one-time disclaimer dialog (accepted state saved to user settings, asked once
-# per machine); until then a backgrounded run (--bg) is refused outright, same gotcha as #93. Accept it
-# interactively before ever backgrounding one.
+# per machine); until then a backgrounded run (--bg) is refused outright. Accept it interactively before ever
+# backgrounding one.
 {
   config,
   pkgs,

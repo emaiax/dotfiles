@@ -1,4 +1,4 @@
-# Claude Code: settings generation, the Seatbelt sandbox (see #121, #126), and the auto-mode classifier config,
+# Claude Code: settings generation, the Seatbelt sandbox, and the auto-mode classifier config,
 # all in one file since nothing else contributes to programs.claude-code.settings. Background/investigation
 # notes on the sandbox specifically: ../docs/sandbox-notes.md.
 {

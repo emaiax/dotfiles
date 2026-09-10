@@ -1,4 +1,4 @@
-# The `claudio` profile: Obsidian vault work, layered over the base settings via `--settings` (see #121).
+# The `claudio` profile: Obsidian vault work, layered over the base settings via `--settings`.
 # Otherwise identical to the default profile, this only adds the vault socket.
 #
 # No vault path below on purpose: the vault is reached only through obsidian-cli, so Obsidian.app does the file
