@@ -108,13 +108,8 @@ in
   programs.claude-code = {
     enable = true;
 
-    # No bare `claude` on PATH: every invocation must go through an explicit profile wrapper (claudio,
-    # claudio-thebot, claude-yolo, claudio-thebot-yolo), each of which decides for itself whether to add
-    # `perms.hardDenyRules` back via `--settings`. An unwrapped `claude` would otherwise inherit whatever
-    # `~/.claude/settings.json` has directly, with no `--settings` file of its own to opt into that tier.
-    # `package = null` drops `finalPackage` from `home.packages`, the only thing that put a bare `claude`
-    # on PATH; `config.programs.claude-code.package` becomes null too, so every consumer below and in the
-    # profile wrappers references `pkgs.claude-code` directly instead.
+    # No bare `claude` on PATH (see sandbox-notes.md): every invocation goes through a profile wrapper,
+    # which references `pkgs.claude-code` directly since this drops `config.programs.claude-code.package`.
     package = null;
 
     settings = {

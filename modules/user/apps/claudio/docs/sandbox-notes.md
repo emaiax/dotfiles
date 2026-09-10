@@ -45,6 +45,12 @@ No path-format change on our side can fix this, the bug is in how Claude Code co
 
 Trade-off accepted, not mitigated yet: `denyRead` on credential files (`.credentials.json`, `.netrc`, `~/.ssh`, etc.) is part of the filesystem layer too, so it no longer blocks a sandboxed Bash command from reading them, only `permissions.deny`'s `Read`/`Edit` rules still hold, and those don't see Bash. `sandbox.credentials` with `mode: mask` would restore this (on macOS it blocks the read outright, same as `deny`, and survives `filesystem.disabled`), not yet migrated. Revert `disabled = true` and revisit the path-mangling bug directly if upstream fixes #22947.
 
+## No bare `claude` on PATH
+
+`claude-code/default.nix` sets `programs.claude-code.package = null`, which drops `finalPackage` from `home.packages`, the only thing that ever put an unwrapped `claude` binary on PATH. Every consumer that used to reference `config.programs.claude-code.package` (the profile wrappers' `runtimeInputs`, the claude-mem plugin-install activation script) now references `pkgs.claude-code` directly instead, since `config.programs.claude-code.package` is null too once the option is set.
+
+This exists because `permissions.deny` is a monotonic union across every settings source Claude Code loads: nothing can remove a deny that a lower-precedence file declares, not even `--dangerously-skip-permissions` (confirmed against code.claude.com/docs/en/settings.md and permission-modes.md). Once `hardDenyRules` (`fj`/`gh` pr merge and release, see `permissions.nix`) moved out of the shared base to let `claude-yolo`/`claudio-thebot-yolo` opt out of it, an unwrapped `claude` would have inherited that same permissive base with no `--settings` file of its own to opt back into the tier. Removing the bare binary closes that gap: every invocation now goes through an explicit profile wrapper, each of which decides for itself.
+
 ## `claude-yolo`: what it actually trades away
 
 `sandbox.enabled = false` is enough on its own: with the sandbox off, none of the base profile's other `sandbox.*` keys do anything, so this profile doesn't replicate any of them.

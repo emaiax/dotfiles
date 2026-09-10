@@ -61,17 +61,15 @@ let
       ''
     ];
 
-    # This is an "auto" profile, not the yolo one below: opt back into the irreversible-command tier
-    # permissions.nix keeps out of the shared base. See the comment above `denyHard` in permissions.nix's
-    # `policy.commands`.
+    # This is an "auto" profile (not the yolo one below): opts back into permissions.nix's `hardDenyRules`.
+    # See the comment above `denyHard` in permissions.nix's `policy.commands` for why this is opt-in.
     permissions.deny = perms.hardDenyRules;
   };
 
   settingsFile = (pkgs.formats.json { }).generate "claudio-thebot-settings.json" settings;
 
-  # bypassPermissions skips auto mode entirely, and this profile deliberately doesn't re-add
-  # `perms.hardDenyRules` either: merging and publishing releases here is gated by a real PR review
-  # approval instead (dudumox's docs/guidelines/how-to-work.md "What authorizes a merge"), not by this.
+  # bypassPermissions skips auto mode entirely. This profile also doesn't opt into `hardDenyRules`: merge
+  # and release approval here comes from a real PR review instead (see sandbox-notes.md's `claude-yolo` note).
   yoloSettingsFile = (pkgs.formats.json { }).generate "claudio-thebot-yolo-settings.json" {
     sandbox.enabled = false;
   };

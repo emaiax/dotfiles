@@ -34,16 +34,8 @@ let
       # Matched literally rather than as a prefix.
       askExact = [ "git checkout ." ];
 
-      # Irreversible. Deny is a monotonic union across every settings source Claude Code loads (no
-      # `--settings` file can remove a deny inherited from `~/.claude/settings.json`, confirmed against
-      # code.claude.com/docs/en/settings.md), so this list is kept OUT of the shared base rendered into
-      # `~/.claude/settings.json` (mkClaudeCodePermissions below) and instead exposed as `hardDenyRules`,
-      # which each "auto"-mode profile (claudio, claudio-thebot) adds back via its own `--settings` file.
-      # The yolo profiles (claudio-yolo, claudio-thebot-yolo) deliberately don't add it back: merging and
-      # publishing releases there is gated by a real approval elsewhere instead (dudumox's
-      # docs/guidelines/how-to-work.md "What authorizes a merge"). There is no bare, unwrapped `claude` on
-      # PATH to leave a gap: `programs.claude-code.package = null` in claude-code/default.nix suppresses it,
-      # so every invocation goes through one of these profiles.
+      # Irreversible. Deny unions across every settings source (a `--settings` file can't remove one), so
+      # this stays out of the shared base; `hardDenyRules` below lets each profile opt into it individually.
       denyHard = [
         "gh pr merge"
         "gh release"

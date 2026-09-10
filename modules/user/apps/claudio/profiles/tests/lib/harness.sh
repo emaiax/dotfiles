@@ -8,9 +8,8 @@ set -euo pipefail
 : "${TESTS_ROOT:?harness.sh needs TESTS_ROOT}"
 : "${RESULTS_DIR:?harness.sh needs RESULTS_DIR}"
 
-# Consumed by run.sh after sourcing. No bare "claude" profile: claude-code/default.nix sets
-# `programs.claude-code.package = null`, so there's no unwrapped `claude` on PATH to test anymore
-# (2026-09-10, hardDenyRules going opt-in per profile). Every invocation goes through one of these.
+# Consumed by run.sh after sourcing. No bare "claude" profile: claude-code/default.nix drops it from PATH
+# (permissions.nix's hardDenyRules going opt-in per profile), so every invocation goes through one of these.
 # shellcheck disable=SC2034
 PROFILES=(claudio claudio-thebot claude-yolo claudio-thebot-yolo)
 
