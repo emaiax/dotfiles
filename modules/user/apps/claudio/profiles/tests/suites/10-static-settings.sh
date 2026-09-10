@@ -81,9 +81,12 @@ EOF
 
   # thebot overlay shape is asserted in 50-automode.sh (it is purely an autoMode override).
 
-  # claudio-thebot-yolo overlay: exactly {sandbox:{enabled:false}}, same as claude-yolo — the autoMode carve-out
-  # would be dead weight under bypassPermissions (see 50-automode.sh), so it must not ride along.
-  if [[ $(jq -Sc . "${OVERLAY[claudio-thebot-yolo]}") == '{"sandbox":{"enabled":false}}' ]]; then
+  # claudio-thebot-yolo overlay: {sandbox:{enabled:false}} plus an explicit push allow, same autoMode
+  # exclusion as claude-yolo (the carve-out would be dead weight under bypassPermissions, see 50-automode.sh).
+  # The push allow exists because permissions.ask from the shared base still prompts interactively even under
+  # --dangerously-skip-permissions (verified 2026-09-10); this profile is meant to run unattended against its
+  # own repo, so it opts out of that specific prompt here.
+  if [[ $(jq -Sc . "${OVERLAY[claudio-thebot-yolo]}") == '{"permissions":{"allow":["Bash(git push:*)","Bash(rtk git push:*)"]},"sandbox":{"enabled":false}}' ]]; then
     t_record PASS static-overlay-shape claudio-thebot-yolo
   else
     t_record FAIL static-overlay-shape claudio-thebot-yolo "overlay is $(jq -Sc . "${OVERLAY[claudio-thebot-yolo]}")"

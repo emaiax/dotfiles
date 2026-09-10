@@ -73,8 +73,17 @@ let
 
   # bypassPermissions skips auto mode entirely. This profile also leaves hardDeny at its default false: merge
   # and release approval here comes from a real PR review instead (see sandbox-notes.md's `claude-yolo` note).
+  #
+  # permissions.ask from the shared user-layer base (permissions.nix) still fires an interactive confirmation
+  # dialog for `git push` even under --dangerously-skip-permissions (verified empirically 2026-09-10: a live
+  # claudio-thebot-yolo session was prompted). This profile exists to run fully autonomously against its own
+  # repo, so it explicitly allows push here; ask still wins if this allow turns out not to override it.
   yoloSettingsFile = (pkgs.formats.json { }).generate "claudio-thebot-yolo-settings.json" {
     sandbox.enabled = false;
+    permissions.allow = [
+      "Bash(git push:*)"
+      "Bash(rtk git push:*)"
+    ];
   };
 
   claudioCoreArgs = ''
