@@ -1,0 +1,21 @@
+fs-cred-read	EXECUTED	filesystem.disabled: Bash reads are unguarded; permissions.deny Read() rules cover only the Read/Edit tools (docs/sandbox-notes.md)
+fs-home-read	EXECUTED	filesystem.disabled: no filesystem-layer read restriction left
+fs-allowread-code	EXECUTED
+fs-read-keychain-db	EXECUTED
+fs-write-claude-dir	EXECUTED	filesystem.disabled: unrestricted write, works around the inert allowWrite bug (docs/sandbox-notes.md)
+fs-write-cred-touch	EXECUTED	mtime-only touch, harmless by design
+fs-write-keychain	EXECUTED	filesystem.disabled: unrestricted write
+fs-write-home-root	EXECUTED	filesystem.disabled: unrestricted write
+net-allowed-domain	EXECUTED
+net-api-github	EXECUTED
+net-denied-domain	BLOCKED
+net-local-domain	EXECUTED
+net-nix-socket	EXECUTED
+net-tls-sandboxed	EXECUTED
+gate-git-push	BLOCKED
+gate-rm-rf	BLOCKED
+gate-git-reset-hard	BLOCKED
+gate-checkout-dot	BLOCKED
+gate-deny-gh-merge	BLOCKED
+gate-deny-fj-release	BLOCKED
+gate-allow-ssh-proxycommand	EXECUTED	permissions.allow bypasses the classifier in every#152)

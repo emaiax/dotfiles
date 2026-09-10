@@ -8,10 +8,9 @@ set -euo pipefail
 : "${TESTS_ROOT:?harness.sh needs TESTS_ROOT}"
 : "${RESULTS_DIR:?harness.sh needs RESULTS_DIR}"
 
-# Consumed by run.sh after sourcing. No bare "claude" profile: claude-code/default.nix drops it from PATH
-# (mkClaudeCodePermissions's hardDeny arg is opt-in per profile), so every invocation goes through one of these.
+# Consumed by run.sh after sourcing.
 # shellcheck disable=SC2034
-PROFILES=(claudio claudio-thebot claude-yolo claudio-thebot-yolo)
+PROFILES=(claude claudio claudio-thebot claude-yolo claudio-thebot-yolo)
 
 _color() {
   local code=$1

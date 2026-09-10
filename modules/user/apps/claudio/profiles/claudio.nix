@@ -37,7 +37,7 @@ in
   home.packages = [
     (pkgs.writeShellApplication {
       name = "claudio";
-      runtimeInputs = [ pkgs.claude-code ];
+      runtimeInputs = [ config.programs.claude-code.package ];
       text = ''
         exec claude --settings ${settingsFile} "$@"
       '';

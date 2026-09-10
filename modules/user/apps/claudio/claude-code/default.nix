@@ -56,7 +56,7 @@ in
 
     if [[ ! -d "$targetDir" ]]; then
       echo "[claude-mem] ${claudeMemVersion} not in cache, running claude plugin install" >&2
-      "${pkgs.claude-code}/bin/claude" plugin install claude-mem@thedotmack -s user -y >/dev/null 2>&1 || true
+      "${config.programs.claude-code.package}/bin/claude" plugin install claude-mem@thedotmack -s user -y >/dev/null 2>&1 || true
     fi
 
     if [[ -d "$targetDir" && -f "$pluginsJson" ]]; then
@@ -107,10 +107,6 @@ in
 
   programs.claude-code = {
     enable = true;
-
-    # No bare `claude` on PATH (see sandbox-notes.md): every invocation goes through a profile wrapper,
-    # which references `pkgs.claude-code` directly since this drops `config.programs.claude-code.package`.
-    package = null;
 
     settings = {
       "$schema" = "https://json.schemastore.org/claude-code-settings.json";

@@ -21,7 +21,7 @@ in
   home.packages = [
     (pkgs.writeShellApplication {
       name = "claude-yolo";
-      runtimeInputs = [ pkgs.claude-code ];
+      runtimeInputs = [ config.programs.claude-code.package ];
       text = ''
         exec claude --dangerously-skip-permissions --settings ${settingsFile} "$@"
       '';

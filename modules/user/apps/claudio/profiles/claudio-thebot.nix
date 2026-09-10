@@ -171,7 +171,7 @@ in
 
   home.packages = [
     (pkgs.writeShellApplication {
-      runtimeInputs = [ pkgs.claude-code ];
+      runtimeInputs = [ config.programs.claude-code.package ];
 
       name = "claudio-thebot";
       text = ''
@@ -186,7 +186,7 @@ in
 
     # no sandbox, no permission prompts
     (pkgs.writeShellApplication {
-      runtimeInputs = [ pkgs.claude-code ];
+      runtimeInputs = [ config.programs.claude-code.package ];
 
       name = "claudio-thebot-yolo";
       text = ''
