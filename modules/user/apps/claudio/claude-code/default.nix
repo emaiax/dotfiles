@@ -38,14 +38,17 @@ let
   claudeMemVersion = "13.15.2";
 in
 {
+  # nix always wins now: a differing existing file gets backed up to .bak first (flake.nix's
+  # backupFileExtension convention), then overwritten, instead of the install being skipped entirely.
   home.activation.claudeCodeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     existing="${claudioPath}/claude-code/settings.json"
 
-    if [[ ! -e "$existing" ]]; then
-      install -Dm644 ${claudeSettingsJson} "$existing"
-    elif ! diff -q ${claudeSettingsJson} "$existing" >/dev/null; then
-      echo "[claude-code] settings has local changes, skipping it: $existing" >&2
+    if [[ -e "$existing" ]] && ! diff -q ${claudeSettingsJson} "$existing" >/dev/null; then
+      cp "$existing" "$existing.bak"
+      echo "[claude-code] settings.json changed, backed up previous content to $existing.bak" >&2
     fi
+
+    install -Dm644 ${claudeSettingsJson} "$existing"
   '';
 
   # Idempotent past claudeMemVersion matching. Install has no version arg, so it just fetches latest;
