@@ -61,14 +61,17 @@ let
       ''
     ];
 
-    # This is an "auto" profile (not the yolo one below): opts back into permissions.nix's `hardDenyRules`.
+    # This is an "auto" profile (not the yolo one below): hardDeny = true opts into the irreversible tier.
     # See the comment above `denyHard` in permissions.nix's `policy.commands` for why this is opt-in.
-    permissions.deny = perms.hardDenyRules;
+    permissions = perms.mkClaudeCodePermissions {
+      inherit (perms) policy;
+      hardDeny = true;
+    };
   };
 
   settingsFile = (pkgs.formats.json { }).generate "claudio-thebot-settings.json" settings;
 
-  # bypassPermissions skips auto mode entirely. This profile also doesn't opt into `hardDenyRules`: merge
+  # bypassPermissions skips auto mode entirely. This profile also leaves hardDeny at its default false: merge
   # and release approval here comes from a real PR review instead (see sandbox-notes.md's `claude-yolo` note).
   yoloSettingsFile = (pkgs.formats.json { }).generate "claudio-thebot-yolo-settings.json" {
     sandbox.enabled = false;

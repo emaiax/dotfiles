@@ -23,9 +23,12 @@ let
       network.allowUnixSockets = [ obsidianSocket ];
     };
 
-    # This is an "auto" profile, not a yolo one: opt back into the irreversible-command tier permissions.nix
-    # keeps out of the shared base. See the comment above `denyHard` in permissions.nix's `policy.commands`.
-    permissions.deny = perms.hardDenyRules;
+    # This is an "auto" profile (not a yolo one): hardDeny = true opts into the irreversible-command tier.
+    # See the comment above `denyHard` in permissions.nix's `policy.commands` for why this is opt-in.
+    permissions = perms.mkClaudeCodePermissions {
+      inherit (perms) policy;
+      hardDeny = true;
+    };
   };
 
   settingsFile = (pkgs.formats.json { }).generate "claudio-settings.json" settings;

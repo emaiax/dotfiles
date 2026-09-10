@@ -35,7 +35,7 @@ let
       askExact = [ "git checkout ." ];
 
       # Irreversible. Deny unions across every settings source (a `--settings` file can't remove one), so
-      # this stays out of the shared base; `hardDenyRules` below lets each profile opt into it individually.
+      # this stays out of the shared base; mkClaudeCodePermissions's `hardDeny` arg opts a profile into it.
       denyHard = [
         "gh pr merge"
         "gh release"
@@ -226,13 +226,21 @@ let
   ];
 
   # programs.claude-code.settings.permissions: the native Read/Edit/Bash gate, ask/deny hold in every mode,
-  # unlike allow and autoMode.
+  # unlike allow and autoMode. `hardDeny` defaults false: see the comment above `denyHard` in
+  # `policy.commands` for why the base call (below) leaves it off, and profiles opt in with `hardDeny = true`.
   mkClaudeCodePermissions =
-    policy:
+    {
+      policy,
+      hardDeny ? false,
+    }:
     let
       credentialDenyRules =
         lib.concatMap claudeCodeFileDenyRules (policy.filesystem.credentials.files ++ credentialBaks)
         ++ lib.concatMap claudeCodeDirDenyRules policy.filesystem.credentials.dirs;
+
+      hardDenyRules = lib.optionals hardDeny (
+        map claudeCodePrefixRule (withRtkTwin policy.commands.denyHard)
+      );
     in
     {
       allow = map claudeCodePrefixRule (withRtkTwin policy.commands.allow);
@@ -241,9 +249,7 @@ let
         map claudeCodePrefixRule (withRtkTwin policy.commands.ask)
         ++ map claudeCodeExactRule (withRtkTwin policy.commands.askExact);
 
-      # denyHard is NOT included here on purpose, see the comment above `denyHard` in `policy.commands`.
-      # Only credential protection is universal; the irreversible-command tier is opt-in per profile.
-      deny = credentialDenyRules;
+      deny = hardDenyRules ++ credentialDenyRules;
     };
 
   # programs.claude-code.settings.sandbox.{bypassSecurityCommands,filesystem,network}: the Seatbelt boundary itself.
@@ -293,14 +299,10 @@ let
   };
 in
 {
-  inherit policy;
-
-  # Opt-in per profile, see the comment above `denyHard` in `policy.commands` for why this isn't folded
-  # into `claudeCode.permissions.deny` by default.
-  hardDenyRules = map claudeCodePrefixRule (withRtkTwin policy.commands.denyHard);
+  inherit policy mkClaudeCodePermissions;
 
   claudeCode = {
-    permissions = mkClaudeCodePermissions policy;
+    permissions = mkClaudeCodePermissions { inherit policy; };
     sandbox = mkClaudeCodeSandbox policy;
   };
 

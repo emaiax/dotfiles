@@ -9,7 +9,7 @@ set -euo pipefail
 : "${RESULTS_DIR:?harness.sh needs RESULTS_DIR}"
 
 # Consumed by run.sh after sourcing. No bare "claude" profile: claude-code/default.nix drops it from PATH
-# (permissions.nix's hardDenyRules going opt-in per profile), so every invocation goes through one of these.
+# (mkClaudeCodePermissions's hardDeny arg is opt-in per profile), so every invocation goes through one of these.
 # shellcheck disable=SC2034
 PROFILES=(claudio claudio-thebot claude-yolo claudio-thebot-yolo)
 
