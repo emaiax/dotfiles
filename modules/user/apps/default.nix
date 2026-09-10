@@ -1,7 +1,7 @@
 {
   imports = [
     ./agent-jail
-    ./antigravity-cli.nix
+    ./antigravity-cli
     ./claudio
     ./cursor
     ./iterm2
