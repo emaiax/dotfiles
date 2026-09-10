@@ -17,6 +17,8 @@ let
   home = config.home.homeDirectory;
   profile = "claudio-thebot";
 
+  perms = import ../permissions.nix { inherit home lib; };
+
   claudioCore = "${home}/code/${profile}/claudio-core";
   claudioState = ".local/share/${profile}";
 
@@ -58,11 +60,18 @@ let
         presence to the operator does not apply to that repository. It still applies everywhere else.
       ''
     ];
+
+    # This is an "auto" profile, not the yolo one below: opt back into the irreversible-command tier
+    # permissions.nix keeps out of the shared base. See the comment above `denyHard` in permissions.nix's
+    # `policy.commands`.
+    permissions.deny = perms.hardDenyRules;
   };
 
   settingsFile = (pkgs.formats.json { }).generate "claudio-thebot-settings.json" settings;
 
-  # bypassPermissions skips auto mode entirely
+  # bypassPermissions skips auto mode entirely, and this profile deliberately doesn't re-add
+  # `perms.hardDenyRules` either: merging and publishing releases here is gated by a real PR review
+  # approval instead (dudumox's docs/guidelines/how-to-work.md "What authorizes a merge"), not by this.
   yoloSettingsFile = (pkgs.formats.json { }).generate "claudio-thebot-yolo-settings.json" {
     sandbox.enabled = false;
   };
@@ -161,7 +170,7 @@ in
 
   home.packages = [
     (pkgs.writeShellApplication {
-      runtimeInputs = [ config.programs.claude-code.package ];
+      runtimeInputs = [ pkgs.claude-code ];
 
       name = "claudio-thebot";
       text = ''
@@ -176,7 +185,7 @@ in
 
     # no sandbox, no permission prompts
     (pkgs.writeShellApplication {
-      runtimeInputs = [ config.programs.claude-code.package ];
+      runtimeInputs = [ pkgs.claude-code ];
 
       name = "claudio-thebot-yolo";
       text = ''

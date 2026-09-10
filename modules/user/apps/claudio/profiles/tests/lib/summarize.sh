@@ -27,7 +27,7 @@ if [[ $fail -gt 0 ]]; then
   jq -r 'select(.status == "FAIL") | "  \(.profile)/\(.case): \(.detail)"' "$R"
 fi
 
-profiles=(claude claudio claudio-thebot claude-yolo claudio-thebot-yolo)
+profiles=(claudio claudio-thebot claude-yolo claudio-thebot-yolo)
 {
   echo "# Profile suite run $(basename "$RESULTS_DIR")"
   echo

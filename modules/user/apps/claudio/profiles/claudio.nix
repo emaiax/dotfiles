@@ -5,12 +5,15 @@
 # access and nothing here can scope it. Needs Obsidian running.
 {
   config,
+  lib,
   pkgs,
   ...
 }:
 let
   obsidianSocket = "${home}/.obsidian-cli.sock";
   home = config.home.homeDirectory;
+
+  perms = import ../permissions.nix { inherit home lib; };
 
   settings = {
     sandbox = {
@@ -19,6 +22,10 @@ let
       filesystem.allowRead = [ obsidianSocket ];
       network.allowUnixSockets = [ obsidianSocket ];
     };
+
+    # This is an "auto" profile, not a yolo one: opt back into the irreversible-command tier permissions.nix
+    # keeps out of the shared base. See the comment above `denyHard` in permissions.nix's `policy.commands`.
+    permissions.deny = perms.hardDenyRules;
   };
 
   settingsFile = (pkgs.formats.json { }).generate "claudio-settings.json" settings;
@@ -27,7 +34,7 @@ in
   home.packages = [
     (pkgs.writeShellApplication {
       name = "claudio";
-      runtimeInputs = [ config.programs.claude-code.package ];
+      runtimeInputs = [ pkgs.claude-code ];
       text = ''
         exec claude --settings ${settingsFile} "$@"
       '';
