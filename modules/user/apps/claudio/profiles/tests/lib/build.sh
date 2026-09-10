@@ -44,7 +44,7 @@ resolve_artifacts() {
   source "$cache"
 
   local p
-  for p in claude claudio claudio-thebot claude-yolo claudio-thebot-yolo; do
+  for p in claude claudio claudio-thebot claude-yolo; do
     WRAPPER[$p]="$HM_BIN/$p"
     [[ -x ${WRAPPER[$p]} ]] || {
       echo "build.sh: missing wrapper ${WRAPPER[$p]}" >&2
@@ -55,7 +55,7 @@ resolve_artifacts() {
   # The default profile has no overlay; the others carry theirs as a --settings store path baked into the wrapper
   # script.
   OVERLAY[claude]=""
-  for p in claudio claudio-thebot claude-yolo claudio-thebot-yolo; do
+  for p in claudio claudio-thebot claude-yolo; do
     OVERLAY[$p]=$(grep -o -- '--settings /nix/store/[^ ]*' "$(readlink -f "${WRAPPER[$p]}")" | awk '{print $2}')
     [[ -f ${OVERLAY[$p]} ]] || {
       echo "build.sh: could not extract overlay for $p" >&2

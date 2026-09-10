@@ -23,11 +23,12 @@ let
       network.allowUnixSockets = [ obsidianSocket ];
     };
 
-    # This is an "auto" profile (not a yolo one): hardDeny = true opts into the irreversible-command tier.
-    # See the comment above `denyHard` in permissions.nix's `policy.commands` for why this is opt-in.
-    permissions = perms.mkClaudeCodePermissions {
-      inherit (perms) policy;
-      hardDeny = true;
+    # This is an "auto" profile (not the yolo claudio-thebot): perms.claudeCode.user is the full ask/deny
+    # bundle with hardDeny already on (permissions.nix). ask/deny hold in every mode, unlike allow and autoMode.
+    # defaultMode lives here, not in the shared base (claude-code/default.nix): this profile is what opts into
+    # "auto" mode, not every plain `claude` session.
+    permissions = perms.claudeCode.user // {
+      defaultMode = "auto";
     };
   };
 

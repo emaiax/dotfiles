@@ -19,11 +19,11 @@ automode_run() {
   assert_jq automode-softdeny-count base "$base" '.autoMode.soft_deny | length' '2'
   assert_jq automode-softdeny-defaults-first base "$base" '.autoMode.soft_deny[0]' '$defaults'
   assert_jq automode-softdeny-forge-presence base "$base" '.autoMode.soft_deny[1] | contains("theirs to initiate")' 'true'
-  # The forge-presence rule must stay phrased as a category, not an absolute: claudio-thebot's allow needs to be able to
-  # override it (see claude-automode.nix).
+  # The forge-presence rule must stay phrased as a category, not an absolute, so a future profile can carve
+  # itself an exception the same way claudio-thebot's now-removed autoMode.allow used to (see claude-automode.nix).
   assert_jq automode-softdeny-overridable base "$base" '.autoMode.soft_deny[1] | contains("under any circumstances") | not' 'true'
 
-  # The base must not ship an allow layer: loosening is a per-profile decision, and today only thebot makes it.
+  # The base must not ship an allow layer: loosening is a per-profile decision.
   assert_jq automode-base-no-allow base "$base" '.autoMode | has("allow")' 'false'
 
   # claudio: inherits auto-mode untouched. Its overlay carrying any autoMode key would be unreviewed scope creep.
@@ -32,19 +32,9 @@ automode_run() {
   # claude-yolo: bypassPermissions skips auto mode entirely, and the overlay must not pretend otherwise.
   assert_jq automode-overlay-absent claude-yolo "${OVERLAY[claude-yolo]}" 'has("autoMode")' 'false'
 
-  # claudio-thebot-yolo: same bypassPermissions reasoning as claude-yolo — the bot-identity carve-out that
-  # justifies claudio-thebot's autoMode.allow only matters when auto mode is even consulted.
-  assert_jq automode-overlay-absent claudio-thebot-yolo "${OVERLAY[claudio-thebot-yolo]}" 'has("autoMode")' 'false'
-
-  # claudio-thebot: exactly one loosening (the bot-identity carve-out for its publish repo), layered as an allow that
-  # keeps $defaults first and scopes itself to that one repository.
-  assert_jq automode-thebot-allow-count claudio-thebot "${OVERLAY[claudio-thebot]}" '.autoMode.allow | length' '2'
-  assert_jq automode-thebot-allow-defaults-first claudio-thebot "${OVERLAY[claudio-thebot]}" '.autoMode.allow[0]' '$defaults'
-  assert_jq automode-thebot-allow-bot-identity claudio-thebot "${OVERLAY[claudio-thebot]}" '.autoMode.allow[1] | contains("its own bot identity")' 'true'
-  assert_jq automode-thebot-allow-scoped claudio-thebot "${OVERLAY[claudio-thebot]}" '.autoMode.allow[1] | contains("still applies everywhere else")' 'true'
-  assert_jq automode-thebot-allow-names-repo claudio-thebot "${OVERLAY[claudio-thebot]}" ".autoMode.allow[1] | contains(\"$HOME/code/claudio-thebot/claudio-core\")" 'true'
-  # And nothing else: no soft_deny or environment overrides may ride along in the overlay.
-  assert_jq automode-thebot-no-softdeny claudio-thebot "${OVERLAY[claudio-thebot]}" '.autoMode | has("soft_deny")' 'false'
-  assert_jq automode-thebot-no-env claudio-thebot "${OVERLAY[claudio-thebot]}" '.autoMode | has("environment")' 'false'
-  assert_jq automode-thebot-only-automode claudio-thebot "${OVERLAY[claudio-thebot]}" 'keys | join(",")' 'autoMode'
+  # claudio-thebot (2026-09-10 consolidation: this profile is yolo-only now, the gated "auto" variant and its
+  # bot-identity autoMode.allow carve-out are both gone): same bypassPermissions reasoning as claude-yolo — auto
+  # mode is never consulted under --dangerously-skip-permissions, so there is nothing left to carve an
+  # exception out of.
+  assert_jq automode-overlay-absent claudio-thebot "${OVERLAY[claudio-thebot]}" 'has("autoMode")' 'false'
 }

@@ -1,19 +1,19 @@
-fs-cred-read	EXECUTED	filesystem.disabled: Bash reads are unguarded; permissions.deny Read() rules cover only the Read/Edit tools (docs/sandbox-notes.md)
-fs-home-read	EXECUTED	filesystem.disabled: no filesystem-layer read restriction left
+fs-cred-read	EXECUTED	Bash reads are unguarded without the sandbox; permissions.deny Read() rules cover only the Read/Edit tools (docs/sandbox-notes.md)
+fs-home-read	EXECUTED
 fs-allowread-code	EXECUTED
 fs-read-keychain-db	EXECUTED
-fs-write-claude-dir	EXECUTED	filesystem.disabled: unrestricted write, works around the inert allowWrite bug (docs/sandbox-notes.md)
+fs-write-claude-dir	EXECUTED
 fs-write-cred-touch	EXECUTED	mtime-only touch, harmless by design
-fs-write-keychain	EXECUTED	filesystem.disabled: unrestricted write
-fs-write-home-root	EXECUTED	filesystem.disabled: unrestricted write
+fs-write-keychain	EXECUTED
+fs-write-home-root	EXECUTED
 net-allowed-domain	EXECUTED
 net-api-github	EXECUTED
-net-denied-domain	BLOCKED
+net-denied-domain	EXECUTED	no sandbox, no egress allowlist
 net-nix-socket	EXECUTED
 net-tls-sandboxed	EXECUTED
-gate-git-push	BLOCKED
-gate-rm-rf	BLOCKED
-gate-git-reset-hard	BLOCKED
-gate-checkout-dot	BLOCKED
-gate-deny-gh-merge	BLOCKED
-gate-deny-fj-release	BLOCKED
+gate-git-push	EXECUTED	lands in the fixture bare remote only; this profile carries zero permissions of its own (2026-09-10 consolidation, permissions.nix's claudeCode.yolo) and the shared base no longer defines any ask/deny either, so there is nothing left to ask about
+gate-rm-rf	EXECUTED	same reasoning as gate-git-push: no ask rule exists anywhere for this profile since the 2026-09-10 consolidation, so bypassPermissions has nothing to deny headlessly either. Previously XFAIL_BLOCKED when this profile still inherited the base's ask rule
+gate-git-reset-hard	EXECUTED	same reasoning as gate-rm-rf
+gate-checkout-dot	EXECUTED	no ask rule to reach in the first place, rtk's rewrite is moot now
+gate-deny-gh-merge	EXECUTED	this profile's permissions bundle is the literal empty object (permissions.nix's claudeCode.yolo, 2026-09-10); there is no deny list to opt into
+gate-deny-fj-release	EXECUTED	same reasoning as gate-deny-gh-merge

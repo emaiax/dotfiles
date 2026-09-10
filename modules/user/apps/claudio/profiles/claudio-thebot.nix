@@ -7,6 +7,11 @@
 # `--add-dir` does NOT auto-load a CLAUDE.md from the directories it grants, despite what `claude --bare
 # --help` implies (verified empirically: a live session had no knowledge of claudio-core's AGENTS.md content
 # until this flag was added). `--append-system-prompt-file` is the one that actually merges it in.
+#
+# This profile is yolo-only (2026-09-10 consolidation): `--dangerously-skip-permissions`, zero permissions
+# (perms.claudeCode.yolo, the literal empty object), sandbox disabled. There used to be a second, gated
+# variant plus a separate `claudio-thebot-yolo` binary; both are gone. This is the homelab-scoped AFK
+# publishing agent, not a profile meant to still ask anything — see AGENTS.md's Autonomy & Approval section.
 {
   config,
   pkgs,
@@ -48,42 +53,14 @@ let
       fi
     '';
 
-  settings = {
-    # Presence rules are soft_deny, not permissions.deny, precisely so this profile can carve itself an
-    # exception here: a permissions deny can't be overridden from a higher layer.
-    autoMode.allow = [
-      "$defaults"
-
-      ''
-        This session is a publishing agent working in ${claudioCore} and posting under its own bot identity rather than the operator's.
-        Opening pull requests, creating and editing issues, and commenting on them are its purpose there, so the rule reserving published
-        presence to the operator does not apply to that repository. It still applies everywhere else.
-      ''
-    ];
-
-    # This is an "auto" profile (not the yolo one below): hardDeny = true opts into the irreversible tier.
-    # See the comment above `denyHard` in permissions.nix's `policy.commands` for why this is opt-in.
-    permissions = perms.mkClaudeCodePermissions {
-      inherit (perms) policy;
-      hardDeny = true;
-    };
-  };
-
-  settingsFile = (pkgs.formats.json { }).generate "claudio-thebot-settings.json" settings;
-
-  # bypassPermissions skips auto mode entirely. This profile also leaves hardDeny at its default false: merge
-  # and release approval here comes from a real PR review instead (see sandbox-notes.md's `claude-yolo` note).
-  #
-  # permissions.ask from the shared user-layer base (permissions.nix) still fires an interactive confirmation
-  # dialog for `git push` even under --dangerously-skip-permissions (verified empirically 2026-09-10: a live
-  # claudio-thebot-yolo session was prompted). This profile exists to run fully autonomously against its own
-  # repo, so it explicitly allows push here; ask still wins if this allow turns out not to override it.
-  yoloSettingsFile = (pkgs.formats.json { }).generate "claudio-thebot-yolo-settings.json" {
+  # bypassPermissions skips auto mode entirely, so there is no autoMode carve-out to declare here (the old
+  # bot-identity presence exception only mattered for the gated variant this profile no longer has).
+  # perms.claudeCode.yolo is the literal empty object: zero ask, zero deny, zero allow (permissions.nix,
+  # 2026-09-10). A base-inherited `ask` on `git push` used to fire here even under bypassPermissions (verified
+  # empirically 2026-09-10); the fix was removing that base-level ask entirely, not allowlisting around it.
+  settingsFile = (pkgs.formats.json { }).generate "claudio-thebot-settings.json" {
     sandbox.enabled = false;
-    permissions.allow = [
-      "Bash(git push:*)"
-      "Bash(rtk git push:*)"
-    ];
+    permissions = perms.claudeCode.yolo;
   };
 
   claudioCoreArgs = ''
@@ -179,6 +156,7 @@ in
   };
 
   home.packages = [
+    # no sandbox, no permission prompts
     (pkgs.writeShellApplication {
       runtimeInputs = [ config.programs.claude-code.package ];
 
@@ -187,23 +165,8 @@ in
         export PATH="${home}/${identityBinDir}:$PATH"
 
         exec env CLAUDIO_THEBOT_SESSION=1 claude \
-          --settings ${settingsFile} \
-          ${claudioCoreArgs} \
-          "$@"
-      '';
-    })
-
-    # no sandbox, no permission prompts
-    (pkgs.writeShellApplication {
-      runtimeInputs = [ config.programs.claude-code.package ];
-
-      name = "claudio-thebot-yolo";
-      text = ''
-        export PATH="${home}/${identityBinDir}:$PATH"
-
-        exec env CLAUDIO_THEBOT_SESSION=1 claude \
           --dangerously-skip-permissions \
-          --settings ${yoloSettingsFile} \
+          --settings ${settingsFile} \
           ${claudioCoreArgs} \
           "$@"
       '';

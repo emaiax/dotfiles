@@ -36,67 +36,71 @@ static_settings_run() {
   assert_jq static-net-trustd base "$base" '.sandbox.network.allowMachLookup | join(",")' 'com.apple.trustd.agent'
   assert_jq static-apple-events base "$base" '.sandbox.allowAppleEvents' 'true'
 
-  # Permission gates: the deny list survives every mode including bypassPermissions, the ask list is what claude-yolo
-  # trades away.
-  assert_jq static-deny-gh-merge base "$base" '.permissions.deny | index("Bash(gh pr merge:*)") != null' 'true'
-  assert_jq static-deny-gh-release base "$base" '.permissions.deny | index("Bash(gh release:*)") != null' 'true'
-  assert_jq static-deny-fj-merge base "$base" '.permissions.deny | index("Bash(fj pr merge:*)") != null' 'true'
-  assert_jq static-deny-fj-release base "$base" '.permissions.deny | index("Bash(fj release:*)") != null' 'true'
+  # Permission gates: deny survives every mode including bypassPermissions, ask is what a yolo-style profile
+  # trades away. These live on the claudio overlay only (permissions.nix's mkClaudeCodePermissions), not the
+  # shared base (2026-09-10): claude-code/default.nix carries none of this, so a bare `claude` invocation isn't
+  # gated by it, and claudio-thebot is yolo-only now (zero permissions of its own too, asserted below).
+  assert_jq static-deny-gh-merge claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(gh pr merge:*)") != null' 'true'
+  assert_jq static-deny-gh-release claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(gh release:*)") != null' 'true'
+  assert_jq static-deny-fj-merge claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(fj pr merge:*)") != null' 'true'
+  assert_jq static-deny-fj-release claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(fj release:*)") != null' 'true'
   # Read(//Users/...): // marks filesystem-root-absolute (permissions.nix).
-  assert_jq static-deny-read-credentials base "$base" ".permissions.deny | index(\"Read(/$h/.claude/.credentials.json)\") != null" 'true'
-  assert_jq static-deny-read-credentials-bak base "$base" ".permissions.deny | index(\"Read(/$h/.claude/.credentials.json.bak)\") != null" 'true'
-  assert_jq static-deny-edit-credentials-bak base "$base" ".permissions.deny | index(\"Edit(/$h/.claude/.credentials.json.bak)\") != null" 'true'
-  assert_jq static-ask-git-push base "$base" '.permissions.ask | index("Bash(git push:*)") != null' 'true'
-  assert_jq static-ask-rm-rf base "$base" '.permissions.ask | index("Bash(rm -rf:*)") != null' 'true'
-  assert_jq static-ask-git-reset base "$base" '.permissions.ask | index("Bash(git reset --hard:*)") != null' 'true'
-  assert_jq static-default-mode-auto base "$base" '.permissions.defaultMode' 'auto'
+  assert_jq static-deny-read-credentials claudio "${OVERLAY[claudio]}" ".permissions.deny | index(\"Read(/$h/.claude/.credentials.json)\") != null" 'true'
+  assert_jq static-deny-read-credentials-bak claudio "${OVERLAY[claudio]}" ".permissions.deny | index(\"Read(/$h/.claude/.credentials.json.bak)\") != null" 'true'
+  assert_jq static-deny-edit-credentials-bak claudio "${OVERLAY[claudio]}" ".permissions.deny | index(\"Edit(/$h/.claude/.credentials.json.bak)\") != null" 'true'
+  assert_jq static-ask-git-push claudio "${OVERLAY[claudio]}" '.permissions.ask | index("Bash(git push:*)") != null' 'true'
+  assert_jq static-ask-rm-rf claudio "${OVERLAY[claudio]}" '.permissions.ask | index("Bash(rm -rf:*)") != null' 'true'
+  assert_jq static-ask-git-reset claudio "${OVERLAY[claudio]}" '.permissions.ask | index("Bash(git reset --hard:*)") != null' 'true'
+  assert_jq static-default-mode-auto claudio "${OVERLAY[claudio]}" '.permissions.defaultMode' 'auto'
 
   # rtk twins: found live by the gate probes; fix is permissions.nix's withRtkTwin.
-  assert_jq static-ask-rtk-git-push base "$base" '.permissions.ask | index("Bash(rtk git push:*)") != null' 'true'
-  assert_jq static-ask-rtk-checkout-exact base "$base" '.permissions.ask | index("Bash(rtk git checkout .)") != null' 'true'
-  assert_jq static-ask-rtk-checkout-dashes base "$base" '.permissions.ask | index("Bash(rtk git checkout --:*)") != null' 'true'
-  assert_jq static-deny-rtk-gh-merge base "$base" '.permissions.deny | index("Bash(rtk gh pr merge:*)") != null' 'true'
-  assert_jq static-deny-rtk-fj-release base "$base" '.permissions.deny | index("Bash(rtk fj release:*)") != null' 'true'
+  assert_jq static-ask-rtk-git-push claudio "${OVERLAY[claudio]}" '.permissions.ask | index("Bash(rtk git push:*)") != null' 'true'
+  assert_jq static-ask-rtk-checkout-exact claudio "${OVERLAY[claudio]}" '.permissions.ask | index("Bash(rtk git checkout .)") != null' 'true'
+  assert_jq static-ask-rtk-checkout-dashes claudio "${OVERLAY[claudio]}" '.permissions.ask | index("Bash(rtk git checkout --:*)") != null' 'true'
+  assert_jq static-deny-rtk-gh-merge claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(rtk gh pr merge:*)") != null' 'true'
+  assert_jq static-deny-rtk-fj-release claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(rtk fj release:*)") != null' 'true'
 
-  # claudio overlay: the Obsidian socket grants plus the sandbox opt-out, and nothing else. Canonical-JSON equality so
-  # any accidental extra key fails loudly. `enabled: false` is deliberate (claudio.nix), the sandbox blocks ssh into
-  # homelab guests; drop it here the day that profile turns the sandbox back on.
-  local claudio_expected
-  claudio_expected=$(jq -Sc . <<EOF
-{"sandbox":{"enabled":false,"filesystem":{"allowRead":["$h/.obsidian-cli.sock"]},"network":{"allowUnixSockets":["$h/.obsidian-cli.sock"]}}}
-EOF
-  )
-  if [[ $(jq -Sc . "${OVERLAY[claudio]}") == "$claudio_expected" ]]; then
-    t_record PASS static-overlay-shape claudio
+  # base settings.json: zero permissions definition on purpose (2026-09-10) — a bare `claude` invocation isn't
+  # gated by anything meant for the specialized profiles. Guard against it silently coming back.
+  assert_jq static-base-no-permissions base "$base" 'has("permissions")' 'false'
+
+  # claudio overlay: sandbox opt-out plus the full permissions bundle asserted individually above, nothing
+  # else. Key-set check only, not a full literal diff: array order inside ask/deny/allow isn't semantically
+  # meaningful and would make this brittle against an unrelated reorder in permissions.nix.
+  assert_jq static-claudio-overlay-keys claudio "${OVERLAY[claudio]}" '. | keys | sort | join(",")' 'permissions,sandbox'
+  assert_jq static-claudio-sandbox-shape claudio "${OVERLAY[claudio]}" '.sandbox | keys | sort | join(",")' 'enabled,filesystem,network'
+  assert_jq static-claudio-sandbox-enabled-false claudio "${OVERLAY[claudio]}" '.sandbox.enabled' 'false'
+  assert_jq static-claudio-obsidian-read claudio "${OVERLAY[claudio]}" '.sandbox.filesystem.allowRead | join(",")' "$h/.obsidian-cli.sock"
+  assert_jq static-claudio-obsidian-socket claudio "${OVERLAY[claudio]}" '.sandbox.network.allowUnixSockets | join(",")' "$h/.obsidian-cli.sock"
+
+  # claude-yolo overlay (2026-09-10: the base defines no permissions at all now, so this profile opts back into
+  # just the credential-file deny explicitly instead of losing it as a side effect): exactly
+  # {permissions:{deny:[...credential rules...]},sandbox:{enabled:false}}. Anything more means the profile grew
+  # scope nobody reviewed; checked as key-set + individual rules rather than a full literal diff (deny array
+  # order isn't semantically meaningful).
+  assert_jq static-claudeyolo-overlay-keys claude-yolo "${OVERLAY[claude-yolo]}" '. | keys | sort | join(",")' 'permissions,sandbox'
+  assert_jq static-claudeyolo-permissions-keys claude-yolo "${OVERLAY[claude-yolo]}" '.permissions | keys | join(",")' 'deny'
+  assert_jq static-claudeyolo-sandbox-shape claude-yolo "${OVERLAY[claude-yolo]}" '.sandbox | keys | join(",")' 'enabled'
+  assert_jq static-claudeyolo-sandbox-enabled-false claude-yolo "${OVERLAY[claude-yolo]}" '.sandbox.enabled' 'false'
+  assert_jq static-claudeyolo-deny-read-credentials claude-yolo "${OVERLAY[claude-yolo]}" ".permissions.deny | index(\"Read(/$h/.claude/.credentials.json)\") != null" 'true'
+  assert_jq static-claudeyolo-deny-read-credentials-bak claude-yolo "${OVERLAY[claude-yolo]}" ".permissions.deny | index(\"Read(/$h/.claude/.credentials.json.bak)\") != null" 'true'
+  assert_jq static-claudeyolo-deny-edit-credentials-bak claude-yolo "${OVERLAY[claude-yolo]}" ".permissions.deny | index(\"Edit(/$h/.claude/.credentials.json.bak)\") != null" 'true'
+  # And nothing more: no ask, no allow, no hardDeny tier rides along with the credential-only opt-in.
+  assert_jq static-claudeyolo-no-ask claude-yolo "${OVERLAY[claude-yolo]}" '.permissions | has("ask")' 'false'
+  assert_jq static-claudeyolo-no-allow claude-yolo "${OVERLAY[claude-yolo]}" '.permissions | has("allow")' 'false'
+
+  # claudio-thebot overlay (2026-09-10 consolidation: this profile is yolo-only now, the gated "auto" variant
+  # and the separate claudio-thebot-yolo binary are both gone): {permissions:{},sandbox:{enabled:false}}, the
+  # same zero-permissions posture as the base, asserted explicitly here rather than left implicit.
+  if [[ $(jq -Sc . "${OVERLAY[claudio-thebot]}") == '{"permissions":{},"sandbox":{"enabled":false}}' ]]; then
+    t_record PASS static-overlay-shape claudio-thebot
   else
-    t_record FAIL static-overlay-shape claudio "overlay diverged from the sandbox opt-out plus two socket grants: $(jq -Sc . "${OVERLAY[claudio]}")"
-  fi
-
-  # claude-yolo overlay: exactly {sandbox:{enabled:false}}. Anything more means the profile grew scope nobody reviewed.
-  if [[ $(jq -Sc . "${OVERLAY[claude-yolo]}") == '{"sandbox":{"enabled":false}}' ]]; then
-    t_record PASS static-overlay-shape claude-yolo
-  else
-    t_record FAIL static-overlay-shape claude-yolo "overlay is $(jq -Sc . "${OVERLAY[claude-yolo]}")"
-  fi
-
-  # thebot overlay shape is asserted in 50-automode.sh (it is purely an autoMode override).
-
-  # claudio-thebot-yolo overlay: {sandbox:{enabled:false}} plus an explicit push allow, same autoMode
-  # exclusion as claude-yolo (the carve-out would be dead weight under bypassPermissions, see 50-automode.sh).
-  # The push allow exists because permissions.ask from the shared base still prompts interactively even under
-  # --dangerously-skip-permissions (verified 2026-09-10); this profile is meant to run unattended against its
-  # own repo, so it opts out of that specific prompt here.
-  if [[ $(jq -Sc . "${OVERLAY[claudio-thebot-yolo]}") == '{"permissions":{"allow":["Bash(git push:*)","Bash(rtk git push:*)"]},"sandbox":{"enabled":false}}' ]]; then
-    t_record PASS static-overlay-shape claudio-thebot-yolo
-  else
-    t_record FAIL static-overlay-shape claudio-thebot-yolo "overlay is $(jq -Sc . "${OVERLAY[claudio-thebot-yolo]}")"
+    t_record FAIL static-overlay-shape claudio-thebot "overlay is $(jq -Sc . "${OVERLAY[claudio-thebot]}")"
   fi
 
   # Wrapper flags: the behavior-defining arguments each wrapper must carry.
   assert_contains static-wrapper-skip-permissions claude-yolo "$(readlink -f "${WRAPPER[claude-yolo]}")" '--dangerously-skip-permissions'
   assert_contains static-wrapper-adddir-context claudio-thebot "$(readlink -f "${WRAPPER[claudio-thebot]}")" "$h/code/claudio"
   assert_contains static-wrapper-adddir-publish claudio-thebot "$(readlink -f "${WRAPPER[claudio-thebot]}")" "$h/code/claudio-thebot/claudio-core"
-  assert_contains static-wrapper-skip-permissions claudio-thebot-yolo "$(readlink -f "${WRAPPER[claudio-thebot-yolo]}")" '--dangerously-skip-permissions'
-  assert_contains static-wrapper-adddir-context claudio-thebot-yolo "$(readlink -f "${WRAPPER[claudio-thebot-yolo]}")" "$h/code/claudio"
-  assert_contains static-wrapper-adddir-publish claudio-thebot-yolo "$(readlink -f "${WRAPPER[claudio-thebot-yolo]}")" "$h/code/claudio-thebot/claudio-core"
+  assert_contains static-wrapper-skip-permissions claudio-thebot "$(readlink -f "${WRAPPER[claudio-thebot]}")" '--dangerously-skip-permissions'
 }

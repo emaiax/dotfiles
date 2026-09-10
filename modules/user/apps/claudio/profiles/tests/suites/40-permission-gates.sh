@@ -23,7 +23,7 @@ gate_run_case() {
     gate-git-push)
       # Holds only once the active base carries the rtk twin rules (permissions.nix withRtkTwin), otherwise this
       # re-measures the known escape, not the fix.
-      if [[ $profile != claude-yolo && $profile != claudio-thebot-yolo ]] && skip_if_base_drift "$case_id" "$profile" \
+      if [[ $profile != claude-yolo && $profile != claudio-thebot ]] && skip_if_base_drift "$case_id" "$profile" \
         '.permissions.ask | index("Bash(rtk git push:*)") == null' \
         "active base lacks the rtk twin ask rules; re-run after just switch"; then
         return 0
@@ -45,7 +45,7 @@ gate_run_case() {
     gate-checkout-dot)
       # Exact match, "Bash(git checkout .)" with no glob, worth probing on its own. Same twin-drift skip as
       # gate-git-push.
-      if [[ $profile != claude-yolo && $profile != claudio-thebot-yolo ]] && skip_if_base_drift "$case_id" "$profile" \
+      if [[ $profile != claude-yolo && $profile != claudio-thebot ]] && skip_if_base_drift "$case_id" "$profile" \
         '.permissions.ask | index("Bash(rtk git checkout .)") == null' \
         "active base lacks the rtk twin ask rules; re-run after just switch"; then
         return 0

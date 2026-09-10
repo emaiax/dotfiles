@@ -1,11 +1,15 @@
 # Permissions for commands, filesystem paths, and network domains policy shared across every coding agent and
-# profile in this repo. These are the loosest any profile will ever be, since they land in the user layer and a
-# higher-precedence layer cannot loosen them.
+# profile in this repo. `policy` is data only: nothing here reaches a real settings.json on its own. A
+# specialized profile opts in explicitly via `claudeCode.user` (claudio.nix: full ask/deny/hardDeny bundle) or
+# `claudeCode.yolo` (claudio-thebot.nix: the literal empty object, zero permissions on purpose — see the
+# comment above that field). claude-code/default.nix, the base every plain `claude` invocation loads regardless
+# of profile, deliberately does NOT wire ask/deny/allow in from here: that used to force every session, profile
+# or not, through the same `ask`-on-`git push` friction meant for the specialized ones (2026-09-10).
 #
 # Structure: `policy` is the single source of truth, grouped by domain (commands, credentials, filesystem,
-# network, sandbox). mkClaudeCodePermissions, mkClaudeCodeSandbox, and mkOpencodePermissions each take that one
-# policy and render it into one consumer's native settings shape, so claude-code/default.nix and
-# opencode/default.nix each just wire in their own branch instead of carrying their own translation logic.
+# network, sandbox). mkClaudeCodePermissions and mkClaudeCodeSandbox render it into a consumer's native settings
+# shape; only the sandbox half is universal (claudeCode.sandbox, wired into every profile via
+# claude-code/default.nix). mkOpencodePermissions is unaffected by any of this, opencode has no equivalent split.
 { home, lib, ... }:
 let
   # allowUnixSockets covers connecting and stat'ing the path
@@ -237,15 +241,8 @@ let
     lib.concatMap claudeCodeFileDenyRules (policy.filesystem.credentials.files ++ credentialBaks)
     ++ lib.concatMap claudeCodeDirDenyRules policy.filesystem.credentials.dirs;
 
-  # programs.claude-code.settings.permissions for the shared base: only the two universal pieces above, no
-  # `allow`, no irreversible-command tier. Every profile inherits this and can't remove from it (deny unions).
-  mkClaudeCodeBasePermissions = policy: {
-    ask = claudeCodeAskRules policy;
-    deny = claudeCodeCredentialDenyRules policy;
-  };
-
-  # The full bundle for a profile that wants its own `allow` too (claudio, claudio-thebot): `hardDeny`
-  # opts into the irreversible-command tier, see the comment above `denyHard` in `policy.commands`.
+  # The full bundle for a profile that wants its own `allow` too (claudio): `hardDeny` opts into the
+  # irreversible-command tier, see the comment above `denyHard` in `policy.commands`.
   mkClaudeCodePermissions =
     {
       policy,
@@ -309,11 +306,29 @@ let
   };
 in
 {
-  inherit policy mkClaudeCodePermissions;
+  inherit policy;
 
   claudeCode = {
-    permissions = mkClaudeCodeBasePermissions policy;
     sandbox = mkClaudeCodeSandbox policy;
+
+    # claudio.nix: full ask/deny bundle plus the irreversible-command tier.
+    user = mkClaudeCodePermissions {
+      inherit policy;
+      hardDeny = true;
+    };
+
+    # claudio-thebot.nix: the literal empty object, on purpose (2026-09-10) — zero ask, zero deny (including
+    # the credential-file rules every other bundle carries unconditionally), zero allow. This profile runs
+    # under --dangerously-skip-permissions against its own repo; nothing here is meant to still gate it.
+    yolo = { };
+
+    # claudio-yolo.nix: the one thing that profile keeps despite otherwise defining no permissions of its own
+    # (2026-09-10) — the base used to hand it unconditional credential-file deny for free (hardDeny=false, ask
+    # empty under bypassPermissions anyway); now that the base defines no permissions at all, this profile
+    # opts back into just that one protection explicitly instead of losing it as a side effect.
+    credentialDenyOnly = {
+      deny = claudeCodeCredentialDenyRules policy;
+    };
   };
 
   opencode = {

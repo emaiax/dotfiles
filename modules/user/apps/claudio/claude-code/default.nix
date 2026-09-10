@@ -153,10 +153,10 @@ in
         "superpowers@claude-plugins-official" = true; # superpowers: code analysis, refactoring, and generation
       };
 
-      # ask/deny hold in every mode, unlike allow and autoMode.
-      permissions = perms.claudeCode.permissions // {
-        defaultMode = "auto";
-      };
+      # No `permissions` key here on purpose: this file is the base settings.json every plain `claude`
+      # invocation loads, profile wrapper or not. `ask`/`deny`/`allow` and `defaultMode` are a specialized
+      # profile's own opt-in (claudio.nix, claudio-thebot.nix each call permissions.nix's
+      # mkClaudeCodePermissions in their own `--settings` overlay), not something forced on every session.
 
       # Two ways to write a sandbox rule that silently does nothing: a trailing slash voids the entry on 2.1.222
       # (fixed in 2.1.224), and a glob like `$HOME/*` matches nothing and fails open.
