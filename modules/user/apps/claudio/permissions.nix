@@ -34,7 +34,8 @@ let
       # Matched literally rather than as a prefix.
       askExact = [ "git checkout ." ];
 
-      # Irreversible, so these go to `permissions.deny` where nothing overrides them.
+      # Irreversible. Deny unions across every settings source (a `--settings` file can't remove one), so
+      # this stays out of the shared base; mkClaudeCodePermissions's `hardDeny` arg opts a profile into it.
       denyHard = [
         "gh pr merge"
         "gh release"
@@ -224,24 +225,41 @@ let
     "Edit(//${claudeCodeAbsRule path}/**)"
   ];
 
-  # programs.claude-code.settings.permissions: the native Read/Edit/Bash gate, ask/deny hold in every mode,
-  # unlike allow and autoMode.
-  mkClaudeCodePermissions =
+  # The two universal pieces every profile gets regardless of yolo/hardDeny status: prompting on destructive
+  # git/rm commands, and never letting a credential file through. Shared by the base and full permissions below.
+  claudeCodeAskRules =
     policy:
+    map claudeCodePrefixRule (withRtkTwin policy.commands.ask)
+    ++ map claudeCodeExactRule (withRtkTwin policy.commands.askExact);
+
+  claudeCodeCredentialDenyRules =
+    policy:
+    lib.concatMap claudeCodeFileDenyRules (policy.filesystem.credentials.files ++ credentialBaks)
+    ++ lib.concatMap claudeCodeDirDenyRules policy.filesystem.credentials.dirs;
+
+  # programs.claude-code.settings.permissions for the shared base: only the two universal pieces above, no
+  # `allow`, no irreversible-command tier. Every profile inherits this and can't remove from it (deny unions).
+  mkClaudeCodeBasePermissions = policy: {
+    ask = claudeCodeAskRules policy;
+    deny = claudeCodeCredentialDenyRules policy;
+  };
+
+  # The full bundle for a profile that wants its own `allow` too (claudio, claudio-thebot): `hardDeny`
+  # opts into the irreversible-command tier, see the comment above `denyHard` in `policy.commands`.
+  mkClaudeCodePermissions =
+    {
+      policy,
+      hardDeny ? false,
+    }:
     let
-      credentialDenyRules =
-        lib.concatMap claudeCodeFileDenyRules (policy.filesystem.credentials.files ++ credentialBaks)
-        ++ lib.concatMap claudeCodeDirDenyRules policy.filesystem.credentials.dirs;
+      hardDenyRules = lib.optionals hardDeny (
+        map claudeCodePrefixRule (withRtkTwin policy.commands.denyHard)
+      );
     in
     {
       allow = map claudeCodePrefixRule (withRtkTwin policy.commands.allow);
-
-      ask =
-        map claudeCodePrefixRule (withRtkTwin policy.commands.ask)
-        ++ map claudeCodeExactRule (withRtkTwin policy.commands.askExact);
-
-      # hard tier only; reversible ones are soft_deny in auto-mode.nix
-      deny = map claudeCodePrefixRule (withRtkTwin policy.commands.denyHard) ++ credentialDenyRules;
+      ask = claudeCodeAskRules policy;
+      deny = hardDenyRules ++ claudeCodeCredentialDenyRules policy;
     };
 
   # programs.claude-code.settings.sandbox.{bypassSecurityCommands,filesystem,network}: the Seatbelt boundary itself.
@@ -291,10 +309,10 @@ let
   };
 in
 {
-  inherit policy;
+  inherit policy mkClaudeCodePermissions;
 
   claudeCode = {
-    permissions = mkClaudeCodePermissions policy;
+    permissions = mkClaudeCodeBasePermissions policy;
     sandbox = mkClaudeCodeSandbox policy;
   };
 

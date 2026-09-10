@@ -1,7 +1,7 @@
 rule	namespace	kind	consumers
 ask	policy.commands.ask	raw	claudeCode.permissions.ask
 askExact	policy.commands.askExact	raw	claudeCode.permissions.ask
-denyHard	policy.commands.denyHard	raw	claudeCode.permissions.deny
+denyHard	policy.commands.denyHard	raw	claudeCode.permissions.deny, only via mkClaudeCodePermissions's hardDeny = true (claudio.nix, claudio-thebot.nix); the base and the yolo profiles leave hardDeny at its default false
 denySoft	policy.commands.denySoft	raw	none — opencode.permission.bash is a flat allow; claude-code's soft tier is hand-written prose in claude-code/default.nix's autoMode.soft_deny, not read from here
 bypassSandboxSeatbelt	policy.commands.bypassSandboxSeatbelt	raw	claudeCode.sandbox.excludedCommands
 dirs	policy.filesystem.credentials.dirs	raw	claudeCode.permissions.deny, claudeCode.sandbox.filesystem.denyRead, claudeCode.sandbox.filesystem.denyWrite

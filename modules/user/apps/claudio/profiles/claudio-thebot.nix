@@ -1,5 +1,5 @@
-# The `claudio-thebot` profile: publishes into claudio-core, layered over the base settings via `--settings`
-# (see #121). Adds `--add-dir` since it can be invoked from anywhere, not just from inside the target repos,
+# The `claudio-thebot` profile: publishes into claudio-core, layered over the base settings via `--settings`.
+# Adds `--add-dir` since it can be invoked from anywhere, not just from inside the target repos,
 # and Read/Edit/Write only see the launch cwd by default. `--plugin-dir` loads claudio-core's own skills/ on
 # top of the operator's base CLAUDIO persona, namespaced as `claudio-core:<skill-name>` (claudio-core carries
 # a `.claude-plugin/plugin.json` manifest for exactly this).
@@ -16,6 +16,8 @@
 let
   home = config.home.homeDirectory;
   profile = "claudio-thebot";
+
+  perms = import ../permissions.nix { inherit home lib; };
 
   claudioCore = "${home}/code/${profile}/claudio-core";
   claudioState = ".local/share/${profile}";
@@ -58,11 +60,19 @@ let
         presence to the operator does not apply to that repository. It still applies everywhere else.
       ''
     ];
+
+    # This is an "auto" profile (not the yolo one below): hardDeny = true opts into the irreversible tier.
+    # See the comment above `denyHard` in permissions.nix's `policy.commands` for why this is opt-in.
+    permissions = perms.mkClaudeCodePermissions {
+      inherit (perms) policy;
+      hardDeny = true;
+    };
   };
 
   settingsFile = (pkgs.formats.json { }).generate "claudio-thebot-settings.json" settings;
 
-  # bypassPermissions skips auto mode entirely
+  # bypassPermissions skips auto mode entirely. This profile also leaves hardDeny at its default false: merge
+  # and release approval here comes from a real PR review instead (see sandbox-notes.md's `claude-yolo` note).
   yoloSettingsFile = (pkgs.formats.json { }).generate "claudio-thebot-yolo-settings.json" {
     sandbox.enabled = false;
   };
