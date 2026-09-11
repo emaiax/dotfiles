@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Auto-mode layering per profile, validated at the config level: entries are prose judged by a model at runtime, not
-# mechanical rules, so asserting the shipped config is the deterministic limit here. Behavioral probes would need an
-# unprompted external action: flaky and unsafe.
+# Auto-mode layering per profile, validated at the config level: entries are prose a model judges at runtime,
+# so asserting the shipped config is the deterministic limit. Behavioral probes would need flaky external action.
 
 set -euo pipefail
 
@@ -32,9 +31,7 @@ automode_run() {
   # claude-yolo: bypassPermissions skips auto mode entirely, and the overlay must not pretend otherwise.
   assert_jq automode-overlay-absent claude-yolo "${OVERLAY[claude-yolo]}" 'has("autoMode")' 'false'
 
-  # claudio-thebot (2026-09-10 consolidation: this profile is yolo-only now, the gated "auto" variant and its
-  # bot-identity autoMode.allow carve-out are both gone): same bypassPermissions reasoning as claude-yolo — auto
-  # mode is never consulted under --dangerously-skip-permissions, so there is nothing left to carve an
-  # exception out of.
+  # claudio-thebot: yolo-only since the 2026-09-10 consolidation, same bypassPermissions reasoning as
+  # claude-yolo, auto mode is never consulted so there is nothing left to carve an exception out of.
   assert_jq automode-overlay-absent claudio-thebot "${OVERLAY[claudio-thebot]}" 'has("autoMode")' 'false'
 }

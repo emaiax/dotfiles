@@ -1,17 +1,5 @@
 # The `claudio-thebot` profile: publishes into claudio-core, layered over the base settings via `--settings`.
-# Adds `--add-dir` since it can be invoked from anywhere, not just from inside the target repos,
-# and Read/Edit/Write only see the launch cwd by default. `--plugin-dir` loads claudio-core's own skills/ on
-# top of the operator's base CLAUDIO persona, namespaced as `claudio-core:<skill-name>` (claudio-core carries
-# a `.claude-plugin/plugin.json` manifest for exactly this).
-#
-# `--add-dir` does NOT auto-load a CLAUDE.md from the directories it grants, despite what `claude --bare
-# --help` implies (verified empirically: a live session had no knowledge of claudio-core's AGENTS.md content
-# until this flag was added). `--append-system-prompt-file` is the one that actually merges it in.
-#
-# This profile is yolo-only (2026-09-10 consolidation): `--dangerously-skip-permissions`, zero permissions
-# (perms.claudeCode.yolo, the literal empty object), sandbox disabled. There used to be a second, gated
-# variant plus a separate `claudio-thebot-yolo` binary; both are gone. This is the homelab-scoped AFK
-# publishing agent, not a profile meant to still ask anything — see AGENTS.md's Autonomy & Approval section.
+# See docs/sandbox-notes.md for the --add-dir/--plugin-dir wiring and this profile's yolo-only consolidation.
 {
   config,
   pkgs,
@@ -35,9 +23,8 @@ let
   fjTokenPath = config.sops.secrets."claudio-thebot-fj-token".path;
   ghTokenPath = config.sops.secrets."claudio-thebot-gh-token".path;
 
-  # `active` is the full shell body to run under CLAUDIO_THEBOT_SESSION (must exec, not just set env), not
-  # just a command prefix, so wrappers that need extra setup (fj, gh) share this gate instead of hand-rolling
-  # their own copy of it.
+  # `active` is the full shell body run under CLAUDIO_THEBOT_SESSION (must exec, not just set env), so wrappers
+  # needing extra setup (fj, gh) share this gate instead of hand-rolling their own copy.
   mkIdentityWrapper =
     {
       name,
@@ -53,11 +40,8 @@ let
       fi
     '';
 
-  # bypassPermissions skips auto mode entirely, so there is no autoMode carve-out to declare here (the old
-  # bot-identity presence exception only mattered for the gated variant this profile no longer has).
-  # perms.claudeCode.yolo is the literal empty object: zero ask, zero deny, zero allow (permissions.nix,
-  # 2026-09-10). A base-inherited `ask` on `git push` used to fire here even under bypassPermissions (verified
-  # empirically 2026-09-10); the fix was removing that base-level ask entirely, not allowlisting around it.
+  # bypassPermissions skips auto mode entirely, no carve-out needed here. perms.claudeCode.yolo is the literal
+  # empty object: docs/sandbox-notes.md's "claude-yolo: what it actually trades away" section has the history.
   settingsFile = (pkgs.formats.json { }).generate "claudio-thebot-settings.json" {
     sandbox.enabled = false;
     permissions = perms.claudeCode.yolo;

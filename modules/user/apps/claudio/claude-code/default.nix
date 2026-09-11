@@ -1,6 +1,5 @@
-# Claude Code: settings generation, the Seatbelt sandbox, and the auto-mode classifier config,
-# all in one file since nothing else contributes to programs.claude-code.settings. Background/investigation
-# notes on the sandbox specifically: ../docs/sandbox-notes.md.
+# Claude Code: settings generation, the Seatbelt sandbox, and the auto-mode classifier config, all in one file
+# since nothing else contributes to programs.claude-code.settings. Background: ../docs/sandbox-notes.md.
 {
   claudioPath,
   config,
@@ -15,9 +14,8 @@ let
   # rendered to Claude's native shape, this file only wires perms.claudeCode in.
   perms = import ../permissions.nix { inherit home lib; };
 
-  # Point at the live checkout, not $HOME/.claude, so the hooks don't depend on the symlinks below landing
-  # correctly. `bash "path"`, not direct exec: the scripts are tracked 100644 and a non-executable hook fails
-  # silently.
+  # Live checkout path, wrapped in `bash "path"` rather than direct exec: docs/sandbox-notes.md's
+  # "Hook command wiring" section has the why.
   rtkHook = {
     matcher = "Bash";
     hooks = [
@@ -153,10 +151,8 @@ in
         "superpowers@claude-plugins-official" = true; # superpowers: code analysis, refactoring, and generation
       };
 
-      # No `permissions` key here on purpose: this file is the base settings.json every plain `claude`
-      # invocation loads, profile wrapper or not. `ask`/`deny`/`allow` and `defaultMode` are a specialized
-      # profile's own opt-in (claudio.nix, claudio-thebot.nix each call permissions.nix's
-      # mkClaudeCodePermissions in their own `--settings` overlay), not something forced on every session.
+      # No `permissions` key here on purpose, every profile opts in on its own: docs/sandbox-notes.md's
+      # "Bare claude has zero permissions of its own" and "permissions.nix: policy is data" sections.
 
       # Two ways to write a sandbox rule that silently does nothing: a trailing slash voids the entry on 2.1.222
       # (fixed in 2.1.224), and a glob like `$HOME/*` matches nothing and fails open.
@@ -180,14 +176,8 @@ in
         filesystem = perms.claudeCode.sandbox.filesystem;
       };
 
-      # Prose judged by a model, not enforcement: wording changes the outcome, and it only applies while the
-      # session is in auto mode. Anything that must hold regardless goes in `permissions` above instead. A
-      # profile's `autoMode.allow` can override a `soft_deny` from here, which is the only way a profile can
-      # loosen anything inherited.
+      # docs/sandbox-notes.md's "autoMode: prose a model judges" section has the design rationale.
       autoMode = {
-        # No hostnames, org names or topology: this repo mirrors publicly, and the built-in defaults already
-        # trust the working repo's own remotes. Repo-specific context goes in that repo's CLAUDE.md, which the
-        # classifier also reads.
         environment = [
           "$defaults"
 
@@ -200,9 +190,7 @@ in
           "Additional context: this machine is a personal workstation, not a shared or production host."
         ];
 
-        # Counterpart of permissions.nix's denySoft. Phrase as a category, never as an absolute: "under any
-        # circumstances" makes it unoverridable and claudio-thebot needs to override this one. Do not mention
-        # that stating intent clears it, which reads as permission to ignore the rule.
+        # Counterpart of permissions.nix's denySoft; phrasing rules in sandbox-notes.md's "autoMode" section.
         soft_deny = [
           "$defaults"
 

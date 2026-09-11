@@ -1,15 +1,5 @@
-# Permissions for commands, filesystem paths, and network domains policy shared across every coding agent and
-# profile in this repo. `policy` is data only: nothing here reaches a real settings.json on its own. A
-# specialized profile opts in explicitly via `claudeCode.user` (claudio.nix: full ask/deny/hardDeny bundle) or
-# `claudeCode.yolo` (claudio-thebot.nix: the literal empty object, zero permissions on purpose — see the
-# comment above that field). claude-code/default.nix, the base every plain `claude` invocation loads regardless
-# of profile, deliberately does NOT wire ask/deny/allow in from here: that used to force every session, profile
-# or not, through the same `ask`-on-`git push` friction meant for the specialized ones (2026-09-10).
-#
-# Structure: `policy` is the single source of truth, grouped by domain (commands, credentials, filesystem,
-# network, sandbox). mkClaudeCodePermissions and mkClaudeCodeSandbox render it into a consumer's native settings
-# shape; only the sandbox half is universal (claudeCode.sandbox, wired into every profile via
-# claude-code/default.nix). mkOpencodePermissions is unaffected by any of this, opencode has no equivalent split.
+# Command, filesystem, and network policy shared across every coding agent and profile in this repo. `policy`
+# is data only: docs/sandbox-notes.md's "permissions.nix: policy is data" section covers the full architecture.
 { home, lib, ... }:
 let
   # allowUnixSockets covers connecting and stat'ing the path
@@ -47,9 +37,7 @@ let
         "fj release"
       ];
 
-      # Reversible, so these become prose in auto-mode.nix's soft_deny, which claudio-thebot can carve an
-      # exception out of, and only claudeCode.permissions.deny renders them that way. OpenCode doesn't render
-      # this tier at all: opencode.permission.bash is a flat allow (see permissions.tsv).
+      # Reversible: rendered as prose in autoMode.soft_deny instead of a hard deny (sandbox-notes.md).
       denySoft = [
         "gh pr create"
         "gh pr ready"
@@ -69,10 +57,8 @@ let
         "fj issue comment"
       ];
 
-      # docker doesn't compose with the sandbox; gh/fj fail cert validation under it (trustd mach-lookup
-      # blocked). Excluded commands run fully unwrapped: a hole, not a containment. Each needs a glob (bare
-      # names aren't matched) and an `rtk `-prefixed twin, since the PreToolUse hook rewrites gh/fj commands
-      # before this matches against them. Full background: docs/sandbox-notes.md.
+      # docker/gh/fj/ssh don't compose with the sandbox; excluded commands run fully unwrapped, a hole rather
+      # than containment. Needs an `rtk `-prefixed twin per entry: docs/sandbox-notes.md's "escape" section.
       bypassSandboxSeatbelt = [
         "docker *"
         "rtk docker *"
@@ -87,12 +73,7 @@ let
 
     # sandbox: claude's Seatbelt boundary policy for filesystem paths every profile needs access to
     filesystem = {
-      # filesystem paths that must stay out of every agent's reach, no matter which tool asks for them
-      # claudeCode.sandbox.filesystem denies these to the sandboxed Bash subprocess, and claudeCode.permissions
-      # denies them to the native Read/Edit tools, which the sandbox never sees.
-      #
-      # OpenCode has no path-based deny mechanism of its own yet, so only claude-code's two halves read this today.
-      #
+      # Credential deny is two independent layers (sandbox filesystem vs Read/Edit tool rules): sandbox-notes.md.
       credentials = {
         # Read/Edit deny rules need a /** suffix to reach files nested inside these directories
         dirs = [
@@ -110,19 +91,13 @@ let
           "${home}/.netrc"
           "${home}/.npmrc"
 
-          # Deny the credential file, never the config directory around it
-          #
-          # ~/.config/opencode - OpenCode configs
-          # ~/.local/share - OpenCode credentials
-          #
+          # Deny the credential file itself, not its parent config dir. Below: OpenCode's auth files.
           "${home}/.local/share/opencode/auth.json"
           "${home}/.local/share/opencode/mcp-auth.json"
         ];
       };
 
-      # Toolchains, not personal data: denying $HOME wholesale takes out npm/node/asdf too. These need both read
-      # and write access, so mkClaudeCodeSandbox's allowRead and allowWrite both draw from this one list instead
-      # of each retyping it, which is how allowWrite drifted out of sync with allowRead before.
+      # One list, not two, so allowRead/allowWrite can't drift out of sync (sandbox-notes.md).
       toolchainReadWrite = [
         "${home}/.asdf"
         "${home}/.bun"
@@ -162,13 +137,7 @@ let
         "${home}/.nix-defexpr"
         "${home}/.nix-profile"
 
-        # ssh agent signing: the agent socket is ephemeral, so the sandbox can't allowWrite it,
-        # but it can allowRead the public keys and config that the agent reads to sign commits.
-        # ~/.ssh itself is denied below (credentials.dirs), but Seatbelt is last-match-wins and Claude Code's
-        # profile generator specifically re-emits allowRead entries after the deny they're nested under
-        # (anthropic-experimental/sandbox-runtime, src/sandbox/macos-sandbox-utils.ts: "denyOnly: deny reads
-        # from these paths ... allowWithinDeny: re-allow reads within denied regions ... allowWithinDeny takes
-        # precedence over denyOnly"), so these four still resolve readable despite the broader deny.
+        # Readable despite the ~/.ssh deny below: sandbox-notes.md's "SSH agent signing keys" section.
         "${home}/.ssh/*.pub"
         "${home}/.ssh/allowed_signers"
         "${home}/.ssh/config"
@@ -195,18 +164,15 @@ let
     };
   };
 
-  # A sibling `.bak` (backupFileExtension = "bak") could ride the same allowRead/allowWrite grant back in as the
-  # file it backs up, so every credential file needs its own `.bak` denied too, not just the ones nested inside
-  # an allowed tree today. Shared between mkClaudeCodePermissions and mkClaudeCodeSandbox.
+  # A sibling `.bak` could ride the same allow grant back in as the file it backs up (sandbox-notes.md).
   credentialBaks = map (p: "${p}.bak") policy.filesystem.credentials.files;
 
   # `Bash(x:*)` matches any arguments; `Bash(x)` matches only that literal invocation.
   claudeCodePrefixRule = cmd: "Bash(${cmd}:*)";
   claudeCodeExactRule = cmd: "Bash(${cmd})";
 
-  # rtk's PreToolUse hook rewrites recognized commands to `rtk <cmd>`, and permission rules match against that
-  # rewritten string, so a bare-command gate is silently defeated for anything rtk rewrites. A twin per gate
-  # rather than a fixed list, since rtk's rewrite inventory can grow.
+  # rtk's PreToolUse hook rewrites recognized commands to `rtk <cmd>`, defeating a bare-command gate silently.
+  # A twin per gate, not a fixed list, since rtk's rewrite inventory can grow.
   withRtkTwin =
     cmds:
     lib.concatMap (cmd: [
@@ -214,9 +180,7 @@ let
       "rtk ${cmd}"
     ]) cmds;
 
-  # Read/Edit is only half of the credential policy: sandbox.filesystem.denyRead/denyWrite only confines Bash.
-  # Write(path) rules are silently never checked, so Edit covers Write too. `//path` is filesystem-root-absolute,
-  # `/path` matches nothing, and dirs need `/**` for nested files.
+  # `//path` is filesystem-root-absolute, `/path` matches nothing, dirs need `/**` for nested files.
   claudeCodeAbsRule = path: lib.removePrefix "/" path;
 
   claudeCodeFileDenyRules = path: [
@@ -317,15 +281,11 @@ in
       hardDeny = true;
     };
 
-    # claudio-thebot.nix: the literal empty object, on purpose (2026-09-10) — zero ask, zero deny (including
-    # the credential-file rules every other bundle carries unconditionally), zero allow. This profile runs
-    # under --dangerously-skip-permissions against its own repo; nothing here is meant to still gate it.
+    # claudio-thebot.nix: the literal empty object, zero permissions on purpose (sandbox-notes.md's
+    # "claude-yolo: what it actually trades away" section covers both this and the bundle below).
     yolo = { };
 
-    # claudio-yolo.nix: the one thing that profile keeps despite otherwise defining no permissions of its own
-    # (2026-09-10) — the base used to hand it unconditional credential-file deny for free (hardDeny=false, ask
-    # empty under bypassPermissions anyway); now that the base defines no permissions at all, this profile
-    # opts back into just that one protection explicitly instead of losing it as a side effect.
+    # claudio-yolo.nix: the one protection it keeps despite otherwise defining no permissions of its own.
     credentialDenyOnly = {
       deny = claudeCodeCredentialDenyRules policy;
     };

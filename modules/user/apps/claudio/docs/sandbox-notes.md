@@ -49,9 +49,9 @@ Trade-off accepted, not mitigated yet: `denyRead` on credential files (`.credent
 
 Until 2026-09-10, `claude-code/default.nix` wired the shared `policy` into the base `programs.claude-code.settings.permissions` for every session on the machine, profile wrapper or not: `ask` on `git push`/`rm -rf`/etc., unconditional credential-file `deny`, `hardDeny = false`. That forced every plain `claude` invocation through the same `ask`-on-`git push` friction meant for the specialized profiles, verified live to be actual friction (a real session got prompted for a push it had no way to route around).
 
-The base now defines no `permissions` key at all. Each specialized profile opts in explicitly via `permissions.nix`'s `claudeCode` bundles instead: `claudio.nix` uses `claudeCode.user` (the full `mkClaudeCodePermissions` bundle, `hardDeny = true`), `claudio-thebot.nix` uses `claudeCode.yolo` (the literal empty object, zero ask/deny/allow — see its own section below), and `claude-yolo.nix` uses `claudeCode.credentialDenyOnly` (just the credential-file `deny` rules, opted back in explicitly since the base no longer hands them out for free).
+The base now defines no `permissions` key at all. Each specialized profile opts in explicitly via `permissions.nix`'s `claudeCode` bundles instead: `claudio.nix` uses `claudeCode.user` (the full `mkClaudeCodePermissions` bundle, `hardDeny = true`), `claudio-thebot.nix` uses `claudeCode.yolo` (the literal empty object, zero ask/deny/allow, see its own section below), and `claude-yolo.nix` uses `claudeCode.credentialDenyOnly` (just the credential-file `deny` rules, opted back in explicitly since the base no longer hands them out for free).
 
-A bare, unwrapped `claude` invocation (no `--settings` file of its own) now inherits none of this: no `ask`, no `deny`, not even the credential-file rules. `permissions.deny` is still a monotonic union across every settings source Claude Code loads when one *is* declared (nothing can remove a deny that a lower-precedence file declares, not even `--dangerously-skip-permissions`, confirmed against code.claude.com/docs/en/settings.md and permission-modes.md) — the change here is that no source declares any deny for a bare session any more, not that the union stopped working. Accepted trade-off, not a bug: removing the bare binary from PATH was considered and rejected as more invasive than it's worth (`programs.claude-code.package = null` collides with the package's own `bin/claude` output unless the module is reworked further).
+A bare, unwrapped `claude` invocation (no `--settings` file of its own) now inherits none of this: no `ask`, no `deny`, not even the credential-file rules. `permissions.deny` is still a monotonic union across every settings source Claude Code loads when one *is* declared (nothing can remove a deny that a lower-precedence file declares, not even `--dangerously-skip-permissions`, confirmed against code.claude.com/docs/en/settings.md and permission-modes.md); the change here is that no source declares any deny for a bare session any more, not that the union stopped working. Accepted trade-off, not a bug: removing the bare binary from PATH was considered and rejected as more invasive than it's worth (`programs.claude-code.package = null` collides with the package's own `bin/claude` output unless the module is reworked further).
 
 ## `claude-yolo`: what it actually trades away
 
@@ -64,3 +64,45 @@ A bare, unwrapped `claude` invocation (no `--settings` file of its own) now inhe
 The official docs describe bypassPermissions as meant for an isolated container/VM, not a trusted host machine. This runs it on the host anyway, deliberately. With no sandbox, no ask, and no irreversible-command tier, the global CLAUDE.md hard rules (never push/commit/destroy without approval, never touch main) have no harness backstop left besides `credentialDenyOnly`'s credential-file rules; everything else, including merging and publishing releases, holds only as long as the model chooses to follow the project's own documented approval gate (e.g. dudumox's `docs/guidelines/how-to-work.md` "What authorizes a merge"). Use this profile only when that trade-off is wanted for that session, not as a default.
 
 First interactive run shows a one-time disclaimer dialog (accepted state saved to user settings, asked once per machine). Until accepted, a backgrounded run (`--bg`) is refused outright. Accept it via a plain interactive `claude-yolo` invocation before ever trying to background one.
+
+## Hook command wiring: live checkout, not `$HOME/.claude`
+
+The PreToolUse hook in `claude-code/default.nix` runs `bash "<checkout>/modules/user/apps/claudio/hooks/rtk-hook.sh"` against the live checkout path, not `$HOME/.claude/hooks/rtk-hook.sh`, so it doesn't depend on the `~/.claude/hooks` symlink (see the write-escape section above) landing correctly first. It runs via `bash "path"` rather than a direct exec because the hook scripts are tracked `100644` in git: a non-executable hook fails silently instead of erroring, and wrapping in `bash` sidesteps the executable bit entirely.
+
+## `permissions.nix`: policy is data, renderers translate it per consumer
+
+`policy` (commands, credentials, filesystem, network) is the single source of truth, consumed by three renderers: `mkClaudeCodePermissions`/`mkClaudeCodeSandbox` for Claude Code's native settings shape, and `mkOpencodePermissions` for OpenCode's unrelated schema (no equivalent tiering there). A profile opts in explicitly: `claudeCode.user` (claudio.nix, the full ask/deny bundle, `hardDeny` gates the irreversible-command tier), `claudeCode.yolo` (claudio-thebot.nix, the literal empty object), or `claudeCode.credentialDenyOnly` (claudio-yolo.nix, just the credential-file deny rules). `claudeCode.sandbox` is the one bundle every profile gets regardless, wired in from `claude-code/default.nix` directly.
+
+Command tiers, in `policy.commands`: `allow` (ssh's `ProxyCommand` case, needs an explicit allow to run at all), `ask` (destructive but undoable: git push, reset --hard, rm -rf, ...), `denyHard` (irreversible: gh/fj merge and release, opt-in via `hardDeny` since deny unions across every settings source and a `--settings` file can't remove one), `denySoft` (reversible, so these only render as prose in `autoMode.soft_deny` rather than a hard `deny`, and only for Claude Code: OpenCode has no equivalent tier, `opencode.permission.bash` is a flat allow), and `bypassSandboxSeatbelt` (docker/gh/fj/ssh, excluded from the sandbox entirely, see "gh/fj/docker escape the sandbox" above).
+
+## Credential deny is two independent layers
+
+`policy.filesystem.credentials` feeds two unrelated deny mechanisms: `claudeCodeCredentialDenyRules` produces `Read`/`Edit` tool-level deny rules that reach the native tools directly (the sandbox never sees them), and `mkClaudeCodeSandbox`'s `denyRead`/`denyWrite` confines the sandboxed Bash subprocess instead. `Write(path)` tool rules are silently never checked by Claude Code, so `Edit` stands in for `Write` too. OpenCode has no path-based deny mechanism of its own yet, so only Claude Code's two halves read this policy today.
+
+A sibling `.bak` file (home-manager's `backupFileExtension = "bak"`) could ride the same allow grant back in as the file it backs up, so `credentialBaks` denies every credential file's `.bak` too, not just ones already nested under a denied directory.
+
+## `toolchainReadWrite` is one list, not two
+
+Toolchain paths (not personal data: denying `$HOME` wholesale would take out npm/node/asdf too) need both read and write access, so `mkClaudeCodeSandbox`'s `allowRead` and `allowWrite` both draw from `policy.filesystem.toolchainReadWrite` instead of each retyping the list. `allowWrite` drifted out of sync with `allowRead` before this was unified.
+
+## SSH agent signing keys stay readable despite the `~/.ssh` deny
+
+`~/.ssh` itself is denied via `policy.filesystem.credentials.dirs`, but commit signing through the ssh agent needs to read the public keys and config it signs with. The agent socket is ephemeral, so it can't be `allowWrite`, only `allowRead` on `~/.ssh/*.pub`, `allowed_signers`, `config`, and `known_hosts`.
+
+This resolves at all because Seatbelt is last-match-wins, and Claude Code's own sandbox profile generator re-emits `allowRead` entries after the deny they're nested under (anthropic-experimental/sandbox-runtime's `macos-sandbox-utils.ts`: "denyOnly: deny reads from these paths ... allowWithinDeny: re-allow reads within denied regions ... allowWithinDeny takes precedence over denyOnly"), so these four paths resolve readable despite the broader `~/.ssh` deny.
+
+## `autoMode`: prose a model judges, not mechanical enforcement
+
+`autoMode` only applies while a session is in auto mode, and is prose a model interprets, not permission-rule enforcement: wording changes the outcome. Anything that must hold regardless of mode belongs in `permissions` instead. A profile's `autoMode.allow` can override a `soft_deny` entry from the base, the only sanctioned way to loosen anything inherited here.
+
+`environment` deliberately carries no hostnames, org names, or topology: this repo mirrors publicly, and the built-in defaults already trust the working repo's own remotes; repo-specific context belongs in that repo's own CLAUDE.md, which the classifier also reads.
+
+`soft_deny` entries are phrased as a category, never as an absolute: "under any circumstances" would make an entry unoverridable, and claudio-thebot needs to override the forge-activity one specifically. The wording also never states that stating intent clears the rule, since spelling that out would itself read as permission to ignore it.
+
+## `claudio-thebot`'s `--add-dir`/`--plugin-dir`/`--append-system-prompt-file` wiring
+
+`claudio-thebot` can be invoked from anywhere, not just from inside the target repos, and Read/Edit/Write only see the launch cwd by default, so it needs `--add-dir` for claudio-core. `--plugin-dir` loads claudio-core's own `skills/` on top of the operator's base CLAUDIO persona, namespaced as `claudio-core:<skill-name>` (claudio-core carries a `.claude-plugin/plugin.json` manifest for exactly this).
+
+`--add-dir` does not auto-load a CLAUDE.md from the directories it grants, despite what `claude --bare --help` implies: verified empirically, a live session had no knowledge of claudio-core's AGENTS.md content until `--append-system-prompt-file` was added. That flag is the one that actually merges it in.
+
+This profile is yolo-only since the 2026-09-10 consolidation: there used to be a second, gated variant plus a separate `claudio-thebot-yolo` binary, both gone. This is the homelab-scoped AFK publishing agent, not a profile meant to still ask anything, see AGENTS.md's Autonomy & Approval section.

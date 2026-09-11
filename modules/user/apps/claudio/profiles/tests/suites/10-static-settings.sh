@@ -37,9 +37,7 @@ static_settings_run() {
   assert_jq static-apple-events base "$base" '.sandbox.allowAppleEvents' 'true'
 
   # Permission gates: deny survives every mode including bypassPermissions, ask is what a yolo-style profile
-  # trades away. These live on the claudio overlay only (permissions.nix's mkClaudeCodePermissions), not the
-  # shared base (2026-09-10): claude-code/default.nix carries none of this, so a bare `claude` invocation isn't
-  # gated by it, and claudio-thebot is yolo-only now (zero permissions of its own too, asserted below).
+  # trades away. These live only on the claudio overlay (permissions.nix), not the shared base (sandbox-notes.md).
   assert_jq static-deny-gh-merge claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(gh pr merge:*)") != null' 'true'
   assert_jq static-deny-gh-release claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(gh release:*)") != null' 'true'
   assert_jq static-deny-fj-merge claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(fj pr merge:*)") != null' 'true'
@@ -60,24 +58,20 @@ static_settings_run() {
   assert_jq static-deny-rtk-gh-merge claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(rtk gh pr merge:*)") != null' 'true'
   assert_jq static-deny-rtk-fj-release claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(rtk fj release:*)") != null' 'true'
 
-  # base settings.json: zero permissions definition on purpose (2026-09-10) — a bare `claude` invocation isn't
-  # gated by anything meant for the specialized profiles. Guard against it silently coming back.
+  # base settings.json: zero permissions definition on purpose, a bare `claude` invocation isn't gated by
+  # anything meant for the specialized profiles. Guard against it silently coming back.
   assert_jq static-base-no-permissions base "$base" 'has("permissions")' 'false'
 
-  # claudio overlay: sandbox opt-out plus the full permissions bundle asserted individually above, nothing
-  # else. Key-set check only, not a full literal diff: array order inside ask/deny/allow isn't semantically
-  # meaningful and would make this brittle against an unrelated reorder in permissions.nix.
+  # claudio overlay: sandbox opt-out plus the permissions bundle asserted individually above. Key-set check
+  # only, not a full literal diff: array order inside ask/deny/allow isn't semantically meaningful.
   assert_jq static-claudio-overlay-keys claudio "${OVERLAY[claudio]}" '. | keys | sort | join(",")' 'permissions,sandbox'
   assert_jq static-claudio-sandbox-shape claudio "${OVERLAY[claudio]}" '.sandbox | keys | sort | join(",")' 'enabled,filesystem,network'
   assert_jq static-claudio-sandbox-enabled-false claudio "${OVERLAY[claudio]}" '.sandbox.enabled' 'false'
   assert_jq static-claudio-obsidian-read claudio "${OVERLAY[claudio]}" '.sandbox.filesystem.allowRead | join(",")' "$h/.obsidian-cli.sock"
   assert_jq static-claudio-obsidian-socket claudio "${OVERLAY[claudio]}" '.sandbox.network.allowUnixSockets | join(",")' "$h/.obsidian-cli.sock"
 
-  # claude-yolo overlay (2026-09-10: the base defines no permissions at all now, so this profile opts back into
-  # just the credential-file deny explicitly instead of losing it as a side effect): exactly
-  # {permissions:{deny:[...credential rules...]},sandbox:{enabled:false}}. Anything more means the profile grew
-  # scope nobody reviewed; checked as key-set + individual rules rather than a full literal diff (deny array
-  # order isn't semantically meaningful).
+  # claude-yolo overlay opts back into just the credential-file deny (sandbox-notes.md): exactly
+  # {permissions:{deny:[...]},sandbox:{enabled:false}}. Key-set + individual rules, not a full literal diff.
   assert_jq static-claudeyolo-overlay-keys claude-yolo "${OVERLAY[claude-yolo]}" '. | keys | sort | join(",")' 'permissions,sandbox'
   assert_jq static-claudeyolo-permissions-keys claude-yolo "${OVERLAY[claude-yolo]}" '.permissions | keys | join(",")' 'deny'
   assert_jq static-claudeyolo-sandbox-shape claude-yolo "${OVERLAY[claude-yolo]}" '.sandbox | keys | join(",")' 'enabled'
@@ -89,9 +83,8 @@ static_settings_run() {
   assert_jq static-claudeyolo-no-ask claude-yolo "${OVERLAY[claude-yolo]}" '.permissions | has("ask")' 'false'
   assert_jq static-claudeyolo-no-allow claude-yolo "${OVERLAY[claude-yolo]}" '.permissions | has("allow")' 'false'
 
-  # claudio-thebot overlay (2026-09-10 consolidation: this profile is yolo-only now, the gated "auto" variant
-  # and the separate claudio-thebot-yolo binary are both gone): {permissions:{},sandbox:{enabled:false}}, the
-  # same zero-permissions posture as the base, asserted explicitly here rather than left implicit.
+  # claudio-thebot overlay: yolo-only since the 2026-09-10 consolidation, {permissions:{},sandbox:{enabled:false}},
+  # the same zero-permissions posture as the base, asserted explicitly here rather than left implicit.
   if [[ $(jq -Sc . "${OVERLAY[claudio-thebot]}") == '{"permissions":{},"sandbox":{"enabled":false}}' ]]; then
     t_record PASS static-overlay-shape claudio-thebot
   else

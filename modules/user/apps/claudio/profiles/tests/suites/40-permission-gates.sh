@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Permission gate probes: ask rules (auto-denied headless, skipped under claude-yolo) and deny rules (hold in every
-# mode, bypassPermissions included). Payloads reach the model literally, wrapping would hide the command string the
-# rules match on.
+# Permission gate probes: ask rules (auto-denied headless, skipped under claude-yolo) and deny rules (hold in
+# every mode, bypassPermissions included). Payloads reach the model literally so the rules match the string.
 
 set -euo pipefail
 
