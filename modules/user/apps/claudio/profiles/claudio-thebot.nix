@@ -1,12 +1,5 @@
 # The `claudio-thebot` profile: publishes into claudio-core, layered over the base settings via `--settings`.
-# Adds `--add-dir` since it can be invoked from anywhere, not just from inside the target repos,
-# and Read/Edit/Write only see the launch cwd by default. `--plugin-dir` loads claudio-core's own skills/ on
-# top of the operator's base CLAUDIO persona, namespaced as `claudio-core:<skill-name>` (claudio-core carries
-# a `.claude-plugin/plugin.json` manifest for exactly this).
-#
-# `--add-dir` does NOT auto-load a CLAUDE.md from the directories it grants, despite what `claude --bare
-# --help` implies (verified empirically: a live session had no knowledge of claudio-core's AGENTS.md content
-# until this flag was added). `--append-system-prompt-file` is the one that actually merges it in.
+# See docs/sandbox-notes.md for the --add-dir/--plugin-dir wiring and this profile's yolo-only consolidation.
 {
   config,
   pkgs,
@@ -30,9 +23,8 @@ let
   fjTokenPath = config.sops.secrets."claudio-thebot-fj-token".path;
   ghTokenPath = config.sops.secrets."claudio-thebot-gh-token".path;
 
-  # `active` is the full shell body to run under CLAUDIO_THEBOT_SESSION (must exec, not just set env), not
-  # just a command prefix, so wrappers that need extra setup (fj, gh) share this gate instead of hand-rolling
-  # their own copy of it.
+  # `active` is the full shell body run under CLAUDIO_THEBOT_SESSION (must exec, not just set env), so wrappers
+  # needing extra setup (fj, gh) share this gate instead of hand-rolling their own copy.
   mkIdentityWrapper =
     {
       name,
@@ -48,33 +40,11 @@ let
       fi
     '';
 
-  settings = {
-    # Presence rules are soft_deny, not permissions.deny, precisely so this profile can carve itself an
-    # exception here: a permissions deny can't be overridden from a higher layer.
-    autoMode.allow = [
-      "$defaults"
-
-      ''
-        This session is a publishing agent working in ${claudioCore} and posting under its own bot identity rather than the operator's.
-        Opening pull requests, creating and editing issues, and commenting on them are its purpose there, so the rule reserving published
-        presence to the operator does not apply to that repository. It still applies everywhere else.
-      ''
-    ];
-
-    # This is an "auto" profile (not the yolo one below): hardDeny = true opts into the irreversible tier.
-    # See the comment above `denyHard` in permissions.nix's `policy.commands` for why this is opt-in.
-    permissions = perms.mkClaudeCodePermissions {
-      inherit (perms) policy;
-      hardDeny = true;
-    };
-  };
-
-  settingsFile = (pkgs.formats.json { }).generate "claudio-thebot-settings.json" settings;
-
-  # bypassPermissions skips auto mode entirely. This profile also leaves hardDeny at its default false: merge
-  # and release approval here comes from a real PR review instead (see sandbox-notes.md's `claude-yolo` note).
-  yoloSettingsFile = (pkgs.formats.json { }).generate "claudio-thebot-yolo-settings.json" {
+  # bypassPermissions skips auto mode entirely, no carve-out needed here. perms.claudeCode.yolo is the literal
+  # empty object: docs/sandbox-notes.md's "claude-yolo: what it actually trades away" section has the history.
+  settingsFile = (pkgs.formats.json { }).generate "claudio-thebot-settings.json" {
     sandbox.enabled = false;
+    permissions = perms.claudeCode.yolo;
   };
 
   claudioCoreArgs = ''
@@ -170,6 +140,7 @@ in
   };
 
   home.packages = [
+    # no sandbox, no permission prompts
     (pkgs.writeShellApplication {
       runtimeInputs = [ config.programs.claude-code.package ];
 
@@ -178,23 +149,8 @@ in
         export PATH="${home}/${identityBinDir}:$PATH"
 
         exec env CLAUDIO_THEBOT_SESSION=1 claude \
-          --settings ${settingsFile} \
-          ${claudioCoreArgs} \
-          "$@"
-      '';
-    })
-
-    # no sandbox, no permission prompts
-    (pkgs.writeShellApplication {
-      runtimeInputs = [ config.programs.claude-code.package ];
-
-      name = "claudio-thebot-yolo";
-      text = ''
-        export PATH="${home}/${identityBinDir}:$PATH"
-
-        exec env CLAUDIO_THEBOT_SESSION=1 claude \
           --dangerously-skip-permissions \
-          --settings ${yoloSettingsFile} \
+          --settings ${settingsFile} \
           ${claudioCoreArgs} \
           "$@"
       '';

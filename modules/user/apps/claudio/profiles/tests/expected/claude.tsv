@@ -12,10 +12,10 @@ net-denied-domain	BLOCKED
 net-local-domain	EXECUTED
 net-nix-socket	EXECUTED
 net-tls-sandboxed	EXECUTED
-gate-git-push	BLOCKED
-gate-rm-rf	BLOCKED
-gate-git-reset-hard	BLOCKED
-gate-checkout-dot	BLOCKED
-gate-deny-gh-merge	BLOCKED
-gate-deny-fj-release	BLOCKED
+gate-git-push	EXECUTED	2026-09-10: the shared base defines zero permissions on purpose (permissions.nix), so a bare `claude` invocation is no longer gated by anything meant for the specialized profiles. Previously BLOCKED via the base's unconditional ask rule
+gate-rm-rf	EXECUTED	same reasoning as gate-git-push
+gate-git-reset-hard	EXECUTED	same reasoning as gate-git-push
+gate-checkout-dot	EXECUTED	same reasoning as gate-git-push
+gate-deny-gh-merge	EXECUTED	same reasoning as gate-git-push: the base no longer carries the credential/irreversible-command deny rules either, since it no longer calls mkClaudeCodePermissions at all. Only claudio/claudio-yolo opt back into any of this now
+gate-deny-fj-release	EXECUTED	same reasoning as gate-deny-gh-merge
 gate-allow-ssh-proxycommand	EXECUTED	permissions.allow bypasses the classifier in every#152)

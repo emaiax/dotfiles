@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Result recording, assertions, and expected-table lookup shared by every suite.
-# Everything funnels into results.jsonl; run.sh derives the summary and exit code from that file, so parallel probe
-# processes need no shared counters.
+# Result recording, assertions, and expected-table lookup shared by every suite. Everything funnels into
+# results.jsonl; run.sh derives the summary and exit code from it, so parallel probes need no shared counters.
 
 set -euo pipefail
 
@@ -10,7 +9,7 @@ set -euo pipefail
 
 # Consumed by run.sh after sourcing.
 # shellcheck disable=SC2034
-PROFILES=(claude claudio claudio-thebot claude-yolo claudio-thebot-yolo)
+PROFILES=(claude claudio claudio-thebot claude-yolo)
 
 _color() {
   local code=$1
@@ -98,9 +97,8 @@ verdict_vs_expected() {
   esac
 }
 
-# skip_if_base_drift CASE_ID PROFILE JQ_TEST NOTE: dynamic probes run over the machine's active base settings, not the
-# branch build (see lib/build.sh). If JQ_TEST detects drift that would invalidate this case, SKIP with NOTE and return 0
-# so the caller bails before spending a probe.
+# skip_if_base_drift CASE_ID PROFILE JQ_TEST NOTE: probes run over the active base, not the branch build
+# (lib/build.sh); if JQ_TEST matches drift that invalidates this case, SKIP with NOTE before spending a probe.
 skip_if_base_drift() {
   local case_id=$1 profile=$2 jq_test=$3 note=$4
   if jq -e "$jq_test" "$HOME/.claude/settings.json" >/dev/null 2>&1; then

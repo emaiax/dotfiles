@@ -1,6 +1,6 @@
 # Profile test suite
 
-AFK test suite for the Claude Code profiles defined in this module: `claude` (default sandboxed), `claudio`, `claudio-thebot`, `claude-yolo`, and `claudio-thebot-yolo`. Every dynamic case runs identically against all five profiles; per-profile expectations live in `expected/<profile>.tsv`, so the comparison sandboxed × yolo falls out of the same run.
+AFK test suite for the Claude Code profiles defined in this module: `claude` (default sandboxed), `claudio`, `claudio-thebot` (yolo: zero permissions, no sandbox, no auto-mode gates), and `claude-yolo`. Every dynamic case runs identically against all four profiles; per-profile expectations live in `expected/<profile>.tsv`, so the comparison sandboxed × yolo falls out of the same run.
 
 ## Running
 
