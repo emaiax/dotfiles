@@ -125,6 +125,17 @@ Judge by the artifact the text ends up in, not by the file that produces it:
 
 The test: does the text get rendered by markdown or git, or does it get read inside the source file? Rendered means no wrap. Read in place means wrap.
 
+## Quoting a heredoc
+
+A heredoc with a quoted delimiter (`<<'EOF'`) is fully literal: no `$(...)`/`${...}` expansion, no backslash escaping, nothing. Never escape a backtick, a quote, or any other character inside one: the escape character itself becomes part of the text.
+
+Use the quoted form whenever the body contains `$` or backtick characters that must stay literal: shell commands, code examples, markdown code spans and fences.
+
+Use an unquoted heredoc (`<<EOF`) only when the body needs `$(...)`/`${...}` to actually expand, and escape only the specific characters that must not expand in that case.
+
+Bad: `<<'EOF'` body containing `` \`git status\` ``: renders as literal backslashes around the word, not a code span.
+Good: `<<'EOF'` body containing `` `git status` ``: renders as a code span.
+
 ## Punctuation
 
 - No em dashes
