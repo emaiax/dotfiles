@@ -33,7 +33,7 @@ let
 
   # Claude Code's installer can leave installed_plugins.json pinned older than what's already cached,
   # breaking every DB write. Bump this to move the pin; the activation below fixes the pointer.
-  claudeMemVersion = "13.15.2";
+  claudeMemVersion = "13.25.3";
 in
 {
   # nix always wins now: a differing existing file gets backed up to .bak first (flake.nix's
