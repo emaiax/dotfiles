@@ -89,6 +89,11 @@ echo "== static: auto-mode"
 source "$TESTS_ROOT/suites/50-automode.sh"
 automode_run
 
+echo "== static: cli-backends"
+# shellcheck source=suites/60-cli-backends.sh
+source "$TESTS_ROOT/suites/60-cli-backends.sh"
+cli_backends_run
+
 if [[ $STATIC_ONLY == 0 ]]; then
   [[ ${#PROFILE_FILTER[@]} -gt 0 ]] || PROFILE_FILTER=("${PROFILES[@]}")
 

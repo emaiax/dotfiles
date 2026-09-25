@@ -1,6 +1,8 @@
 { inputs, pkgs, ... }:
 {
   imports = [
+    ./options.nix
+    ./antigravity
     ./claude-code
     ./opencode
     ./profiles

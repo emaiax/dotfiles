@@ -21,9 +21,63 @@ in
   home.packages = [
     (pkgs.writeShellApplication {
       name = "claude-yolo";
-      runtimeInputs = [ config.programs.claude-code.package ];
+      runtimeInputs = [
+        config.programs.claude-code.package
+        pkgs.antigravity-cli
+        config.programs.opencode.package
+      ];
       text = ''
-        exec claude --dangerously-skip-permissions --settings ${settingsFile} "$@"
+        default_backend="${config.programs.claudio.backend}"
+        backend="$default_backend"
+
+        if [[ -n "''${CLAUDIO_BACKEND:-}" ]]; then
+          backend="$CLAUDIO_BACKEND"
+        fi
+
+        if [[ $# -gt 0 ]]; then
+          case "$1" in
+            --agy)
+              backend="agy"
+              shift
+              ;;
+            --claude|--claude-code)
+              backend="claude-code"
+              shift
+              ;;
+            --opencode)
+              backend="opencode"
+              shift
+              ;;
+            --backend|-b)
+              if [[ $# -lt 2 ]]; then
+                echo "claude-yolo: missing argument for $1" >&2
+                exit 1
+              fi
+              backend="$2"
+              shift 2
+              ;;
+            --backend=*)
+              backend="''${1#*=}"
+              shift
+              ;;
+          esac
+        fi
+
+        case "$backend" in
+          agy)
+            exec env CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS=1 agy --dangerously-skip-permissions "$@"
+            ;;
+          claude-code)
+            exec claude --dangerously-skip-permissions --settings ${settingsFile} "$@"
+            ;;
+          opencode)
+            exec opencode --auto "$@"
+            ;;
+          *)
+            echo "claude-yolo: unknown backend '$backend' (supported: agy, claude-code, opencode)" >&2
+            exit 1
+            ;;
+        esac
       '';
     })
   ];
