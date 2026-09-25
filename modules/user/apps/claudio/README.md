@@ -107,43 +107,43 @@ Full policy definitions are documented in [`permissions.tsv`](permissions.tsv).
 
 | Backend | Profile | Mode | Credentials Protection | Destructive Command Gate | Hard Deny (Merge/Release) | RTK Rewrites | Sandbox Layer |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **claude-code** | `claudio` | `auto` | `deny` (Read/Edit tool rules) | `ask` (interactive prompt) | `deny` | `rtk hook claude` | Seatbelt network allowlist (filesystem disabled) |
-| **claude-code** | `claude-yolo` | `bypass` | `deny` (`credentialDenyOnly`) | `allow` (`--dangerously-skip-permissions`) | `allow` | `rtk hook claude` | None (`sandbox.enabled = false`) |
-| **claude-code** | `claudio-thebot` | `bypass` | `allow` (clean `identity-bin` environment) | `allow` (`--dangerously-skip-permissions`) | `allow` | `rtk hook claude` | None (`sandbox.enabled = false`) |
 | **agy** | `claudio` | `default` | `deny` (file tools + command inspection) | `ask` (interactive prompt) | `deny` | `rtk rewrite` | Terminal restrictions (`--sandbox` optional) |
-| **agy** | `claude-yolo` | `bypass` | `deny` (file tools + command inspection) | `allow` (`CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS=1`) | `deny` | `rtk rewrite` | None |
+| **agy** | `claudio-yolo` | `bypass` | `deny` (file tools + command inspection) | `allow` (`CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS=1`) | `deny` | `rtk rewrite` | None |
 | **agy** | `claudio-thebot` | `bypass` | `deny` (file tools + command inspection) | `allow` (`CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS=1`) | `deny` | `rtk rewrite` | None (`identity-bin` PATH injection) |
+| **claude-code** | `claudio` | `auto` | `deny` (Read/Edit tool rules) | `ask` (interactive prompt) | `deny` | `rtk hook claude` | Seatbelt network allowlist (filesystem disabled) |
+| **claude-code** | `claudio-yolo` | `bypass` | `deny` (`credentialDenyOnly`) | `allow` (`--dangerously-skip-permissions`) | `allow` | `rtk hook claude` | None (`sandbox.enabled = false`) |
+| **claude-code** | `claudio-thebot` | `bypass` | `allow` (clean `identity-bin` environment) | `allow` (`--dangerously-skip-permissions`) | `allow` | `rtk hook claude` | None (`sandbox.enabled = false`) |
 | **opencode** | `claudio` | `default` | `deny` (`*.env` patterns) | `allow` (flat bash allow, `external_directory = ask`) | `allow` | None | None |
-| **opencode** | `claude-yolo` | `auto` | `deny` (`*.env` patterns) | `allow` (`--auto`) | `allow` | None | None |
+| **opencode** | `claudio-yolo` | `auto` | `deny` (`*.env` patterns) | `allow` (`--auto`) | `allow` | None | None |
 | **opencode** | `claudio-thebot` | `auto` | `deny` (`*.env` patterns) | `allow` (`--auto`) | `allow` | None | None |
 
 ### Detailed Command & Target Comparison
 
-| Rule Type | Target | Claude: claudio | Claude: claude-yolo | Claude: claudio-thebot | AGY: claudio | AGY: claude-yolo | AGY: claudio-thebot | OpenCode |
+| Rule Type | Target | Claude: claudio | Claude: claudio-yolo | Claude: claudio-thebot | AGY: claudio | AGY: claudio-yolo | AGY: claudio-thebot | OpenCode |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Command** | `git push` | `ask` | `allow` | `allow` | `ask` | `allow` | `allow` | `allow` |
-| **Command** | `git reset --hard` | `ask` | `allow` | `allow` | `ask` | `allow` | `allow` | `allow` |
-| **Command** | `git checkout --` | `ask` | `allow` | `allow` | `ask` | `allow` | `allow` | `allow` |
-| **Command** | `git restore` | `ask` | `allow` | `allow` | `ask` | `allow` | `allow` | `allow` |
-| **Command** | `git clean` | `ask` | `allow` | `allow` | `ask` | `allow` | `allow` | `allow` |
-| **Command** | `git rebase` | `ask` | `allow` | `allow` | `ask` | `allow` | `allow` | `allow` |
-| **Command** | `rm -rf` | `ask` | `allow` | `allow` | `ask` | `allow` | `allow` | `allow` |
-| **Command** | `git checkout .` | `ask` | `allow` | `allow` | `ask` | `allow` | `allow` | `allow` |
-| **Command** | `gh pr merge` | `deny` | `allow` | `allow` | `deny` | `deny` | `deny` | `allow` |
-| **Command** | `gh release` | `deny` | `allow` | `allow` | `deny` | `deny` | `deny` | `allow` |
+| **Command** | `fj pr create` | `soft_deny` (prose) | `allow` | `allow` | `soft_deny` (`AGENTS.md`) | `soft_deny` (`AGENTS.md`) | `soft_deny` (`AGENTS.md`) | `allow` |
 | **Command** | `fj pr merge` | `deny` | `allow` | `allow` | `deny` | `deny` | `deny` | `allow` |
 | **Command** | `fj release` | `deny` | `allow` | `allow` | `deny` | `deny` | `deny` | `allow` |
 | **Command** | `gh pr create` | `soft_deny` (prose) | `allow` | `allow` | `soft_deny` (`AGENTS.md`) | `soft_deny` (`AGENTS.md`) | `soft_deny` (`AGENTS.md`) | `allow` |
-| **Command** | `fj pr create` | `soft_deny` (prose) | `allow` | `allow` | `soft_deny` (`AGENTS.md`) | `soft_deny` (`AGENTS.md`) | `soft_deny` (`AGENTS.md`) | `allow` |
-| **Directory** | `~/.ssh` | `deny` | `deny` | `allow` | `deny` | `deny` | `deny` | `allow` |
+| **Command** | `gh pr merge` | `deny` | `allow` | `allow` | `deny` | `deny` | `deny` | `allow` |
+| **Command** | `gh release` | `deny` | `allow` | `allow` | `deny` | `deny` | `deny` | `allow` |
+| **Command** | `git checkout .` | `ask` | `allow` | `allow` | `ask` | `allow` | `allow` | `allow` |
+| **Command** | `git checkout --` | `ask` | `allow` | `allow` | `ask` | `allow` | `allow` | `allow` |
+| **Command** | `git clean` | `ask` | `allow` | `allow` | `ask` | `allow` | `allow` | `allow` |
+| **Command** | `git push` | `ask` | `allow` | `allow` | `ask` | `allow` | `allow` | `allow` |
+| **Command** | `git rebase` | `ask` | `allow` | `allow` | `ask` | `allow` | `allow` | `allow` |
+| **Command** | `git reset --hard` | `ask` | `allow` | `allow` | `ask` | `allow` | `allow` | `allow` |
+| **Command** | `git restore` | `ask` | `allow` | `allow` | `ask` | `allow` | `allow` | `allow` |
+| **Command** | `rm -rf` | `ask` | `allow` | `allow` | `ask` | `allow` | `allow` | `allow` |
 | **Directory** | `~/.aws` | `deny` | `deny` | `allow` | `deny` | `deny` | `deny` | `allow` |
-| **Directory** | `~/.config/sops` | `deny` | `deny` | `allow` | `deny` | `deny` | `deny` | `allow` |
 | **Directory** | `~/.config/1Password` | `deny` | `deny` | `allow` | `deny` | `deny` | `deny` | `allow` |
+| **Directory** | `~/.config/sops` | `deny` | `deny` | `allow` | `deny` | `deny` | `deny` | `allow` |
 | **Directory** | `~/.gnupg` | `deny` | `deny` | `allow` | `deny` | `deny` | `deny` | `allow` |
+| **Directory** | `~/.ssh` | `deny` | `deny` | `allow` | `deny` | `deny` | `deny` | `allow` |
 | **File** | `~/.claude/.credentials.json` | `deny` | `deny` | `allow` | `deny` | `deny` | `deny` | `allow` |
+| **File** | `~/.local/share/opencode/auth.json` | `deny` | `deny` | `allow` | `deny` | `deny` | `deny` | `allow` |
 | **File** | `~/.netrc` | `deny` | `deny` | `allow` | `deny` | `deny` | `deny` | `allow` |
 | **File** | `~/.npmrc` | `deny` | `deny` | `allow` | `deny` | `deny` | `deny` | `allow` |
-| **File** | `opencode/auth.json` | `deny` | `deny` | `allow` | `deny` | `deny` | `deny` | `allow` |
 | **Pattern** | `*.env` | `allow` | `allow` | `allow` | `allow` | `allow` | `allow` | `deny` |
 | **Rewrite** | `git log / status / diff` | `rtk rewrite` | `rtk rewrite` | `rtk rewrite` | `rtk rewrite` | `rtk rewrite` | `rtk rewrite` | None |
 | **Rewrite** | `grep / rg / ls / find` | `rtk rewrite` | `rtk rewrite` | `rtk rewrite` | `rtk rewrite` | `rtk rewrite` | `rtk rewrite` | None |

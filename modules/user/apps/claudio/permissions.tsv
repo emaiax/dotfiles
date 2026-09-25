@@ -41,42 +41,42 @@ bash	opencode.permission.bash	rendered	opencode/default.nix, built by mkOpencode
 
 # Backend and Profile Matrix Overview
 backend	profile	default_mode	credentials_protection	destructive_cmd_gate	hard_deny	rtk_rewrites	sandbox_layer
-claude-code	claudio	auto	deny (Read/Edit tool rules)	ask (interactive prompt)	deny (gh/fj merge/release)	PreToolUse hook (rtk hook claude)	Seatbelt network allowlist (filesystem disabled)
-claude-code	claude-yolo	bypass	deny (credentialDenyOnly)	allow (--dangerously-skip-permissions)	allow	PreToolUse hook (rtk hook claude)	none (sandbox.enabled = false)
-claude-code	claudio-thebot	bypass	allow (identity-bin wrapper environment)	allow (--dangerously-skip-permissions)	allow	PreToolUse hook (rtk hook claude)	none (sandbox.enabled = false)
 agy	claudio	default	deny (view/read tools + command check)	ask (interactive prompt)	deny (gh/fj merge/release)	PreToolUse hook (rtk rewrite)	terminal restrictions (--sandbox optional)
-agy	claude-yolo	bypass	deny (view/read tools + command check)	allow (CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS=1)	deny (gh/fj merge/release)	PreToolUse hook (rtk rewrite)	none
+agy	claudio-yolo	bypass	deny (view/read tools + command check)	allow (CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS=1)	deny (gh/fj merge/release)	PreToolUse hook (rtk rewrite)	none
 agy	claudio-thebot	bypass	deny (view/read tools + command check)	allow (CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS=1)	deny (gh/fj merge/release)	PreToolUse hook (rtk rewrite)	none (identity-bin PATH injection)
+claude-code	claudio	auto	deny (Read/Edit tool rules)	ask (interactive prompt)	deny (gh/fj merge/release)	PreToolUse hook (rtk hook claude)	Seatbelt network allowlist (filesystem disabled)
+claude-code	claudio-yolo	bypass	deny (credentialDenyOnly)	allow (--dangerously-skip-permissions)	allow	PreToolUse hook (rtk hook claude)	none (sandbox.enabled = false)
+claude-code	claudio-thebot	bypass	allow (identity-bin wrapper environment)	allow (--dangerously-skip-permissions)	allow	PreToolUse hook (rtk hook claude)	none (sandbox.enabled = false)
 opencode	claudio	default	deny (*.env patterns)	allow (flat bash allow, external_directory=ask)	allow	none	none
-opencode	claude-yolo	auto	deny (*.env patterns)	allow (--auto)	allow	none	none
+opencode	claudio-yolo	auto	deny (*.env patterns)	allow (--auto)	allow	none	none
 opencode	claudio-thebot	auto	deny (*.env patterns)	allow (--auto)	allow	none	none
 
 # Detailed Permission Rule Comparison by Target
-rule_type	target	claude_code:claudio	claude_code:claude-yolo	claude_code:claudio-thebot	agy:claudio	agy:claude-yolo	agy:claudio-thebot	opencode
-command	git push	ask	allow	allow	ask	allow	allow	allow
-command	git reset --hard	ask	allow	allow	ask	allow	allow	allow
-command	git checkout --	ask	allow	allow	ask	allow	allow	allow
-command	git restore	ask	allow	allow	ask	allow	allow	allow
-command	git clean	ask	allow	allow	ask	allow	allow	allow
-command	git rebase	ask	allow	allow	ask	allow	allow	allow
-command	rm -rf	ask	allow	allow	ask	allow	allow	allow
-command	git checkout .	ask	allow	allow	ask	allow	allow	allow
-command	gh pr merge	deny	allow	allow	deny	deny	deny	allow
-command	gh release	deny	allow	allow	deny	deny	deny	allow
+rule_type	target	claude_code:claudio	claude_code:claudio-yolo	claude_code:claudio-thebot	agy:claudio	agy:claudio-yolo	agy:claudio-thebot	opencode
+command	fj pr create	soft_deny (prose)	allow	allow	soft_deny (AGENTS.md)	soft_deny (AGENTS.md)	soft_deny (AGENTS.md)	allow
 command	fj pr merge	deny	allow	allow	deny	deny	deny	allow
 command	fj release	deny	allow	allow	deny	deny	deny	allow
 command	gh pr create	soft_deny (prose)	allow	allow	soft_deny (AGENTS.md)	soft_deny (AGENTS.md)	soft_deny (AGENTS.md)	allow
-command	fj pr create	soft_deny (prose)	allow	allow	soft_deny (AGENTS.md)	soft_deny (AGENTS.md)	soft_deny (AGENTS.md)	allow
-credential_dir	~/.ssh	deny	deny	allow	deny	deny	deny	allow
+command	gh pr merge	deny	allow	allow	deny	deny	deny	allow
+command	gh release	deny	allow	allow	deny	deny	deny	allow
+command	git checkout .	ask	allow	allow	ask	allow	allow	allow
+command	git checkout --	ask	allow	allow	ask	allow	allow	allow
+command	git clean	ask	allow	allow	ask	allow	allow	allow
+command	git push	ask	allow	allow	ask	allow	allow	allow
+command	git rebase	ask	allow	allow	ask	allow	allow	allow
+command	git reset --hard	ask	allow	allow	ask	allow	allow	allow
+command	git restore	ask	allow	allow	ask	allow	allow	allow
+command	rm -rf	ask	allow	allow	ask	allow	allow	allow
 credential_dir	~/.aws	deny	deny	allow	deny	deny	deny	allow
-credential_dir	~/.config/sops	deny	deny	allow	deny	deny	deny	allow
 credential_dir	~/.config/1Password	deny	deny	allow	deny	deny	deny	allow
+credential_dir	~/.config/sops	deny	deny	allow	deny	deny	deny	allow
 credential_dir	~/.gnupg	deny	deny	allow	deny	deny	deny	allow
+credential_dir	~/.ssh	deny	deny	allow	deny	deny	deny	allow
 credential_file	~/.claude/.credentials.json	deny	deny	allow	deny	deny	deny	allow
-credential_file	~/.netrc	deny	deny	allow	deny	deny	deny	allow
-credential_file	~/.npmrc	deny	deny	allow	deny	deny	deny	allow
 credential_file	~/.local/share/opencode/auth.json	deny	deny	allow	deny	deny	deny	allow
 credential_file	~/.local/share/opencode/mcp-auth.json	deny	deny	allow	deny	deny	deny	allow
+credential_file	~/.netrc	deny	deny	allow	deny	deny	deny	allow
+credential_file	~/.npmrc	deny	deny	allow	deny	deny	deny	allow
 credential_pattern	*.env / *.env.*	allow	allow	allow	allow	allow	allow	deny
 rewrite	git log / git diff / git status	rtk rewrite	rtk rewrite	rtk rewrite	rtk rewrite	rtk rewrite	rtk rewrite	none
 rewrite	grep / rg / ls / find	rtk rewrite	rtk rewrite	rtk rewrite	rtk rewrite	rtk rewrite	rtk rewrite	none
