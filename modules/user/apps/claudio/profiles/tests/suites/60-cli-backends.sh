@@ -75,7 +75,7 @@ cli_backends_run() {
     fi
 
     # 3. Credential path in file tool: ~/.ssh
-    res=$(echo '{"toolCall":{"name":"view_file","args":{"AbsolutePath":"/Users/emaiax/.ssh/id_ed25519"}}}' | bash "$hook_bin" "$policy_file")
+    res=$(echo "{\"toolCall\":{\"name\":\"view_file\",\"args\":{\"AbsolutePath\":\"${HOME}/.ssh/id_ed25519\"}}}" | bash "$hook_bin" "$policy_file")
     if [[ $(echo "$res" | jq -r '.decision') == "deny" ]]; then
       t_record PASS hook-deny-view-ssh agy
     else
@@ -83,7 +83,7 @@ cli_backends_run() {
     fi
 
     # 4. Credential path in command: cat ~/.ssh
-    res=$(echo '{"toolCall":{"name":"run_command","args":{"CommandLine":"cat /Users/emaiax/.ssh/id_ed25519"}}}' | bash "$hook_bin" "$policy_file")
+    res=$(echo "{\"toolCall\":{\"name\":\"run_command\",\"args\":{\"CommandLine\":\"cat ${HOME}/.ssh/id_ed25519\"}}}" | bash "$hook_bin" "$policy_file")
     if [[ $(echo "$res" | jq -r '.decision') == "deny" ]]; then
       t_record PASS hook-deny-cmd-ssh agy
     else

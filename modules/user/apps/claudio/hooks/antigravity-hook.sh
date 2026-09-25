@@ -31,11 +31,11 @@ TOOL_NAME=$(echo "$PAYLOAD" | jq -r '.toolCall.name // empty')
 #   leak their plaintext contents into the LLM conversation context.
 #
 # Examples:
-#   - BLOCKED: view_file(AbsolutePath="/Users/emaiax/.ssh/id_ed25519")
+#   - BLOCKED: view_file(AbsolutePath="~/.ssh/id_ed25519")
 #              -> {"decision":"deny","reason":"Credential path blocked by claudio policy"}
-#   - BLOCKED: replace_file_content(TargetFile="/Users/emaiax/.aws/credentials")
+#   - BLOCKED: replace_file_content(TargetFile="~/.aws/credentials")
 #              -> {"decision":"deny","reason":"Credential path blocked by claudio policy"}
-#   - ALLOWED: view_file(AbsolutePath="/Users/emaiax/code/dotfiles/README.md")
+#   - ALLOWED: view_file(AbsolutePath="~/code/dotfiles/README.md")
 #              -> continues to next checks / allow
 # -----------------------------------------------------------------------------
 if [[ "$TOOL_NAME" =~ ^(view_file|read_file|write_to_file|replace_file_content)$ ]]; then
