@@ -100,4 +100,75 @@ cli_backends_run() {
   else
     t_record SKIP hook-policy-tests agy "policy_file or hook_bin not found"
   fi
+
+  # 6. Antigravity settings store generation & schema
+  local agy_settings_json
+  agy_settings_json=$(grep -o '/nix/store/[a-z0-9]*-antigravity-cli-settings\.json' "$GEN/activate" 2>/dev/null | head -1 || true)
+  if [[ -z "$agy_settings_json" || ! -f "$agy_settings_json" ]]; then
+    agy_settings_json=$(ls -d /nix/store/*antigravity-cli-settings.json 2>/dev/null | tail -1 || true)
+  fi
+
+  if [[ -f "$agy_settings_json" ]]; then
+    local cs telemetry verbosity has_git
+    cs=$(jq -r '.colorScheme // empty' "$agy_settings_json")
+    telemetry=$(jq -r '.enableTelemetry' "$agy_settings_json")
+    verbosity=$(jq -r '.verbosity // empty' "$agy_settings_json")
+    has_git=$(jq -r '.permissions.allow[] | select(. == "command(git *)")' "$agy_settings_json" 2>/dev/null || true)
+
+    if [[ "$cs" == "tokyo night" && "$telemetry" == "false" && "$verbosity" == "low" && "$has_git" == "command(git *)" ]]; then
+      t_record PASS settings-store-schema agy
+    else
+      t_record FAIL settings-store-schema agy "unexpected settings content: $(cat "$agy_settings_json")"
+    fi
+  else
+    t_record FAIL settings-store-schema agy "could not find antigravity-cli-settings.json"
+  fi
+
+  # 7. Activation script includes smart merge
+  if grep -q 'antigravityCliSettings' "$GEN/activate" 2>/dev/null && grep -q 'trustedWorkspaces' "$GEN/activate" 2>/dev/null; then
+    t_record PASS activation-has-smart-merge agy
+  else
+    t_record FAIL activation-has-smart-merge agy "activation script missing antigravityCliSettings or trustedWorkspaces merge"
+  fi
+
+  # 8. Behavioral test of smart-merge logic
+  if [[ -f "$agy_settings_json" ]]; then
+    local test_live test_merged
+    test_live='{"colorScheme":"old","enableTelemetry":true,"trustedWorkspaces":["/test/worktree"],"permissions":{"allow":["command(adhoc-tool)"]}}'
+    test_merged=$(echo "$test_live" | jq -s --slurpfile nix "$agy_settings_json" '
+      .[0] as $live | $nix[0] as $nix |
+      ($live * $nix) * {
+        trustedWorkspaces: ($live.trustedWorkspaces // []),
+        permissions: {
+          allow: ((($live.permissions.allow // []) + ($nix.permissions.allow // [])) | unique)
+        }
+      }
+    ')
+    local merged_ws merged_adhoc merged_git merged_cs
+    merged_ws=$(echo "$test_merged" | jq -r '.trustedWorkspaces[0] // empty')
+    merged_adhoc=$(echo "$test_merged" | jq -r '.permissions.allow[] | select(. == "command(adhoc-tool)")' 2>/dev/null || true)
+    merged_git=$(echo "$test_merged" | jq -r '.permissions.allow[] | select(. == "command(git *)")' 2>/dev/null || true)
+    merged_cs=$(echo "$test_merged" | jq -r '.colorScheme')
+
+    if [[ "$merged_ws" == "/test/worktree" && "$merged_adhoc" == "command(adhoc-tool)" && "$merged_git" == "command(git *)" && "$merged_cs" == "tokyo night" ]]; then
+      t_record PASS smart-merge-preserves-and-unions agy
+    else
+      t_record FAIL smart-merge-preserves-and-unions agy "merge failed: $test_merged"
+    fi
+  else
+    t_record SKIP smart-merge-preserves-and-unions agy "agy_settings_json missing"
+  fi
+
+  # 9. Tracked seeds parity between apps/antigravity-cli and claudio/antigravity
+  local seed_app="$TESTS_ROOT/../../../antigravity-cli/settings.json"
+  local seed_claudio="$TESTS_ROOT/../../antigravity/settings.json"
+  if [[ -f "$seed_app" && -f "$seed_claudio" ]]; then
+    if cmp -s "$seed_app" "$seed_claudio"; then
+      t_record PASS tracked-seed-parity agy
+    else
+      t_record FAIL tracked-seed-parity agy "seeds differ between $seed_app and $seed_claudio"
+    fi
+  else
+    t_record FAIL tracked-seed-parity agy "one or both seed files missing: $seed_app, $seed_claudio"
+  fi
 }
