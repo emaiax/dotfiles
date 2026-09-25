@@ -154,8 +154,8 @@ Full policy definitions are documented in [`permissions.tsv`](permissions.tsv).
 | :---: | :--- | :--- |
 | 🟢 | **Allow** | Automatically permitted without interactive confirmation |
 | 🟡 | **Ask** | Prompts for interactive user approval before execution |
-| 🛑 | **Deny** | Hard blocked by security hook or permission rules (fails immediately) |
 | 🟠 | **Soft Deny** | Discouraged via agent instructions (`AGENTS.md` / Claude prompt) |
+| 🛑 | **Deny** | Hard blocked by security hook or permission rules (fails immediately) |
 | ⚡ | **RTK Rewrite** | Command intercepted and compressed via RTK to optimize tokens |
 | ⚪ | **None** | No restriction or interception layer applied |
 
