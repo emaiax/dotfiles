@@ -1,3 +1,5 @@
+# Antigravity CLI (agy) integration for Claudio:
+# Lifecycle management, settings smart-merge, security hooks, and global customizations.
 {
   claudioPath,
   config,
@@ -37,10 +39,34 @@ let
   };
 
   hooksJson = (pkgs.formats.json { }).generate "antigravity-hooks.json" hooksConfig;
+
+  cfg = config.programs.antigravity-cli;
+  liveSettingsPath = "${home}/.gemini/antigravity-cli/settings.json";
+  trackedSettings = "${claudioPath}/antigravity/settings.json";
+
+  fullSettings = lib.recursiveUpdate (lib.optionalAttrs (cfg.permissions != null) {
+    inherit (cfg) permissions;
+  }) cfg.settings;
+
+  generatedSettingsJson =
+    (pkgs.formats.json { }).generate "antigravity-cli-settings.json"
+      fullSettings;
 in
 {
-  programs.antigravity-cli.permissions.allow = perms.antigravity.permissions.allow;
+  programs.antigravity-cli = {
+    enable = true;
+    settings = {
+      colorScheme = lib.mkDefault "tokyo night";
+      enableTelemetry = lib.mkDefault false;
+      verbosity = lib.mkDefault "low";
+    };
+    permissions.allow = perms.antigravity.permissions.allow;
+  };
 
+  # Disable home-manager's store symlink so it doesn't collide with agy's live runtime file
+  home.file.".gemini/antigravity-cli/settings.json".enable = false;
+
+  # Global customizations
   home.file.".gemini/config/AGENTS.md" = {
     source = config.lib.file.mkOutOfStoreSymlink "${claudioPath}/AGENTS.md";
     force = true;
@@ -61,12 +87,35 @@ in
     force = true;
   };
 
-  # Keep claudio's local antigravity/settings.json copy in sync with antigravity-cli/settings.json
-  home.activation.claudioAntigravitySettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    existing="${claudioPath}/antigravity/settings.json"
-    tracked="${config.home.homeDirectory}/code/dotfiles/modules/user/apps/antigravity-cli/settings.json"
-    if [[ -d "$(dirname "$existing")" && -f "$tracked" ]] && ! cmp -s "$tracked" "$existing" 2>/dev/null; then
-      install -Dm644 "$tracked" "$existing"
+  # Smart merge on just switch:
+  # 1. Enforce Nix-declared settings (theme, telemetry, verbosity).
+  # 2. Preserve live runtime state (trustedWorkspaces).
+  # 3. Union declared approvals with live ad-hoc approvals.
+  # 4. Sync the tracked seed file in claudio/antigravity/settings.json.
+  home.activation.antigravityCliSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    liveSettings="${liveSettingsPath}"
+    tracked="${trackedSettings}"
+
+    # Update tracked seed file in claudio/antigravity/ if it exists and changed
+    if [[ -d "$(dirname "$tracked")" ]] && ! cmp -s "${generatedSettingsJson}" "$tracked" 2>/dev/null; then
+      install -Dm644 "${generatedSettingsJson}" "$tracked"
+    fi
+
+    if [[ ! -e "$liveSettings" ]]; then
+      install -Dm600 "${generatedSettingsJson}" "$liveSettings"
+    else
+      tmp="$(mktemp)"
+      ${pkgs.jq}/bin/jq -s '
+        .[0] as $live | .[1] as $nix |
+        ($live * $nix) * {
+          trustedWorkspaces: ($live.trustedWorkspaces // []),
+          permissions: {
+            allow: ((($live.permissions.allow // []) + ($nix.permissions.allow // [])) | unique)
+          }
+        }
+      ' "$liveSettings" "${generatedSettingsJson}" > "$tmp"
+      install -Dm600 "$tmp" "$liveSettings"
+      rm -f "$tmp"
     fi
   '';
 }

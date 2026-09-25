@@ -159,16 +159,15 @@ cli_backends_run() {
     t_record SKIP smart-merge-preserves-and-unions agy "agy_settings_json missing"
   fi
 
-  # 9. Tracked seeds parity between apps/antigravity-cli and claudio/antigravity
-  local seed_app="$TESTS_ROOT/../../../antigravity-cli/settings.json"
+  # 9. Tracked seed in claudio/antigravity matches generated store settings
   local seed_claudio="$TESTS_ROOT/../../antigravity/settings.json"
-  if [[ -f "$seed_app" && -f "$seed_claudio" ]]; then
-    if cmp -s "$seed_app" "$seed_claudio"; then
-      t_record PASS tracked-seed-parity agy
+  if [[ -f "$seed_claudio" && -f "$agy_settings_json" ]]; then
+    if cmp -s "$seed_claudio" "$agy_settings_json"; then
+      t_record PASS tracked-seed-matches-store agy
     else
-      t_record FAIL tracked-seed-parity agy "seeds differ between $seed_app and $seed_claudio"
+      t_record FAIL tracked-seed-matches-store agy "seed differs from store json: $(diff -u "$seed_claudio" "$agy_settings_json" || true)"
     fi
   else
-    t_record FAIL tracked-seed-parity agy "one or both seed files missing: $seed_app, $seed_claudio"
+    t_record FAIL tracked-seed-matches-store agy "seed file missing: $seed_claudio or $agy_settings_json"
   fi
 }
