@@ -31,7 +31,7 @@ claudio/
 ├── skills/                    # Progressive on-demand skills (e.g., nixpkgs PR checklist)
 ├── permissions.nix            # Security policy defined as pure data
 ├── permissions.tsv            # Policy consumers, backend matrix, and rule comparison
-├── options.nix                # Nix options (programs.claudio.backend)
+├── options.nix                # Nix options (programs.claudio: backend, permissions, rtk)
 ├── antigravity/               # Antigravity CLI adapter (config links and hooks.json)
 ├── claude-code/               # Claude Code adapter (Seatbelt sandbox and settings.json)
 ├── opencode/                  # OpenCode adapter (permission schema)
@@ -96,6 +96,34 @@ claudio --claude --dangerously-skip-permissions
 1. **CLI Flag**: `--agy`, `--claude`, `--backend <name>` (highest priority).
 2. **Environment Variable**: `CLAUDIO_BACKEND=agy`.
 3. **Declarative Nix Default**: `programs.claudio.backend = "claude-code";` (or `"agy"`).
+
+### Declarative Configuration (`programs.claudio`)
+
+Declarative options configured under `programs.claudio` propagate across all agent runtimes automatically:
+
+```nix
+programs.claudio = {
+  enable = true;
+  backend = "claude-code"; # "claude-code" | "agy" | "opencode"
+
+  permissions = {
+    commands = {
+      extraAllow = [ "cargo *" "pnpm *" "terraform plan *" ];
+      extraAsk = [ "pulumi *" "kubectl delete *" ];
+      extraDenyHard = [ "dangerous-tool *" ];
+    };
+    network = {
+      extraAllowedDomains = [ "api.linear.app" ];
+    };
+    filesystem = {
+      extraCredentials = [ "\${config.home.homeDirectory}/.kube/config" ];
+      extraToolchainPaths = [ "\${config.home.homeDirectory}/work" ];
+    };
+  };
+
+  rtk.enable = true;
+};
+```
 
 ---
 

@@ -9,8 +9,12 @@
 let
   obsidianSocket = "${home}/.obsidian-cli.sock";
   home = config.home.homeDirectory;
+  claudioCfg = config.programs.claudio;
 
-  perms = import ../permissions.nix { inherit home lib; };
+  perms = import ../permissions.nix {
+    inherit home lib;
+    inherit (claudioCfg) permissions;
+  };
 
   settings = {
     sandbox = {

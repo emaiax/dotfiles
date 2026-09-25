@@ -9,8 +9,12 @@
 let
   home = config.home.homeDirectory;
   profile = "claudio-thebot";
+  claudioCfg = config.programs.claudio;
 
-  perms = import ../permissions.nix { inherit home lib; };
+  perms = import ../permissions.nix {
+    inherit home lib;
+    inherit (claudioCfg) permissions;
+  };
 
   claudioCore = "${home}/code/${profile}/claudio-core";
   claudioState = ".local/share/${profile}";

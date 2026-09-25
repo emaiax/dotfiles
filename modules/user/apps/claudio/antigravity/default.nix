@@ -9,7 +9,11 @@
 }:
 let
   home = config.home.homeDirectory;
-  perms = import ../permissions.nix { inherit home lib; };
+  claudioCfg = config.programs.claudio;
+  perms = import ../permissions.nix {
+    inherit home lib;
+    inherit (claudioCfg) permissions;
+  };
 
   policyJson = (pkgs.formats.json { }).generate "claudio-policy.json" perms.policy;
 

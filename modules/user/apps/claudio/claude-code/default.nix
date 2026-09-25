@@ -9,10 +9,14 @@
 }:
 let
   home = config.home.homeDirectory;
+  claudioCfg = config.programs.claudio;
 
   # Shared with opencode/default.nix. ask/deny and the sandbox's filesystem/network both come back fully
   # rendered to Claude's native shape, this file only wires perms.claudeCode in.
-  perms = import ../permissions.nix { inherit home lib; };
+  perms = import ../permissions.nix {
+    inherit home lib;
+    inherit (claudioCfg) permissions;
+  };
 
   # Live checkout path, wrapped in `bash "path"` rather than direct exec: docs/sandbox-notes.md's
   # "Hook command wiring" section has the why.
@@ -121,7 +125,7 @@ in
       # sandbox *.local/ssh work) silently dropped it. Declared here now so it survives the next regeneration.
       agentPushNotifEnabled = true;
 
-      hooks.PreToolUse = [ rtkHook ];
+      hooks.PreToolUse = lib.optional claudioCfg.rtk.enable rtkHook;
 
       extraKnownMarketplaces = {
         obsidian-skills = {

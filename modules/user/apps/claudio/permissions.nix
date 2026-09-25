@@ -1,7 +1,20 @@
 # Command, filesystem, and network policy shared across every coding agent and profile in this repo. `policy`
 # is data only: docs/sandbox-notes.md's "permissions.nix: policy is data" section covers the full architecture.
-{ home, lib, ... }:
+{
+  home,
+  lib,
+  cfg ? { },
+  permissions ? cfg.permissions or { },
+  ...
+}:
 let
+  extraAllow = permissions.commands.extraAllow or [ ];
+  extraAsk = permissions.commands.extraAsk or [ ];
+  extraDenyHard = permissions.commands.extraDenyHard or [ ];
+  extraAllowedDomains = permissions.network.extraAllowedDomains or [ ];
+  extraCredentials = permissions.filesystem.extraCredentials or [ ];
+  extraToolchainPaths = permissions.filesystem.extraToolchainPaths or [ ];
+
   # allowUnixSockets covers connecting and stat'ing the path
   unixSockets = [
     "/nix/var/nix/daemon-socket/socket" # allow nix subcommand to reach its daemon
@@ -11,7 +24,8 @@ let
   policy = {
     commands = {
       # ssh is a special case: it needs to be allowed to run
-      allow = [ "ssh -o ProxyCommand=" ];
+      allow = [ "ssh -o ProxyCommand=" ] ++ extraAllow;
+      inherit extraAllow extraAsk extraDenyHard;
 
       ask = [
         "git push"
@@ -23,7 +37,8 @@ let
         "git clean"
         "git rebase"
         "rm -rf"
-      ];
+      ]
+      ++ extraAsk;
 
       # Matched literally rather than as a prefix.
       askExact = [ "git checkout ." ];
@@ -35,7 +50,8 @@ let
         "gh release"
         "fj pr merge"
         "fj release"
-      ];
+      ]
+      ++ extraDenyHard;
 
       # Reversible: rendered as prose in autoMode.soft_deny instead of a hard deny (sandbox-notes.md).
       denySoft = [
@@ -95,6 +111,8 @@ let
           "${home}/.local/share/opencode/auth.json"
           "${home}/.local/share/opencode/mcp-auth.json"
         ];
+
+        extra = extraCredentials;
       };
 
       # One list, not two, so allowRead/allowWrite can't drift out of sync (sandbox-notes.md).
@@ -120,7 +138,8 @@ let
         # workspaces
         "${home}/code"
         "${home}/go"
-      ];
+      ]
+      ++ extraToolchainPaths;
 
       # Read-only additions on top of toolchainReadWrite.
       toolchainReadOnly = [
@@ -154,7 +173,8 @@ let
         "app.asana.com" # asana api
         "github.com" # git-over-https
         "registry.yarnpkg.com" # yarn install
-      ];
+      ]
+      ++ extraAllowedDomains;
 
       # gh/terraform/kubectl validate TLS via Security.framework -> trustd, which Seatbelt blocks by default
       # (`x509: OSStatus -26276`, even for a valid cert; curl/git/Node verify in-process and are unaffected)
@@ -165,10 +185,12 @@ let
   };
 
   # A sibling `.bak` could ride the same allow grant back in as the file it backs up (sandbox-notes.md).
-  credentialBaks = map (p: "${p}.bak") policy.filesystem.credentials.files;
+  credentialBaks = map (p: "${p}.bak") (policy.filesystem.credentials.files ++ extraCredentials);
+
+  cleanCmd = cmd: lib.removeSuffix " " (lib.removeSuffix "*" (lib.removeSuffix " *" cmd));
 
   # `Bash(x:*)` matches any arguments; `Bash(x)` matches only that literal invocation.
-  claudeCodePrefixRule = cmd: "Bash(${cmd}:*)";
+  claudeCodePrefixRule = cmd: "Bash(${cleanCmd cmd}:*)";
   claudeCodeExactRule = cmd: "Bash(${cmd})";
 
   # rtk's PreToolUse hook rewrites recognized commands to `rtk <cmd>`, defeating a bare-command gate silently.
@@ -193,6 +215,13 @@ let
     "Edit(//${claudeCodeAbsRule path}/**)"
   ];
 
+  claudeCodeExtraCredentialDenyRules = path: [
+    "Read(//${claudeCodeAbsRule path})"
+    "Edit(//${claudeCodeAbsRule path})"
+    "Read(//${claudeCodeAbsRule path}/**)"
+    "Edit(//${claudeCodeAbsRule path}/**)"
+  ];
+
   # The two universal pieces every profile gets regardless of yolo/hardDeny status: prompting on destructive
   # git/rm commands, and never letting a credential file through. Shared by the base and full permissions below.
   claudeCodeAskRules =
@@ -203,7 +232,8 @@ let
   claudeCodeCredentialDenyRules =
     policy:
     lib.concatMap claudeCodeFileDenyRules (policy.filesystem.credentials.files ++ credentialBaks)
-    ++ lib.concatMap claudeCodeDirDenyRules policy.filesystem.credentials.dirs;
+    ++ lib.concatMap claudeCodeDirDenyRules policy.filesystem.credentials.dirs
+    ++ lib.concatMap claudeCodeExtraCredentialDenyRules (policy.filesystem.credentials.extra or [ ]);
 
   # The full bundle for a profile that wants its own `allow` too (claudio): `hardDeny` opts into the
   # irreversible-command tier, see the comment above `denyHard` in `policy.commands`.
@@ -238,8 +268,18 @@ let
 
       allowWrite = policy.filesystem.toolchainReadWrite;
 
-      denyRead = [ home ] ++ policy.filesystem.credentials.dirs ++ policy.filesystem.credentials.files;
-      denyWrite = [ home ] ++ policy.filesystem.credentials.dirs ++ policy.filesystem.credentials.files; # [ home ] is redundant but explicit
+      denyRead = [
+        home
+      ]
+      ++ policy.filesystem.credentials.dirs
+      ++ policy.filesystem.credentials.files
+      ++ (policy.filesystem.credentials.extra or [ ]);
+      denyWrite = [
+        home
+      ]
+      ++ policy.filesystem.credentials.dirs
+      ++ policy.filesystem.credentials.files
+      ++ (policy.filesystem.credentials.extra or [ ]); # [ home ] is redundant but explicit
     };
   };
 
@@ -266,11 +306,20 @@ let
 
     bash = {
       "*" = "allow";
-    };
+    }
+    // (lib.genAttrs (policy.commands.extraAllow or [ ]) (_: "allow"));
   };
 
   # agy permissions format in settings.json: "command(<cmd> *)" or "command(<cmd>)"
   antigravityExactRule = cmd: "command(${cmd})";
+  antigravityAllowRule =
+    cmd:
+    if lib.hasPrefix "command(" cmd then
+      cmd
+    else if lib.hasSuffix "*" cmd then
+      "command(${cmd})"
+    else
+      "command(${cmd} *)";
 
   mkAntigravityPermissions = policy: {
     allow = [
@@ -293,7 +342,8 @@ let
       "command(tail *)"
       "command(which *)"
     ]
-    ++ map antigravityExactRule policy.commands.allow;
+    ++ map antigravityExactRule (lib.filter (c: c == "ssh -o ProxyCommand=") policy.commands.allow)
+    ++ map antigravityAllowRule (policy.commands.extraAllow or [ ]);
   };
 in
 {
