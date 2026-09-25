@@ -184,195 +184,195 @@ let
     };
   };
 
-  # A sibling `.bak` could ride the same allow grant back in as the file it backs up (sandbox-notes.md).
-  credentialBaks = map (p: "${p}.bak") (policy.filesystem.credentials.files ++ extraCredentials);
-
-  cleanCmd = cmd: lib.removeSuffix " " (lib.removeSuffix "*" (lib.removeSuffix " *" cmd));
-
-  # `Bash(x:*)` matches any arguments; `Bash(x)` matches only that literal invocation.
-  claudeCodePrefixRule = cmd: "Bash(${cleanCmd cmd}:*)";
-  claudeCodeExactRule = cmd: "Bash(${cmd})";
-
-  # rtk's PreToolUse hook rewrites recognized commands to `rtk <cmd>`, defeating a bare-command gate silently.
-  # A twin per gate, not a fixed list, since rtk's rewrite inventory can grow.
-  withRtkTwin =
-    cmds:
-    lib.concatMap (cmd: [
-      cmd
-      "rtk ${cmd}"
-    ]) cmds;
-
-  # `//path` is filesystem-root-absolute, `/path` matches nothing, dirs need `/**` for nested files.
-  claudeCodeAbsRule = path: lib.removePrefix "/" path;
-
-  claudeCodeFileDenyRules = path: [
-    "Read(//${claudeCodeAbsRule path})"
-    "Edit(//${claudeCodeAbsRule path})"
-  ];
-
-  claudeCodeDirDenyRules = path: [
-    "Read(//${claudeCodeAbsRule path}/**)"
-    "Edit(//${claudeCodeAbsRule path}/**)"
-  ];
-
-  claudeCodeExtraCredentialDenyRules = path: [
-    "Read(//${claudeCodeAbsRule path})"
-    "Edit(//${claudeCodeAbsRule path})"
-    "Read(//${claudeCodeAbsRule path}/**)"
-    "Edit(//${claudeCodeAbsRule path}/**)"
-  ];
-
-  # The two universal pieces every profile gets regardless of yolo/hardDeny status: prompting on destructive
-  # git/rm commands, and never letting a credential file through. Shared by the base and full permissions below.
-  claudeCodeAskRules =
-    policy:
-    map claudeCodePrefixRule (withRtkTwin policy.commands.ask)
-    ++ map claudeCodeExactRule (withRtkTwin policy.commands.askExact);
-
-  claudeCodeCredentialDenyRules =
-    policy:
-    lib.concatMap claudeCodeFileDenyRules (policy.filesystem.credentials.files ++ credentialBaks)
-    ++ lib.concatMap claudeCodeDirDenyRules policy.filesystem.credentials.dirs
-    ++ lib.concatMap claudeCodeExtraCredentialDenyRules (policy.filesystem.credentials.extra or [ ]);
-
-  # The full bundle for a profile that wants its own `allow` too (claudio): `hardDeny` opts into the
-  # irreversible-command tier, see the comment above `denyHard` in `policy.commands`.
-  mkClaudeCodePermissions =
-    {
-      policy,
-      hardDeny ? false,
-    }:
+  # =========================================================================
+  # 2. Claude Code Adapter (Seatbelt sandbox & native tool rules)
+  # =========================================================================
+  claudeCodeBackend =
     let
-      hardDenyRules = lib.optionals hardDeny (
-        map claudeCodePrefixRule (withRtkTwin policy.commands.denyHard)
-      );
+      cleanCmd = cmd: lib.removeSuffix " " (lib.removeSuffix "*" (lib.removeSuffix " *" cmd));
+      prefixRule = cmd: "Bash(${cleanCmd cmd}:*)";
+      exactRule = cmd: "Bash(${cmd})";
+
+      withRtkTwin =
+        cmds:
+        lib.concatMap (cmd: [
+          cmd
+          "rtk ${cmd}"
+        ]) cmds;
+
+      absPath = path: lib.removePrefix "/" path;
+
+      # Auto-defense: file rules + .bak backup twin rules
+      fileRules = path: [
+        "Read(//${absPath path})"
+        "Edit(//${absPath path})"
+        "Read(//${absPath path}.bak)"
+        "Edit(//${absPath path}.bak)"
+      ];
+
+      # Auto-defense: directory rules (recursive /**)
+      dirRules = path: [
+        "Read(//${absPath path}/**)"
+        "Edit(//${absPath path}/**)"
+      ];
+
+      # Auto-defense: extra/unknown path (covers file, .bak, and recursive dir)
+      extraPathRules = path: (fileRules path) ++ (dirRules path);
+
+      credentialDenyRules =
+        lib.concatMap fileRules policy.filesystem.credentials.files
+        ++ lib.concatMap dirRules policy.filesystem.credentials.dirs
+        ++ lib.concatMap extraPathRules (policy.filesystem.credentials.extra or [ ]);
+
+      askRules =
+        map prefixRule (withRtkTwin policy.commands.ask)
+        ++ map exactRule (withRtkTwin policy.commands.askExact);
+
+      mkPermissions =
+        {
+          hardDeny ? false,
+        }:
+        let
+          hardDenyRules = lib.optionals hardDeny (map prefixRule (withRtkTwin policy.commands.denyHard));
+        in
+        {
+          allow = map prefixRule (withRtkTwin policy.commands.allow);
+          ask = askRules;
+          deny = hardDenyRules ++ credentialDenyRules;
+        };
+
+      mkSandbox = {
+        excludedCommands = policy.commands.bypassSandboxSeatbelt;
+        network = policy.network;
+        filesystem = {
+          disabled = true; # allowWrite is a no-op upstream; network sandbox stays active
+          allowRead =
+            unixSockets ++ policy.filesystem.toolchainReadOnly ++ policy.filesystem.toolchainReadWrite;
+          allowWrite = policy.filesystem.toolchainReadWrite;
+          denyRead = [
+            home
+          ]
+          ++ policy.filesystem.credentials.dirs
+          ++ policy.filesystem.credentials.files
+          ++ (policy.filesystem.credentials.extra or [ ]);
+          denyWrite = [
+            home
+          ]
+          ++ policy.filesystem.credentials.dirs
+          ++ policy.filesystem.credentials.files
+          ++ (policy.filesystem.credentials.extra or [ ]);
+        };
+      };
     in
     {
-      allow = map claudeCodePrefixRule (withRtkTwin policy.commands.allow);
-      ask = claudeCodeAskRules policy;
-      deny = hardDenyRules ++ claudeCodeCredentialDenyRules policy;
+      inherit credentialDenyRules mkPermissions mkSandbox;
     };
 
-  # programs.claude-code.settings.sandbox.{bypassSecurityCommands,filesystem,network}: the Seatbelt boundary itself.
-  mkClaudeCodeSandbox = policy: {
-    excludedCommands = policy.commands.bypassSandboxSeatbelt;
-    network = policy.network;
+  # =========================================================================
+  # 3. Antigravity CLI Adapter (settings.json approvals)
+  # =========================================================================
+  antigravityBackend =
+    let
+      exactRule = cmd: "command(${cmd})";
+      allowRule =
+        cmd:
+        if lib.hasPrefix "command(" cmd then
+          cmd
+        else if lib.hasSuffix "*" cmd then
+          "command(${cmd})"
+        else
+          "command(${cmd} *)";
 
-    # Reads: allow-everything by default upstream
-    # Writes: deny-by-default, and cwd is writable implicitly
-    filesystem = {
-      disabled = true; # allowWrite is a no-op upstream, docs/sandbox-notes.md; network sandbox stays on
+      baseApprovals = [
+        "command(cat *)"
+        "command(chmod *)"
+        "command(echo *)"
+        "command(find *)"
+        "command(fj *)"
+        "command(git *)"
+        "command(grep *)"
+        "command(head *)"
+        "command(jq *)"
+        "command(just *)"
+        "command(ls *)"
+        "command(nix *)"
+        "command(python3 *)"
+        "command(readlink *)"
+        "command(rtk *)"
+        "command(sort *)"
+        "command(tail *)"
+        "command(which *)"
+      ];
+    in
+    {
+      permissions = {
+        allow =
+          baseApprovals
+          ++ map exactRule (lib.filter (c: c == "ssh -o ProxyCommand=") policy.commands.allow)
+          ++ map allowRule (policy.commands.extraAllow or [ ]);
+      };
+    };
 
-      allowRead =
-        unixSockets ++ policy.filesystem.toolchainReadOnly ++ policy.filesystem.toolchainReadWrite;
-
-      allowWrite = policy.filesystem.toolchainReadWrite;
-
-      denyRead = [
-        home
-      ]
-      ++ policy.filesystem.credentials.dirs
-      ++ policy.filesystem.credentials.files
-      ++ (policy.filesystem.credentials.extra or [ ]);
-      denyWrite = [
-        home
-      ]
-      ++ policy.filesystem.credentials.dirs
-      ++ policy.filesystem.credentials.files
-      ++ (policy.filesystem.credentials.extra or [ ]); # [ home ] is redundant but explicit
+  # =========================================================================
+  # 4. OpenCode Adapter (permission matrix)
+  # =========================================================================
+  opencodeBackend = {
+    permission = {
+      read = {
+        "*" = "allow";
+        "*.env" = "deny";
+        "*.env.*" = "deny";
+        "*.env.example" = "allow";
+      };
+      glob = "allow";
+      grep = "allow";
+      lsp = "allow";
+      edit = "allow";
+      webfetch = "allow";
+      websearch = "allow";
+      task = "allow";
+      external_directory = "ask";
+      doom_loop = "deny";
+      bash = {
+        "*" = "allow";
+      }
+      // (lib.genAttrs (policy.commands.extraAllow or [ ]) (_: "allow"));
     };
   };
 
-  # programs.opencode.settings.permission.
-  mkOpencodePermissions = policy: {
-    read = {
-      "*" = "allow";
-
-      # default .env protection explicit: a bare "allow" string here isn't documented to preserve it
-      "*.env" = "deny";
-      "*.env.*" = "deny";
-      "*.env.example" = "allow";
+  # =========================================================================
+  # 5. Profile Bundles & Dispatcher
+  # =========================================================================
+  claudeCode = {
+    sandbox = claudeCodeBackend.mkSandbox;
+    user = claudeCodeBackend.mkPermissions { hardDeny = true; };
+    yolo = { };
+    credentialDenyOnly = {
+      deny = claudeCodeBackend.credentialDenyRules;
     };
-
-    glob = "allow";
-    grep = "allow";
-    lsp = "allow";
-    edit = "allow";
-    webfetch = "allow";
-    websearch = "allow";
-    task = "allow";
-    external_directory = "ask"; # Touching paths outside the project: flag it.
-    doom_loop = "deny"; # Same tool call repeated 3x with identical input: kill it, don't ask.
-
-    bash = {
-      "*" = "allow";
-    }
-    // (lib.genAttrs (policy.commands.extraAllow or [ ]) (_: "allow"));
   };
 
-  # agy permissions format in settings.json: "command(<cmd> *)" or "command(<cmd>)"
-  antigravityExactRule = cmd: "command(${cmd})";
-  antigravityAllowRule =
-    cmd:
-    if lib.hasPrefix "command(" cmd then
-      cmd
-    else if lib.hasSuffix "*" cmd then
-      "command(${cmd})"
+  forProfile =
+    profile:
+    if profile == "claudio" then
+      claudeCode.user // { defaultMode = "auto"; }
+    else if profile == "claudio-yolo" then
+      claudeCode.credentialDenyOnly
+    else if profile == "claudio-thebot" then
+      claudeCode.yolo
     else
-      "command(${cmd} *)";
-
-  mkAntigravityPermissions = policy: {
-    allow = [
-      "command(cat *)"
-      "command(chmod *)"
-      "command(echo *)"
-      "command(find *)"
-      "command(fj *)"
-      "command(git *)"
-      "command(grep *)"
-      "command(head *)"
-      "command(jq *)"
-      "command(just *)"
-      "command(ls *)"
-      "command(nix *)"
-      "command(python3 *)"
-      "command(readlink *)"
-      "command(rtk *)"
-      "command(sort *)"
-      "command(tail *)"
-      "command(which *)"
-    ]
-    ++ map antigravityExactRule (lib.filter (c: c == "ssh -o ProxyCommand=") policy.commands.allow)
-    ++ map antigravityAllowRule (policy.commands.extraAllow or [ ]);
-  };
+      throw "Unknown claudio profile: ${profile}";
 in
 {
-  inherit policy;
+  inherit policy forProfile;
 
   antigravity = {
-    permissions = mkAntigravityPermissions policy;
+    permissions = antigravityBackend.permissions;
   };
 
-  claudeCode = {
-    sandbox = mkClaudeCodeSandbox policy;
-
-    # claudio.nix: full ask/deny bundle plus the irreversible-command tier.
-    user = mkClaudeCodePermissions {
-      inherit policy;
-      hardDeny = true;
-    };
-
-    # claudio-thebot.nix: the literal empty object, zero permissions on purpose (sandbox-notes.md's
-    # "claude-yolo: what it actually trades away" section covers both this and the bundle below).
-    yolo = { };
-
-    # claudio-yolo.nix: the one protection it keeps despite otherwise defining no permissions of its own.
-    credentialDenyOnly = {
-      deny = claudeCodeCredentialDenyRules policy;
-    };
-  };
+  inherit claudeCode;
 
   opencode = {
-    permission = mkOpencodePermissions policy;
+    permission = opencodeBackend.permission;
   };
 }

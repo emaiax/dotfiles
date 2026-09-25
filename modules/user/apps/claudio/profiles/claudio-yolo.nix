@@ -17,7 +17,7 @@ let
 
   settings = {
     sandbox.enabled = false;
-    permissions = perms.claudeCode.credentialDenyOnly;
+    permissions = perms.forProfile "claudio-yolo";
   };
 
   settingsFile = (pkgs.formats.json { }).generate "claude-yolo-settings.json" settings;
