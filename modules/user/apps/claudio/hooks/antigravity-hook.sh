@@ -1,4 +1,16 @@
 #!/usr/bin/env bash
+# PreToolUse Lifecycle Hook for Google Antigravity CLI (agy).
+#
+# Protocol:
+#   - Input (stdin): JSON payload from agy: `{"toolCall": {"name": "<tool>", "args": { ... }}}`
+#   - Argument ($1): Path to `claudio-policy.json` (compiled from permissions.nix)
+#   - Output (stdout): JSON decision:
+#       {"decision":"deny","reason":"..."}                     -> Abort tool call immediately
+#       {"decision":"ask","reason":"..."}                      -> Prompt user interactively in TUI
+#       {"decision":"allow"}                                   -> Execute tool as-is
+#       {"decision":"allow","overwrite":{"CommandLine":"..."}} -> Execute rewritten command (e.g. RTK)
+#
+# This script enforces the unified Claudio security policy and token optimization on Antigravity CLI.
 set -euo pipefail
 
 POLICY_JSON="${1:-}"
@@ -7,7 +19,25 @@ PAYLOAD=$(cat)
 
 TOOL_NAME=$(echo "$PAYLOAD" | jq -r '.toolCall.name // empty')
 
+# -----------------------------------------------------------------------------
 # 1. Inspect file access operations
+#
+# What:
+#   Intercepts direct filesystem tool calls (viewing, reading, creating, editing).
+#
+# Why:
+#   Unlike Claude Code, Antigravity CLI does not have macOS Seatbelt sandbox filesystem
+#   isolation. Without this check, an agent could read private keys or credentials and
+#   leak their plaintext contents into the LLM conversation context.
+#
+# Examples:
+#   - BLOCKED: view_file(AbsolutePath="/Users/emaiax/.ssh/id_ed25519")
+#              -> {"decision":"deny","reason":"Credential path blocked by claudio policy"}
+#   - BLOCKED: replace_file_content(TargetFile="/Users/emaiax/.aws/credentials")
+#              -> {"decision":"deny","reason":"Credential path blocked by claudio policy"}
+#   - ALLOWED: view_file(AbsolutePath="/Users/emaiax/code/dotfiles/README.md")
+#              -> continues to next checks / allow
+# -----------------------------------------------------------------------------
 if [[ "$TOOL_NAME" =~ ^(view_file|read_file|write_to_file|replace_file_content)$ ]]; then
   PATH_ARG=$(echo "$PAYLOAD" | jq -r '.toolCall.args.AbsolutePath // .toolCall.args.TargetFile // empty')
 
@@ -25,12 +55,36 @@ if [[ "$TOOL_NAME" =~ ^(view_file|read_file|write_to_file|replace_file_content)$
   fi
 fi
 
-# 2. Inspect shell commands
+# -----------------------------------------------------------------------------
+# 2. Inspect shell commands (run_command)
+#
+# What:
+#   Inspects the command line string of shell tool calls before execution.
+#
+# Why:
+#   Enforces credential leak protection, hard blocks on irreversible operations,
+#   interactive confirmation gates on destructive commands, and RTK token compression.
+# -----------------------------------------------------------------------------
 if [[ "$TOOL_NAME" == "run_command" ]]; then
   CMD=$(echo "$PAYLOAD" | jq -r '.toolCall.args.CommandLine // empty')
 
   if [[ -n "$CMD" && -f "$POLICY_JSON" ]]; then
-    # Check if command directly touches any credential dir/file
+    # ---------------------------------------------------------------------------
+    # 2.1. Credential leakage prevention in command strings
+    #
+    # What:
+    #   Checks if the shell command references any protected credential file or dir.
+    #
+    # Why:
+    #   Even if file tools are blocked, an agent could run `cat ~/.ssh/id_ed25519`
+    #   or `grep token ~/.config/sops/keys.txt` to print secrets to stdout.
+    #
+    # Examples:
+    #   - BLOCKED: run_command(CommandLine="cat ~/.ssh/id_ed25519")
+    #              -> {"decision":"deny","reason":"Credential path blocked by claudio policy"}
+    #   - BLOCKED: run_command(CommandLine="grep token ~/.config/sops/secrets.yaml")
+    #              -> {"decision":"deny","reason":"Credential path blocked by claudio policy"}
+    # ---------------------------------------------------------------------------
     IS_CRED_IN_CMD=$(jq -r --arg cmd "$CMD" '
       (.filesystem.credentials.dirs | any(. as $dir | ($cmd | contains($dir))))
       or
@@ -42,10 +96,25 @@ if [[ "$TOOL_NAME" == "run_command" ]]; then
       exit 0
     fi
 
-    # Strip leading rtk prefix if present
+    # Strip leading rtk prefix if present (e.g. `rtk git push` -> `git push`)
     BARE_CMD="${CMD#rtk }"
 
-    # Check hard denials
+    # ---------------------------------------------------------------------------
+    # 2.2. Hard denials (Irreversible repository operations)
+    #
+    # What:
+    #   Strictly blocks irreversible forge commands (PR merging, release publishing).
+    #
+    # Why:
+    #   Autonomous or pair-programming agents should never merge pull requests or
+    #   publish releases without human presence and verification.
+    #
+    # Examples:
+    #   - BLOCKED: run_command(CommandLine="gh pr merge 123 --auto")
+    #              -> {"decision":"deny","reason":"Command is hard denied by claudio policy"}
+    #   - BLOCKED: run_command(CommandLine="fj release create v1.0.0")
+    #              -> {"decision":"deny","reason":"Command is hard denied by claudio policy"}
+    # ---------------------------------------------------------------------------
     IS_DENY_HARD=$(jq -r --arg cmd "$BARE_CMD" '
       .commands.denyHard |
       any(. as $entry | ($cmd == $entry or ($cmd | startswith($entry + " "))))
@@ -56,8 +125,25 @@ if [[ "$TOOL_NAME" == "run_command" ]]; then
       exit 0
     fi
 
-    # Check ask list (commands that require confirmation)
-    # If CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS=1 is set, auto-allow
+    # ---------------------------------------------------------------------------
+    # 2.3. Destructive command gate (Interactive confirmation / Ask)
+    #
+    # What:
+    #   Intercepts destructive git or filesystem commands and requires confirmation.
+    #
+    # Why:
+    #   Commands like `git push`, `rm -rf`, or `git reset --hard` can cause irreversible
+    #   data or history loss. In the standard `claudio` profile, the user must approve them.
+    #   In YOLO mode (`CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS=1`), this prompt is bypassed.
+    #
+    # Examples:
+    #   - PROMPT (claudio):      run_command(CommandLine="git push origin main")
+    #                            -> {"decision":"ask","reason":"Command requires explicit confirmation per claudio policy"}
+    #   - PROMPT (claudio):      run_command(CommandLine="rm -rf ./build")
+    #                            -> {"decision":"ask","reason":"Command requires explicit confirmation per claudio policy"}
+    #   - AUTO-ALLOW (claude-yolo): run_command(CommandLine="git push origin main")
+    #                            -> continues to RTK rewrite / allow
+    # ---------------------------------------------------------------------------
     if [[ -z "${CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS:-}" ]]; then
       IS_ASK=$(jq -r --arg cmd "$BARE_CMD" '
         (.commands.ask | any(. as $entry | ($cmd == $entry or ($cmd | startswith($entry + " ")))))
@@ -72,7 +158,24 @@ if [[ "$TOOL_NAME" == "run_command" ]]; then
     fi
   fi
 
-  # Attempt RTK rewrite for allowed commands
+  # ---------------------------------------------------------------------------
+  # 2.4. Token optimization via RTK rewrite
+  #
+  # What:
+  #   Rewrites verbose commands through `rtk` (e.g. `git diff`, `git log`, `grep`).
+  #
+  # Why:
+  #   Commands with high output volume consume excessive LLM context tokens.
+  #   RTK compresses CLI tool outputs by up to 80-90% before the model reads them.
+  #
+  # Examples:
+  #   - REWRITTEN: run_command(CommandLine="git log -n 5")
+  #                -> {"decision":"allow","overwrite":{"CommandLine":"rtk git log -n 5"}}
+  #   - REWRITTEN: run_command(CommandLine="grep -rn pattern .")
+  #                -> {"decision":"allow","overwrite":{"CommandLine":"rtk grep -rn pattern ."}}
+  #   - UNMODIFIED: run_command(CommandLine="echo hello")
+  #                -> {"decision":"allow"}
+  # ---------------------------------------------------------------------------
   if command -v rtk >/dev/null 2>&1; then
     REWRITTEN=$(rtk rewrite "$CMD" 2>/dev/null || true)
     if [[ -n "$REWRITTEN" && "$REWRITTEN" != "$CMD" ]]; then
@@ -82,4 +185,9 @@ if [[ "$TOOL_NAME" == "run_command" ]]; then
   fi
 fi
 
+# -----------------------------------------------------------------------------
+# 3. Default decision: Allow
+#
+# Safe, non-credential, non-destructive operations proceed without interruption.
+# -----------------------------------------------------------------------------
 echo '{"decision":"allow"}'
