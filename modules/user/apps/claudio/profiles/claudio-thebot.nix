@@ -52,6 +52,10 @@ let
     --plugin-dir "${claudioCore}" \
     --append-system-prompt-file "${claudioCore}/AGENTS.md" \
   '';
+
+  claudioCoreArgsAgy = ''
+    --add-dir "${claudioCore}" \
+  '';
 in
 {
   sops.secrets = {
@@ -142,17 +146,76 @@ in
   home.packages = [
     # no sandbox, no permission prompts
     (pkgs.writeShellApplication {
-      runtimeInputs = [ config.programs.claude-code.package ];
+      runtimeInputs = [
+        config.programs.claude-code.package
+        config.programs.antigravity-cli.package
+        config.programs.opencode.package
+      ];
 
       name = "claudio-thebot";
       text = ''
         export PATH="${home}/${identityBinDir}:$PATH"
 
-        exec env CLAUDIO_THEBOT_SESSION=1 claude \
-          --dangerously-skip-permissions \
-          --settings ${settingsFile} \
-          ${claudioCoreArgs} \
-          "$@"
+        default_backend="${config.programs.claudio.backend}"
+        backend="$default_backend"
+
+        if [[ -n "''${CLAUDIO_BACKEND:-}" ]]; then
+          backend="$CLAUDIO_BACKEND"
+        fi
+
+        if [[ $# -gt 0 ]]; then
+          case "$1" in
+            --agy)
+              backend="agy"
+              shift
+              ;;
+            --claude|--claude-code)
+              backend="claude-code"
+              shift
+              ;;
+            --opencode)
+              backend="opencode"
+              shift
+              ;;
+            --backend|-b)
+              if [[ $# -lt 2 ]]; then
+                echo "claudio-thebot: missing argument for $1" >&2
+                exit 1
+              fi
+              backend="$2"
+              shift 2
+              ;;
+            --backend=*)
+              backend="''${1#*=}"
+              shift
+              ;;
+          esac
+        fi
+
+        case "$backend" in
+          agy)
+            exec env CLAUDIO_THEBOT_SESSION=1 CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS=1 agy \
+              --dangerously-skip-permissions \
+              ${claudioCoreArgsAgy} \
+              "$@"
+            ;;
+          claude-code)
+            exec env CLAUDIO_THEBOT_SESSION=1 claude \
+              --dangerously-skip-permissions \
+              --settings ${settingsFile} \
+              ${claudioCoreArgs} \
+              "$@"
+            ;;
+          opencode)
+            exec env CLAUDIO_THEBOT_SESSION=1 opencode \
+              --auto \
+              "$@"
+            ;;
+          *)
+            echo "claudio-thebot: unknown backend '$backend' (supported: agy, claude-code, opencode)" >&2
+            exit 1
+            ;;
+        esac
       '';
     })
   ];

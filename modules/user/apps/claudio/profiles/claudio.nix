@@ -33,9 +33,63 @@ in
   home.packages = [
     (pkgs.writeShellApplication {
       name = "claudio";
-      runtimeInputs = [ config.programs.claude-code.package ];
+      runtimeInputs = [
+        config.programs.claude-code.package
+        config.programs.antigravity-cli.package
+        config.programs.opencode.package
+      ];
       text = ''
-        exec claude --settings ${settingsFile} "$@"
+        default_backend="${config.programs.claudio.backend}"
+        backend="$default_backend"
+
+        if [[ -n "''${CLAUDIO_BACKEND:-}" ]]; then
+          backend="$CLAUDIO_BACKEND"
+        fi
+
+        if [[ $# -gt 0 ]]; then
+          case "$1" in
+            --agy)
+              backend="agy"
+              shift
+              ;;
+            --claude|--claude-code)
+              backend="claude-code"
+              shift
+              ;;
+            --opencode)
+              backend="opencode"
+              shift
+              ;;
+            --backend|-b)
+              if [[ $# -lt 2 ]]; then
+                echo "claudio: missing argument for $1" >&2
+                exit 1
+              fi
+              backend="$2"
+              shift 2
+              ;;
+            --backend=*)
+              backend="''${1#*=}"
+              shift
+              ;;
+          esac
+        fi
+
+        case "$backend" in
+          agy)
+            exec agy "$@"
+            ;;
+          claude-code)
+            exec claude --settings ${settingsFile} "$@"
+            ;;
+          opencode)
+            exec opencode "$@"
+            ;;
+          *)
+            echo "claudio: unknown backend '$backend' (supported: agy, claude-code, opencode)" >&2
+            exit 1
+            ;;
+        esac
       '';
     })
   ];

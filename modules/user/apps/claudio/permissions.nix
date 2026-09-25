@@ -268,9 +268,40 @@ let
       "*" = "allow";
     };
   };
+
+  # agy permissions format in settings.json: "command(<cmd> *)" or "command(<cmd>)"
+  antigravityExactRule = cmd: "command(${cmd})";
+
+  mkAntigravityPermissions = policy: {
+    allow = [
+      "command(cat *)"
+      "command(chmod *)"
+      "command(echo *)"
+      "command(find *)"
+      "command(fj *)"
+      "command(git *)"
+      "command(grep *)"
+      "command(head *)"
+      "command(jq *)"
+      "command(just *)"
+      "command(ls *)"
+      "command(nix *)"
+      "command(python3 *)"
+      "command(readlink *)"
+      "command(rtk *)"
+      "command(sort *)"
+      "command(tail *)"
+      "command(which *)"
+    ]
+    ++ map antigravityExactRule policy.commands.allow;
+  };
 in
 {
   inherit policy;
+
+  antigravity = {
+    permissions = mkAntigravityPermissions policy;
+  };
 
   claudeCode = {
     sandbox = mkClaudeCodeSandbox policy;

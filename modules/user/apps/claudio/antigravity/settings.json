@@ -1,0 +1,30 @@
+{
+  "colorScheme": "tokyo night",
+  "enableTelemetry": false,
+  "permissions": {
+    "allow": [
+      "command(cat *)",
+      "command(chmod *)",
+      "command(echo *)",
+      "command(find *)",
+      "command(fj *)",
+      "command(git *)",
+      "command(grep *)",
+      "command(head *)",
+      "command(jq *)",
+      "command(just *)",
+      "command(ls *)",
+      "command(nix *)",
+      "command(python3 *)",
+      "command(readlink *)",
+      "command(rtk *)",
+      "command(sort *)",
+      "command(tail *)",
+      "command(which *)",
+      "command(ssh -o ProxyCommand=)"
+    ],
+    "ask": [],
+    "deny": []
+  },
+  "verbosity": "low"
+}
