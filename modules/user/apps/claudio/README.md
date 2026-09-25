@@ -108,9 +108,24 @@ programs.claudio = {
 
   permissions = {
     commands = {
-      extraAllow = [ "cargo *" "pnpm *" "terraform plan *" ];
-      extraAsk = [ "pulumi *" "kubectl delete *" ];
-      extraDenyHard = [ "dangerous-tool *" ];
+      extraAllow = [
+        "cargo *"
+        "pnpm *"
+        "just build *"
+        "watchexec *"
+      ];
+      extraAsk = [
+        "darwin-rebuild switch *"
+        "just switch *"
+        "brew install *"
+        "kubectl apply *"
+      ];
+      extraDenyHard = [
+        "sudo nix-collect-garbage *"
+        "sops decrypt *"
+        "op item delete *"
+        "terraform destroy *"
+      ];
     };
     network = {
       extraAllowedDomains = [ "api.linear.app" ];

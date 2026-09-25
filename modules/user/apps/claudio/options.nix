@@ -25,7 +25,8 @@
           example = [
             "cargo *"
             "pnpm *"
-            "terraform plan *"
+            "just build *"
+            "watchexec *"
           ];
           description = "Commands automatically approved across all backends (agy, claude-code, opencode).";
         };
@@ -34,8 +35,10 @@
           type = lib.types.listOf lib.types.str;
           default = [ ];
           example = [
-            "pulumi *"
-            "kubectl delete *"
+            "darwin-rebuild switch *"
+            "just switch *"
+            "brew install *"
+            "kubectl apply *"
           ];
           description = "Commands requiring interactive human confirmation before execution.";
         };
@@ -43,7 +46,12 @@
         extraDenyHard = lib.mkOption {
           type = lib.types.listOf lib.types.str;
           default = [ ];
-          example = [ "dangerous-tool *" ];
+          example = [
+            "sudo nix-collect-garbage *"
+            "sops decrypt *"
+            "op item delete *"
+            "terraform destroy *"
+          ];
           description = "Irreversible commands strictly blocked across all profiles.";
         };
       };
