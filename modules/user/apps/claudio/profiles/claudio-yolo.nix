@@ -23,7 +23,7 @@ in
       name = "claude-yolo";
       runtimeInputs = [
         config.programs.claude-code.package
-        pkgs.antigravity-cli
+        config.programs.antigravity-cli.package
         config.programs.opencode.package
       ];
       text = ''
