@@ -1,18 +1,18 @@
 rule	namespace	kind	consumers
-ask	policy.commands.ask	raw	claudeCode.permissions.ask
-askExact	policy.commands.askExact	raw	claudeCode.permissions.ask
-denyHard	policy.commands.denyHard	raw	claudeCode.permissions.deny, only via mkClaudeCodePermissions's hardDeny = true (claudio.nix, claudio-thebot.nix); the base and the yolo profiles leave hardDeny at its default false
-denySoft	policy.commands.denySoft	raw	none — opencode.permission.bash is a flat allow; claude-code's soft tier is hand-written prose in claude-code/default.nix's autoMode.soft_deny, not read from here
+ask	policy.commands.ask	raw	claudeCode.permissions.ask, antigravity.PreToolUse.ask (via antigravity-hook.sh)
+askExact	policy.commands.askExact	raw	claudeCode.permissions.ask, antigravity.PreToolUse.askExact (via antigravity-hook.sh)
+denyHard	policy.commands.denyHard	raw	claudeCode.permissions.deny (only via mkClaudeCodePermissions hardDeny=true in claudio.nix), antigravity.PreToolUse.denyHard (via antigravity-hook.sh)
+denySoft	policy.commands.denySoft	raw	claude-code autoMode.soft_deny (prose), AGENTS.md instructions for agy/opencode
 bypassSandboxSeatbelt	policy.commands.bypassSandboxSeatbelt	raw	claudeCode.sandbox.excludedCommands
-dirs	policy.filesystem.credentials.dirs	raw	claudeCode.permissions.deny, claudeCode.sandbox.filesystem.denyRead, claudeCode.sandbox.filesystem.denyWrite
-files	policy.filesystem.credentials.files	raw	claudeCode.permissions.deny, claudeCode.sandbox.filesystem.denyRead, claudeCode.sandbox.filesystem.denyWrite
+dirs	policy.filesystem.credentials.dirs	raw	claudeCode.permissions.deny, claudeCode.sandbox.filesystem.denyRead/Write, antigravity.PreToolUse.credentials (view/read tools + command string check)
+files	policy.filesystem.credentials.files	raw	claudeCode.permissions.deny, claudeCode.sandbox.filesystem.denyRead/Write, antigravity.PreToolUse.credentials (view/read tools + command string check)
 toolchainReadWrite	policy.filesystem.toolchainReadWrite	raw	claudeCode.sandbox.filesystem.allowRead, claudeCode.sandbox.filesystem.allowWrite
 toolchainReadOnly	policy.filesystem.toolchainReadOnly	raw	claudeCode.sandbox.filesystem.allowRead
 allowedDomains	policy.network.allowedDomains	raw	claudeCode.sandbox.network.allowedDomains
 allowUnixSockets	policy.network.allowUnixSockets	raw	claudeCode.sandbox.network.allowUnixSockets
 allowMachLookup	policy.network.allowMachLookup	raw	claudeCode.sandbox.network.allowMachLookup
-credentialBaks	credentialBaks (internal, derived from filesystem.credentials.files)	internal	claudeCode.permissions.deny only, via mkClaudeCodePermissions's credentialDenyRules. Not read by mkClaudeCodeSandbox, so a Bash subprocess isn't blocked from a credential file's .bak twin, only the native Read/Edit tools are.
-unixSockets	unixSockets (internal, the nix daemon socket + docker daemon socket)	internal	claudeCode.sandbox.network.allowUnixSockets, claudeCode.sandbox.filesystem.allowRead. Shared so a socket added to one can't drift out of sync with the other.
+credentialBaks	credentialBaks (internal, derived from filesystem.credentials.files)	internal	claudeCode.permissions.deny only via mkClaudeCodePermissions credentialDenyRules
+unixSockets	unixSockets (internal, nix daemon socket + docker daemon socket)	internal	claudeCode.sandbox.network.allowUnixSockets, claudeCode.sandbox.filesystem.allowRead
 ask	claudeCode.permissions.ask	rendered	claude-code/default.nix (programs.claude-code.settings.permissions.ask), built by mkClaudeCodePermissions
 deny	claudeCode.permissions.deny	rendered	claude-code/default.nix (programs.claude-code.settings.permissions.deny), built by mkClaudeCodePermissions
 excludedCommands	claudeCode.sandbox.excludedCommands	rendered	claude-code/default.nix (programs.claude-code.settings.sandbox.excludedCommands), built by mkClaudeCodeSandbox
@@ -23,6 +23,10 @@ denyWrite	claudeCode.sandbox.filesystem.denyWrite	rendered	claude-code/default.n
 allowedDomains	claudeCode.sandbox.network.allowedDomains	rendered	claude-code/default.nix, built by mkClaudeCodeSandbox
 allowUnixSockets	claudeCode.sandbox.network.allowUnixSockets	rendered	claude-code/default.nix, built by mkClaudeCodeSandbox
 allowMachLookup	claudeCode.sandbox.network.allowMachLookup	rendered	claude-code/default.nix, built by mkClaudeCodeSandbox
+PreToolUse.ask	antigravity.hook.ask	rendered	antigravity/default.nix -> hooks/antigravity-hook.sh, gates policy.commands.ask and askExact
+PreToolUse.denyHard	antigravity.hook.denyHard	rendered	antigravity/default.nix -> hooks/antigravity-hook.sh, blocks policy.commands.denyHard
+PreToolUse.credentials	antigravity.hook.credentials	rendered	antigravity/default.nix -> hooks/antigravity-hook.sh, blocks policy.filesystem.credentials
+PreToolUse.rtkRewrite	antigravity.hook.rtkRewrite	rendered	antigravity/default.nix -> hooks/antigravity-hook.sh, rewrites allowed commands via rtk rewrite
 read	opencode.permission.read	rendered	opencode/default.nix (programs.opencode.settings.permission.read), built by mkOpencodePermissions
 glob	opencode.permission.glob	rendered	opencode/default.nix, built by mkOpencodePermissions
 grep	opencode.permission.grep	rendered	opencode/default.nix, built by mkOpencodePermissions
@@ -34,3 +38,45 @@ task	opencode.permission.task	rendered	opencode/default.nix, built by mkOpencode
 external_directory	opencode.permission.external_directory	rendered	opencode/default.nix, built by mkOpencodePermissions
 doom_loop	opencode.permission.doom_loop	rendered	opencode/default.nix, built by mkOpencodePermissions
 bash	opencode.permission.bash	rendered	opencode/default.nix, built by mkOpencodePermissions
+
+# Backend and Profile Matrix Overview
+backend	profile	default_mode	credentials_protection	destructive_cmd_gate	hard_deny	rtk_rewrites	sandbox_layer
+claude-code	claudio	auto	deny (Read/Edit tool rules)	ask (interactive prompt)	deny (gh/fj merge/release)	PreToolUse hook (rtk hook claude)	Seatbelt network allowlist (filesystem disabled)
+claude-code	claude-yolo	bypass	deny (credentialDenyOnly)	allow (--dangerously-skip-permissions)	allow	PreToolUse hook (rtk hook claude)	none (sandbox.enabled = false)
+claude-code	claudio-thebot	bypass	allow (identity-bin wrapper environment)	allow (--dangerously-skip-permissions)	allow	PreToolUse hook (rtk hook claude)	none (sandbox.enabled = false)
+agy	claudio	default	deny (view/read tools + command check)	ask (interactive prompt)	deny (gh/fj merge/release)	PreToolUse hook (rtk rewrite)	terminal restrictions (--sandbox optional)
+agy	claude-yolo	bypass	deny (view/read tools + command check)	allow (CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS=1)	deny (gh/fj merge/release)	PreToolUse hook (rtk rewrite)	none
+agy	claudio-thebot	bypass	deny (view/read tools + command check)	allow (CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS=1)	deny (gh/fj merge/release)	PreToolUse hook (rtk rewrite)	none (identity-bin PATH injection)
+opencode	claudio	default	deny (*.env patterns)	allow (flat bash allow, external_directory=ask)	allow	none	none
+opencode	claude-yolo	auto	deny (*.env patterns)	allow (--auto)	allow	none	none
+opencode	claudio-thebot	auto	deny (*.env patterns)	allow (--auto)	allow	none	none
+
+# Detailed Permission Rule Comparison by Target
+rule_type	target	claude_code:claudio	claude_code:claude-yolo	claude_code:claudio-thebot	agy:claudio	agy:claude-yolo	agy:claudio-thebot	opencode
+command	git push	ask	allow	allow	ask	allow	allow	allow
+command	git reset --hard	ask	allow	allow	ask	allow	allow	allow
+command	git checkout --	ask	allow	allow	ask	allow	allow	allow
+command	git restore	ask	allow	allow	ask	allow	allow	allow
+command	git clean	ask	allow	allow	ask	allow	allow	allow
+command	git rebase	ask	allow	allow	ask	allow	allow	allow
+command	rm -rf	ask	allow	allow	ask	allow	allow	allow
+command	git checkout .	ask	allow	allow	ask	allow	allow	allow
+command	gh pr merge	deny	allow	allow	deny	deny	deny	allow
+command	gh release	deny	allow	allow	deny	deny	deny	allow
+command	fj pr merge	deny	allow	allow	deny	deny	deny	allow
+command	fj release	deny	allow	allow	deny	deny	deny	allow
+command	gh pr create	soft_deny (prose)	allow	allow	soft_deny (AGENTS.md)	soft_deny (AGENTS.md)	soft_deny (AGENTS.md)	allow
+command	fj pr create	soft_deny (prose)	allow	allow	soft_deny (AGENTS.md)	soft_deny (AGENTS.md)	soft_deny (AGENTS.md)	allow
+credential_dir	~/.ssh	deny	deny	allow	deny	deny	deny	allow
+credential_dir	~/.aws	deny	deny	allow	deny	deny	deny	allow
+credential_dir	~/.config/sops	deny	deny	allow	deny	deny	deny	allow
+credential_dir	~/.config/1Password	deny	deny	allow	deny	deny	deny	allow
+credential_dir	~/.gnupg	deny	deny	allow	deny	deny	deny	allow
+credential_file	~/.claude/.credentials.json	deny	deny	allow	deny	deny	deny	allow
+credential_file	~/.netrc	deny	deny	allow	deny	deny	deny	allow
+credential_file	~/.npmrc	deny	deny	allow	deny	deny	deny	allow
+credential_file	~/.local/share/opencode/auth.json	deny	deny	allow	deny	deny	deny	allow
+credential_file	~/.local/share/opencode/mcp-auth.json	deny	deny	allow	deny	deny	deny	allow
+credential_pattern	*.env / *.env.*	allow	allow	allow	allow	allow	allow	deny
+rewrite	git log / git diff / git status	rtk rewrite	rtk rewrite	rtk rewrite	rtk rewrite	rtk rewrite	rtk rewrite	none
+rewrite	grep / rg / ls / find	rtk rewrite	rtk rewrite	rtk rewrite	rtk rewrite	rtk rewrite	rtk rewrite	none
