@@ -27,6 +27,7 @@ PreToolUse.ask	antigravity.hook.ask	rendered	antigravity/default.nix -> hooks/an
 PreToolUse.denyHard	antigravity.hook.denyHard	rendered	antigravity/default.nix -> hooks/antigravity-hook.sh, blocks policy.commands.denyHard
 PreToolUse.credentials	antigravity.hook.credentials	rendered	antigravity/default.nix -> hooks/antigravity-hook.sh, blocks policy.filesystem.credentials
 PreToolUse.rtkRewrite	antigravity.hook.rtkRewrite	rendered	antigravity/default.nix -> hooks/antigravity-hook.sh, rewrites allowed commands via rtk rewrite
+allow	antigravity.permissions.allow	rendered	antigravity/default.nix -> programs.antigravity-cli.permissions.allow (merged into settings.json)
 read	opencode.permission.read	rendered	opencode/default.nix (programs.opencode.settings.permission.read), built by mkOpencodePermissions
 glob	opencode.permission.glob	rendered	opencode/default.nix, built by mkOpencodePermissions
 grep	opencode.permission.grep	rendered	opencode/default.nix, built by mkOpencodePermissions

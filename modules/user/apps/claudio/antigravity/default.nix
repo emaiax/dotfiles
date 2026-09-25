@@ -39,6 +39,8 @@ let
   hooksJson = (pkgs.formats.json { }).generate "antigravity-hooks.json" hooksConfig;
 in
 {
+  programs.antigravity-cli.permissions.allow = perms.antigravity.permissions.allow;
+
   home.file.".gemini/config/AGENTS.md" = {
     source = config.lib.file.mkOutOfStoreSymlink "${claudioPath}/AGENTS.md";
     force = true;
@@ -58,4 +60,13 @@ in
     source = hooksJson;
     force = true;
   };
+
+  # Keep claudio's local antigravity/settings.json copy in sync with antigravity-cli/settings.json
+  home.activation.claudioAntigravitySettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    existing="${claudioPath}/antigravity/settings.json"
+    tracked="${config.home.homeDirectory}/code/dotfiles/modules/user/apps/antigravity-cli/settings.json"
+    if [[ -d "$(dirname "$existing")" && -f "$tracked" ]] && ! cmp -s "$tracked" "$existing" 2>/dev/null; then
+      install -Dm644 "$tracked" "$existing"
+    fi
+  '';
 }

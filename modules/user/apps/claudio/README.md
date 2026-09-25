@@ -159,6 +159,16 @@ Full policy definitions are documented in [`permissions.tsv`](permissions.tsv).
 | ⚡ | **RTK Rewrite** | Command intercepted and compressed via RTK to optimize tokens |
 | ⚪ | **None** | No restriction or interception layer applied |
 
+### Antigravity Settings & Activation Lifecycle
+
+While Claude Code and OpenCode link settings via out-of-store symlinks, `agy` atomically replaces `~/.gemini/antigravity-cli/settings.json` on save with a standalone file (`0600`), unlinking symlinks. To handle this cleanly via `just switch`:
+- **Nix Declarations**: Configured via `programs.antigravity-cli.settings` and `programs.antigravity-cli.permissions.allow` (populated by Claudio's `permissions.nix`).
+- **Activation Merge**: During `just switch`, home-manager performs a non-destructive `jq` merge:
+  1. Base settings (`colorScheme`, `enableTelemetry`, `verbosity`) are enforced.
+  2. Live `trustedWorkspaces` are preserved intact.
+  3. Pre-approved commands from Nix and ad-hoc interactive approvals are unioned (`unique(live + nix)`).
+  4. Tracked seed files (`antigravity-cli/settings.json` and `claudio/antigravity/settings.json`) are synchronized with the declarative state.
+
 ---
 
 ## ⚡ Token Optimization (RTK)
