@@ -41,22 +41,9 @@ let
     ++ map exactRule (withRtkTwin policy.commands.askExact);
 
   denyCommands = policy.commands.deny or [ ];
-
-  mkPermissions =
-    {
-      deny ? false,
-      hardDeny ? deny,
-    }:
-    let
-      denyRules = lib.optionals hardDeny (map prefixRule (withRtkTwin denyCommands));
-    in
-    {
-      allow = map prefixRule (withRtkTwin policy.commands.allow);
-      ask = askRules;
-      deny = denyRules ++ credentialDenyRules;
-    };
-
-  mkSandbox = {
+in
+{
+  sandbox = {
     excludedCommands = policy.commands.bypassSandboxSeatbelt;
     network = policy.network;
     filesystem = {
@@ -81,14 +68,9 @@ let
     };
   };
 
-in
-{
-  inherit
-    credentialDenyRules
-    mkPermissions
-    mkSandbox
-    ;
-
-  sandbox = mkSandbox;
-  permissions = mkPermissions { hardDeny = true; };
+  permissions = {
+    allow = map prefixRule (withRtkTwin policy.commands.allow);
+    ask = askRules;
+    deny = map prefixRule (withRtkTwin denyCommands) ++ credentialDenyRules;
+  };
 }
