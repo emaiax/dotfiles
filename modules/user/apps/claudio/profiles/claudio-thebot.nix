@@ -9,8 +9,12 @@
 let
   home = config.home.homeDirectory;
   profile = "claudio-thebot";
+  claudioCfg = config.programs.claudio;
 
-  perms = import ../permissions.nix { inherit home lib; };
+  perms = import ../permissions.nix {
+    inherit home lib;
+    inherit (claudioCfg) permissions;
+  };
 
   claudioCore = "${home}/code/${profile}/claudio-core";
   claudioState = ".local/share/${profile}";
@@ -40,11 +44,11 @@ let
       fi
     '';
 
-  # bypassPermissions skips auto mode entirely, no carve-out needed here. perms.claudeCode.yolo is the literal
-  # empty object: docs/sandbox-notes.md's "claude-yolo: what it actually trades away" section has the history.
+  # bypassPermissions skips auto mode entirely, no carve-out needed here. Empty object:
+  # docs/sandbox-notes.md's "claude-yolo: what it actually trades away" section has the history.
   settingsFile = (pkgs.formats.json { }).generate "claudio-thebot-settings.json" {
     sandbox.enabled = false;
-    permissions = perms.claudeCode.yolo;
+    permissions = { };
   };
 
   claudioCoreArgs = ''

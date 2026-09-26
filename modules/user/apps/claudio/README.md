@@ -31,7 +31,7 @@ claudio/
 ├── skills/                    # Progressive on-demand skills (e.g., nixpkgs PR checklist)
 ├── permissions.nix            # Security policy defined as pure data
 ├── permissions.tsv            # Policy consumers, backend matrix, and rule comparison
-├── options.nix                # Nix options (programs.claudio.backend)
+├── options.nix                # Nix options (programs.claudio: backend, permissions, rtk)
 ├── antigravity/               # Antigravity CLI adapter (config links and hooks.json)
 ├── claude-code/               # Claude Code adapter (Seatbelt sandbox and settings.json)
 ├── opencode/                  # OpenCode adapter (permission schema)
@@ -42,7 +42,7 @@ claudio/
 
 ### Decoupled Core
 - **Prompts & Instructions**: [`AGENTS.md`](AGENTS.md), [`docs/`](docs/), and [`skills/`](skills/) follow standard conventions discovered natively by both Antigravity CLI (`agy`) and Claude Code (`~/.claude/`).
-- **Security Policy as Data**: [`permissions.nix`](permissions.nix) defines raw lists of commands (`ask`, `denyHard`, `denySoft`), credential paths, and network targets independently of any specific agent implementation.
+- **Security Policy as Data**: [`permissions.nix`](permissions.nix) defines raw lists of commands (`ask`, `deny`, `denySoft`), credential paths, and network targets independently of any specific agent implementation.
 
 ---
 
@@ -96,6 +96,49 @@ claudio --claude --dangerously-skip-permissions
 1. **CLI Flag**: `--agy`, `--claude`, `--backend <name>` (highest priority).
 2. **Environment Variable**: `CLAUDIO_BACKEND=agy`.
 3. **Declarative Nix Default**: `programs.claudio.backend = "claude-code";` (or `"agy"`).
+
+### Declarative Configuration (`programs.claudio`)
+
+Declarative options configured under `programs.claudio` propagate across all agent runtimes automatically:
+
+```nix
+programs.claudio = {
+  enable = true;
+  backend = "claude-code"; # "claude-code" | "agy" | "opencode"
+
+  permissions = {
+    commands = {
+      extraAllow = [
+        "cargo *"
+        "pnpm *"
+        "just build *"
+        "watchexec *"
+      ];
+      extraAsk = [
+        "darwin-rebuild switch *"
+        "just switch *"
+        "brew install *"
+        "kubectl apply *"
+      ];
+      extraDeny = [
+        "sudo nix-collect-garbage *"
+        "sops decrypt *"
+        "op item delete *"
+        "terraform destroy *"
+      ];
+    };
+    network = {
+      extraAllowedDomains = [ "api.linear.app" ];
+    };
+    filesystem = {
+      extraCredentials = [ "\${config.home.homeDirectory}/.kube/config" ];
+      extraToolchainPaths = [ "\${config.home.homeDirectory}/work" ];
+    };
+  };
+
+  rtk.enable = true;
+};
+```
 
 ---
 

@@ -9,8 +9,12 @@
 let
   obsidianSocket = "${home}/.obsidian-cli.sock";
   home = config.home.homeDirectory;
+  claudioCfg = config.programs.claudio;
 
-  perms = import ../permissions.nix { inherit home lib; };
+  perms = import ../permissions.nix {
+    inherit home lib;
+    inherit (claudioCfg) permissions;
+  };
 
   settings = {
     sandbox = {
@@ -22,7 +26,7 @@ let
 
     # An "auto" profile (not yolo like claudio-thebot): defaultMode lives here since this is what opts into
     # "auto" mode, not every plain `claude` session (docs/sandbox-notes.md).
-    permissions = perms.claudeCode.user // {
+    permissions = perms.claudeCode.permissions // {
       defaultMode = "auto";
     };
   };

@@ -39,24 +39,24 @@ static_settings_run() {
   # Permission gates: deny survives every mode including bypassPermissions, ask is what a yolo-style profile
   # trades away. These live only on the claudio overlay (permissions.nix), not the shared base (sandbox-notes.md).
   assert_jq static-deny-gh-merge claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(gh pr merge:*)") != null' 'true'
-  assert_jq static-deny-gh-release claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(gh release:*)") != null' 'true'
-  assert_jq static-deny-fj-merge claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(fj pr merge:*)") != null' 'true'
-  assert_jq static-deny-fj-release claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(fj release:*)") != null' 'true'
+  assert_jq static-deny-gh-pr-close claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(gh pr close:*)") != null' 'true'
+  assert_jq static-deny-gh-pr-create claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(gh pr create:*)") != null' 'true'
+  assert_jq static-deny-gh-issue-create claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(gh issue create:*)") != null' 'true'
   # Read(//Users/...): // marks filesystem-root-absolute (permissions.nix).
   assert_jq static-deny-read-credentials claudio "${OVERLAY[claudio]}" ".permissions.deny | index(\"Read(/$h/.claude/.credentials.json)\") != null" 'true'
   assert_jq static-deny-read-credentials-bak claudio "${OVERLAY[claudio]}" ".permissions.deny | index(\"Read(/$h/.claude/.credentials.json.bak)\") != null" 'true'
   assert_jq static-deny-edit-credentials-bak claudio "${OVERLAY[claudio]}" ".permissions.deny | index(\"Edit(/$h/.claude/.credentials.json.bak)\") != null" 'true'
   assert_jq static-ask-git-push claudio "${OVERLAY[claudio]}" '.permissions.ask | index("Bash(git push:*)") != null' 'true'
+  assert_jq static-ask-python3 claudio "${OVERLAY[claudio]}" '.permissions.ask | index("Bash(python3:*)") != null' 'true'
   assert_jq static-ask-rm-rf claudio "${OVERLAY[claudio]}" '.permissions.ask | index("Bash(rm -rf:*)") != null' 'true'
-  assert_jq static-ask-git-reset claudio "${OVERLAY[claudio]}" '.permissions.ask | index("Bash(git reset --hard:*)") != null' 'true'
   assert_jq static-default-mode-auto claudio "${OVERLAY[claudio]}" '.permissions.defaultMode' 'auto'
 
   # rtk twins: found live by the gate probes; fix is permissions.nix's withRtkTwin.
   assert_jq static-ask-rtk-git-push claudio "${OVERLAY[claudio]}" '.permissions.ask | index("Bash(rtk git push:*)") != null' 'true'
+  assert_jq static-ask-rtk-python3 claudio "${OVERLAY[claudio]}" '.permissions.ask | index("Bash(rtk python3:*)") != null' 'true'
   assert_jq static-ask-rtk-checkout-exact claudio "${OVERLAY[claudio]}" '.permissions.ask | index("Bash(rtk git checkout .)") != null' 'true'
-  assert_jq static-ask-rtk-checkout-dashes claudio "${OVERLAY[claudio]}" '.permissions.ask | index("Bash(rtk git checkout --:*)") != null' 'true'
   assert_jq static-deny-rtk-gh-merge claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(rtk gh pr merge:*)") != null' 'true'
-  assert_jq static-deny-rtk-fj-release claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(rtk fj release:*)") != null' 'true'
+  assert_jq static-deny-rtk-gh-pr-create claudio "${OVERLAY[claudio]}" '.permissions.deny | index("Bash(rtk gh pr create:*)") != null' 'true'
 
   # base settings.json: zero permissions definition on purpose, a bare `claude` invocation isn't gated by
   # anything meant for the specialized profiles. Guard against it silently coming back.

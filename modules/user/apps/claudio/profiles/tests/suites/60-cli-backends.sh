@@ -59,12 +59,39 @@ cli_backends_run() {
   if [[ -f "$hook_bin" && -f "$policy_file" ]]; then
     local res
     # 1. Ask gate: git push
-    res=$(echo '{"toolCall":{"name":"run_command","args":{"CommandLine":"git push origin main"}}}' | bash "$hook_bin" "$policy_file")
+    res=$(echo '{"toolCall":{"name":"run_command","args":{"CommandLine":"git push origin main"}}}' | env -u CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS bash "$hook_bin" "$policy_file")
     if [[ $(echo "$res" | jq -r '.decision') == "ask" ]]; then
       t_record PASS hook-ask-git-push agy
     else
       t_record FAIL hook-ask-git-push agy "expected ask, got: $res"
     fi
+
+    # 1b. Extra ask gate: kubectl delete
+    local extra_policy
+    extra_policy=$(mktemp)
+    jq '.commands.extraAsk = ["kubectl delete *", "pulumi *"] | .commands.extraDeny = ["dangerous-tool *"] | .filesystem.credentials.extra = ["'"$HOME"'/.kube/config"]' "$policy_file" > "$extra_policy"
+
+    res=$(echo '{"toolCall":{"name":"run_command","args":{"CommandLine":"kubectl delete pod foo"}}}' | env -u CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS bash "$hook_bin" "$extra_policy")
+    if [[ $(echo "$res" | jq -r '.decision') == "ask" ]]; then
+      t_record PASS hook-extra-ask-kubectl agy
+    else
+      t_record FAIL hook-extra-ask-kubectl agy "expected ask for extraAsk kubectl, got: $res"
+    fi
+
+    res=$(echo '{"toolCall":{"name":"run_command","args":{"CommandLine":"dangerous-tool run"}}}' | bash "$hook_bin" "$extra_policy")
+    if [[ $(echo "$res" | jq -r '.decision') == "deny" ]]; then
+      t_record PASS hook-extra-deny-tool agy
+    else
+      t_record FAIL hook-extra-deny-tool agy "expected deny for extraDeny, got: $res"
+    fi
+
+    res=$(echo "{\"toolCall\":{\"name\":\"view_file\",\"args\":{\"AbsolutePath\":\"${HOME}/.kube/config\"}}}" | bash "$hook_bin" "$extra_policy")
+    if [[ $(echo "$res" | jq -r '.decision') == "deny" ]]; then
+      t_record PASS hook-extra-deny-cred agy
+    else
+      t_record FAIL hook-extra-deny-cred agy "expected deny for extraCredentials, got: $res"
+    fi
+    rm -f "$extra_policy"
 
     # 2. Hard deny: gh pr merge
     res=$(echo '{"toolCall":{"name":"run_command","args":{"CommandLine":"gh pr merge 123"}}}' | bash "$hook_bin" "$policy_file")
@@ -134,23 +161,27 @@ cli_backends_run() {
   # 8. Behavioral test of smart-merge logic
   if [[ -f "$agy_settings_json" ]]; then
     local test_live test_merged
-    test_live='{"colorScheme":"old","enableTelemetry":true,"trustedWorkspaces":["/test/worktree"],"permissions":{"allow":["command(adhoc-tool)"]}}'
+    test_live='{"colorScheme":"old","enableTelemetry":true,"trustedWorkspaces":["/test/worktree"],"permissions":{"allow":["command(adhoc-tool)"],"ask":["command(adhoc-ask)"],"deny":["command(adhoc-deny)"]}}'
     test_merged=$(echo "$test_live" | jq -s --slurpfile nix "$agy_settings_json" '
       .[0] as $live | $nix[0] as $nix |
       ($live * $nix) * {
         trustedWorkspaces: ($live.trustedWorkspaces // []),
         permissions: {
-          allow: ((($live.permissions.allow // []) + ($nix.permissions.allow // [])) | unique)
+          allow: ((($live.permissions.allow // []) + ($nix.permissions.allow // [])) | unique),
+          ask: ((($live.permissions.ask // []) + ($nix.permissions.ask // [])) | unique),
+          deny: ((($live.permissions.deny // []) + ($nix.permissions.deny // [])) | unique)
         }
       }
     ')
-    local merged_ws merged_adhoc merged_git merged_cs
+    local merged_ws merged_adhoc merged_git merged_cs merged_ask_adhoc merged_deny_adhoc
     merged_ws=$(echo "$test_merged" | jq -r '.trustedWorkspaces[0] // empty')
     merged_adhoc=$(echo "$test_merged" | jq -r '.permissions.allow[] | select(. == "command(adhoc-tool)")' 2>/dev/null || true)
     merged_git=$(echo "$test_merged" | jq -r '.permissions.allow[] | select(. == "command(git *)")' 2>/dev/null || true)
     merged_cs=$(echo "$test_merged" | jq -r '.colorScheme')
+    merged_ask_adhoc=$(echo "$test_merged" | jq -r '.permissions.ask[] | select(. == "command(adhoc-ask)")' 2>/dev/null || true)
+    merged_deny_adhoc=$(echo "$test_merged" | jq -r '.permissions.deny[] | select(. == "command(adhoc-deny)")' 2>/dev/null || true)
 
-    if [[ "$merged_ws" == "/test/worktree" && "$merged_adhoc" == "command(adhoc-tool)" && "$merged_git" == "command(git *)" && "$merged_cs" == "tokyo night" ]]; then
+    if [[ "$merged_ws" == "/test/worktree" && "$merged_adhoc" == "command(adhoc-tool)" && "$merged_git" == "command(git *)" && "$merged_cs" == "tokyo night" && "$merged_ask_adhoc" == "command(adhoc-ask)" && "$merged_deny_adhoc" == "command(adhoc-deny)" ]]; then
       t_record PASS smart-merge-preserves-and-unions agy
     else
       t_record FAIL smart-merge-preserves-and-unions agy "merge failed: $test_merged"
@@ -170,4 +201,101 @@ cli_backends_run() {
   else
     t_record FAIL tracked-seed-matches-store agy "seed file missing: $seed_claudio or $agy_settings_json"
   fi
+
+  # 10. Evaluated permissions translation matrix
+  local eval_json
+  eval_json=$(nix-instantiate --eval --strict --json -E "
+    let
+      pkgs = import <nixpkgs> {};
+      lib = pkgs.lib;
+      home = \"/Users/test\";
+      perms = import $TESTS_ROOT/../../permissions.nix {
+        inherit home lib;
+        permissions = {
+          commands = {
+            extraAllow = [ \"cargo *\" \"pnpm *\" \"terraform plan *\" ];
+            extraAsk = [ \"pulumi *\" \"kubectl delete *\" ];
+            extraDeny = [ \"dangerous-tool *\" ];
+          };
+          network = {
+            extraAllowedDomains = [ \"api.linear.app\" ];
+          };
+          filesystem = {
+            extraCredentials = [ \"/Users/test/.kube/config\" ];
+            extraToolchainPaths = [ \"/Users/test/work\" ];
+          };
+        };
+      };
+    in {
+      agyAllow = perms.antigravity.permissions.allow;
+      agyAsk = perms.antigravity.permissions.ask;
+      agyDeny = perms.antigravity.permissions.deny;
+      claudeAllow = perms.claudeCode.permissions.allow;
+      claudeAsk = perms.claudeCode.permissions.ask;
+      claudeDeny = perms.claudeCode.permissions.deny;
+      claudeDomains = perms.claudeCode.sandbox.network.allowedDomains;
+      claudeFsAllowRead = perms.claudeCode.sandbox.filesystem.allowRead;
+      opencodeBash = perms.opencode.permission.bash;
+    }
+  " 2>/dev/null || true)
+
+  if [[ -n "$eval_json" ]]; then
+    local has_agy_cargo has_agy_ask_pulumi has_agy_deny_tool has_claude_cargo has_claude_rtk_cargo has_claude_ask_kubectl has_opencode_cargo
+    has_agy_cargo=$(echo "$eval_json" | jq -r '.agyAllow[] | select(. == "command(cargo *)")' 2>/dev/null || true)
+    has_agy_ask_pulumi=$(echo "$eval_json" | jq -r '.agyAsk[] | select(. == "command(pulumi *)")' 2>/dev/null || true)
+    has_agy_deny_tool=$(echo "$eval_json" | jq -r '.agyDeny[] | select(. == "command(dangerous-tool *)")' 2>/dev/null || true)
+    has_claude_cargo=$(echo "$eval_json" | jq -r '.claudeAllow[] | select(. == "Bash(cargo:*)")' 2>/dev/null || true)
+    has_claude_rtk_cargo=$(echo "$eval_json" | jq -r '.claudeAllow[] | select(. == "Bash(rtk cargo:*)")' 2>/dev/null || true)
+    has_claude_ask_kubectl=$(echo "$eval_json" | jq -r '.claudeAsk[] | select(. == "Bash(kubectl delete:*)")' 2>/dev/null || true)
+    has_opencode_cargo=$(echo "$eval_json" | jq -r '.opencodeBash["cargo *"] // empty' 2>/dev/null || true)
+
+    if [[ "$has_agy_cargo" == "command(cargo *)" ]]; then
+      t_record PASS declarative-extra-allow-agy agy
+    else
+      t_record FAIL declarative-extra-allow-agy agy "cargo * missing in agy allow: $eval_json"
+    fi
+
+    if [[ "$has_agy_ask_pulumi" == "command(pulumi *)" ]]; then
+      t_record PASS declarative-extra-ask-agy agy
+    else
+      t_record FAIL declarative-extra-ask-agy agy "pulumi * missing in agy ask: $eval_json"
+    fi
+
+    if [[ "$has_agy_deny_tool" == "command(dangerous-tool *)" ]]; then
+      t_record PASS declarative-extra-deny-agy agy
+    else
+      t_record FAIL declarative-extra-deny-agy agy "dangerous-tool * missing in agy deny: $eval_json"
+    fi
+
+    if [[ "$has_claude_cargo" == "Bash(cargo:*)" && "$has_claude_rtk_cargo" == "Bash(rtk cargo:*)" ]]; then
+      t_record PASS declarative-extra-allow-claude-code claude
+    else
+      t_record FAIL declarative-extra-allow-claude-code claude "cargo / rtk cargo missing in claude allow: $eval_json"
+    fi
+
+    if [[ "$has_claude_ask_kubectl" == "Bash(kubectl delete:*)" ]]; then
+      t_record PASS declarative-extra-ask-claude-code claude
+    else
+      t_record FAIL declarative-extra-ask-claude-code claude "kubectl delete missing in claude ask: $eval_json"
+    fi
+
+    if [[ "$has_opencode_cargo" == "allow" ]]; then
+      t_record PASS declarative-extra-allow-opencode opencode
+    else
+      t_record FAIL declarative-extra-allow-opencode opencode "cargo * missing in opencode bash permissions: $eval_json"
+    fi
+  else
+    t_record FAIL declarative-permissions-eval agy "failed to evaluate permissions.nix with extra permissions"
+  fi
+
+  # 11. Tracked claudio-policy.json artifacts exist and contain valid JSON
+  local b pfile
+  for b in antigravity claude-code opencode; do
+    pfile="$TESTS_ROOT/../../$b/claudio-policy.json"
+    if [[ -f "$pfile" ]] && jq empty "$pfile" 2>/dev/null; then
+      t_record PASS "policy-artifact-$b" "$b"
+    else
+      t_record FAIL "policy-artifact-$b" "$b" "missing or invalid JSON in $pfile"
+    fi
+  done
 }

@@ -9,7 +9,11 @@
 }:
 let
   home = config.home.homeDirectory;
-  perms = import ../permissions.nix { inherit home lib; };
+  claudioCfg = config.programs.claudio;
+  perms = import ../permissions.nix {
+    inherit home lib;
+    inherit (claudioCfg) permissions;
+  };
 
   policyJson = (pkgs.formats.json { }).generate "claudio-policy.json" perms.policy;
 
@@ -55,12 +59,18 @@ in
 {
   programs.antigravity-cli = {
     enable = true;
+
     settings = {
+      altScreenMode = lib.mkDefault "always";
+      artifactReviewPolicy = lib.mkDefault "agent-decides";
       colorScheme = lib.mkDefault "tokyo night";
       enableTelemetry = lib.mkDefault false;
+      showFeedbackSurvey = lib.mkDefault false;
+      toolPermission = lib.mkDefault "request-review";
       verbosity = lib.mkDefault "low";
     };
-    permissions.allow = perms.antigravity.permissions.allow;
+
+    permissions = perms.antigravity.permissions;
   };
 
   # Disable home-manager's store symlink so it doesn't collide with agy's live runtime file
@@ -110,7 +120,9 @@ in
         ($live * $nix) * {
           trustedWorkspaces: ($live.trustedWorkspaces // []),
           permissions: {
-            allow: ((($live.permissions.allow // []) + ($nix.permissions.allow // [])) | unique)
+            allow: ((($live.permissions.allow // []) + ($nix.permissions.allow // [])) | unique),
+            ask: ((($live.permissions.ask // []) + ($nix.permissions.ask // [])) | unique),
+            deny: ((($live.permissions.deny // []) + ($nix.permissions.deny // [])) | unique)
           }
         }
       ' "$liveSettings" "${generatedSettingsJson}" > "$tmp"

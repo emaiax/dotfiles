@@ -7,10 +7,14 @@
 }:
 let
   home = config.home.homeDirectory;
+  claudioCfg = config.programs.claudio;
 
   # Shared with claude-code/default.nix. permission (including bash's dag-entry rendering) comes back fully
   # assembled, this file only wires it in.
-  perms = import ../permissions.nix { inherit home lib; };
+  perms = import ../permissions.nix {
+    inherit home lib;
+    inherit (claudioCfg) permissions;
+  };
 
   opencodeSettingsJson = (pkgs.formats.json { }).generate "opencode-settings.json" (
     config.programs.opencode.settings

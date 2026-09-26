@@ -1,13 +1,18 @@
 {
+  "altScreenMode": "always",
+  "artifactReviewPolicy": "agent-decides",
   "colorScheme": "tokyo night",
   "enableTelemetry": false,
   "permissions": {
     "allow": [
       "command(cat *)",
       "command(chmod *)",
+      "command(command *)",
+      "command(docker *)",
       "command(echo *)",
       "command(find *)",
       "command(fj *)",
+      "command(gh *)",
       "command(git *)",
       "command(grep *)",
       "command(head *)",
@@ -15,16 +20,33 @@
       "command(just *)",
       "command(ls *)",
       "command(nix *)",
-      "command(python3 *)",
       "command(readlink *)",
+      "command(rg *)",
       "command(rtk *)",
       "command(sort *)",
+      "command(ssh -o ProxyCommand=)",
       "command(tail *)",
-      "command(which *)",
-      "command(ssh -o ProxyCommand=)"
+      "command(which *)"
     ],
-    "ask": [],
-    "deny": []
+    "ask": [
+      "command(docker prune *)",
+      "command(git push *)",
+      "command(python3 *)",
+      "command(rm -rf *)",
+      "command(git checkout .)"
+    ],
+    "deny": [
+      "command(gh pr close *)",
+      "command(gh pr comment *)",
+      "command(gh pr create *)",
+      "command(gh pr merge *)",
+      "command(gh issue close *)",
+      "command(gh issue comment *)",
+      "command(gh issue create *)",
+      "command(gh issue edit *)"
+    ]
   },
+  "showFeedbackSurvey": false,
+  "toolPermission": "request-review",
   "verbosity": "low"
 }

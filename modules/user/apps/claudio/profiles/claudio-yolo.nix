@@ -8,11 +8,18 @@
 }:
 let
   home = config.home.homeDirectory;
-  perms = import ../permissions.nix { inherit home lib; };
+  claudioCfg = config.programs.claudio;
+
+  perms = import ../permissions.nix {
+    inherit home lib;
+    inherit (claudioCfg) permissions;
+  };
 
   settings = {
     sandbox.enabled = false;
-    permissions = perms.claudeCode.credentialDenyOnly;
+    permissions = {
+      deny = perms.claudeCode.credentialDenyRules;
+    };
   };
 
   settingsFile = (pkgs.formats.json { }).generate "claude-yolo-settings.json" settings;

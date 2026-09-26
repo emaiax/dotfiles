@@ -43,9 +43,9 @@ if [[ "$TOOL_NAME" =~ ^(view_file|read_file|write_to_file|replace_file_content)$
 
   if [[ -n "$PATH_ARG" && -f "$POLICY_JSON" ]]; then
     IS_CRED_DENIED=$(jq -r --arg path "$PATH_ARG" '
-      (.filesystem.credentials.dirs | any(. as $dir | ($path == $dir or ($path | startswith($dir + "/")))))
+      ((.filesystem.credentials.dirs + (.filesystem.credentials.extra // [])) | any(. as $dir | ($path == $dir or ($path | startswith($dir + "/")))))
       or
-      (.filesystem.credentials.files | any(. as $file | ($path == $file or ($path | startswith($file)))))
+      ((.filesystem.credentials.files + (.filesystem.credentials.extra // [])) | any(. as $file | ($path == $file or ($path | startswith($file)))))
     ' "$POLICY_JSON")
 
     if [[ "$IS_CRED_DENIED" == "true" ]]; then
@@ -86,9 +86,9 @@ if [[ "$TOOL_NAME" == "run_command" ]]; then
     #              -> {"decision":"deny","reason":"Credential path blocked by claudio policy"}
     # ---------------------------------------------------------------------------
     IS_CRED_IN_CMD=$(jq -r --arg cmd "$CMD" '
-      (.filesystem.credentials.dirs | any(. as $dir | ($cmd | contains($dir))))
+      ((.filesystem.credentials.dirs + (.filesystem.credentials.extra // [])) | any(. as $dir | ($cmd | contains($dir))))
       or
-      (.filesystem.credentials.files | any(. as $file | ($cmd | contains($file))))
+      ((.filesystem.credentials.files + (.filesystem.credentials.extra // [])) | any(. as $file | ($cmd | contains($file))))
     ' "$POLICY_JSON")
 
     if [[ "$IS_CRED_IN_CMD" == "true" ]]; then
@@ -115,13 +115,16 @@ if [[ "$TOOL_NAME" == "run_command" ]]; then
     #   - BLOCKED: run_command(CommandLine="fj release create v1.0.0")
     #              -> {"decision":"deny","reason":"Command is hard denied by claudio policy"}
     # ---------------------------------------------------------------------------
-    IS_DENY_HARD=$(jq -r --arg cmd "$BARE_CMD" '
-      .commands.denyHard |
-      any(. as $entry | ($cmd == $entry or ($cmd | startswith($entry + " "))))
+    IS_DENIED=$(jq -r --arg cmd "$BARE_CMD" '
+      ((.commands.deny // []) + (.commands.extraDeny // [])) |
+      any(. as $entry |
+        ($entry | rtrimstr(" *") | rtrimstr("*")) as $clean |
+        ($cmd == $clean or ($cmd | startswith($clean + " ")))
+      )
     ' "$POLICY_JSON")
 
-    if [[ "$IS_DENY_HARD" == "true" ]]; then
-      echo '{"decision":"deny","reason":"Command is hard denied by claudio policy"}'
+    if [[ "$IS_DENIED" == "true" ]]; then
+      echo '{"decision":"deny","reason":"Command is denied by claudio policy"}'
       exit 0
     fi
 
@@ -146,9 +149,12 @@ if [[ "$TOOL_NAME" == "run_command" ]]; then
     # ---------------------------------------------------------------------------
     if [[ -z "${CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS:-}" ]]; then
       IS_ASK=$(jq -r --arg cmd "$BARE_CMD" '
-        (.commands.ask | any(. as $entry | ($cmd == $entry or ($cmd | startswith($entry + " ")))))
+        ((.commands.ask // []) + (.commands.extraAsk // [])) | any(. as $entry |
+          ($entry | rtrimstr(" *") | rtrimstr("*")) as $clean |
+          ($cmd == $clean or ($cmd | startswith($clean + " ")))
+        )
         or
-        (.commands.askExact | any(. as $entry | ($cmd == $entry)))
+        ((.commands.askExact // []) | any(. as $entry | ($cmd == $entry)))
       ' "$POLICY_JSON")
 
       if [[ "$IS_ASK" == "true" ]]; then

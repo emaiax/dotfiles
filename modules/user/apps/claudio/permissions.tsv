@@ -1,7 +1,7 @@
 rule	namespace	kind	consumers
 ask	policy.commands.ask	raw	claudeCode.permissions.ask, antigravity.PreToolUse.ask (via antigravity-hook.sh)
 askExact	policy.commands.askExact	raw	claudeCode.permissions.ask, antigravity.PreToolUse.askExact (via antigravity-hook.sh)
-denyHard	policy.commands.denyHard	raw	claudeCode.permissions.deny (only via mkClaudeCodePermissions hardDeny=true in claudio.nix), antigravity.PreToolUse.denyHard (via antigravity-hook.sh)
+deny	policy.commands.deny	raw	claudeCode.permissions.deny (only via mkClaudeCodePermissions deny=true in claudio.nix), antigravity.PreToolUse.deny (via antigravity-hook.sh)
 denySoft	policy.commands.denySoft	raw	claude-code autoMode.soft_deny (prose), AGENTS.md instructions for agy/opencode
 bypassSandboxSeatbelt	policy.commands.bypassSandboxSeatbelt	raw	claudeCode.sandbox.excludedCommands
 dirs	policy.filesystem.credentials.dirs	raw	claudeCode.permissions.deny, claudeCode.sandbox.filesystem.denyRead/Write, antigravity.PreToolUse.credentials (view/read tools + command string check)
@@ -24,7 +24,7 @@ allowedDomains	claudeCode.sandbox.network.allowedDomains	rendered	claude-code/de
 allowUnixSockets	claudeCode.sandbox.network.allowUnixSockets	rendered	claude-code/default.nix, built by mkClaudeCodeSandbox
 allowMachLookup	claudeCode.sandbox.network.allowMachLookup	rendered	claude-code/default.nix, built by mkClaudeCodeSandbox
 PreToolUse.ask	antigravity.hook.ask	rendered	antigravity/default.nix -> hooks/antigravity-hook.sh, gates policy.commands.ask and askExact
-PreToolUse.denyHard	antigravity.hook.denyHard	rendered	antigravity/default.nix -> hooks/antigravity-hook.sh, blocks policy.commands.denyHard
+PreToolUse.deny	antigravity.hook.deny	rendered	antigravity/default.nix -> hooks/antigravity-hook.sh, blocks policy.commands.deny
 PreToolUse.credentials	antigravity.hook.credentials	rendered	antigravity/default.nix -> hooks/antigravity-hook.sh, blocks policy.filesystem.credentials
 PreToolUse.rtkRewrite	antigravity.hook.rtkRewrite	rendered	antigravity/default.nix -> hooks/antigravity-hook.sh, rewrites allowed commands via rtk rewrite
 allow	antigravity.permissions.allow	rendered	antigravity/default.nix -> programs.antigravity-cli.permissions.allow (merged into settings.json)
