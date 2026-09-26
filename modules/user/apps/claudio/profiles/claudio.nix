@@ -26,7 +26,7 @@ let
 
     # An "auto" profile (not yolo like claudio-thebot): defaultMode lives here since this is what opts into
     # "auto" mode, not every plain `claude` session (docs/sandbox-notes.md).
-    permissions = perms.claudeCode.user // {
+    permissions = perms.claudeCode.permissions // {
       defaultMode = "auto";
     };
   };

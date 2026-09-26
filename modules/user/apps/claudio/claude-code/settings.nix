@@ -90,9 +90,5 @@ in
     ;
 
   sandbox = mkSandbox;
-  user = mkPermissions { hardDeny = true; };
-  yolo = { };
-  credentialDenyOnly = {
-    deny = credentialDenyRules;
-  };
+  permissions = mkPermissions { hardDeny = true; };
 }

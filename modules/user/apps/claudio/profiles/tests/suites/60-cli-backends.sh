@@ -230,9 +230,9 @@ cli_backends_run() {
       agyAllow = perms.antigravity.permissions.allow;
       agyAsk = perms.antigravity.permissions.ask;
       agyDeny = perms.antigravity.permissions.deny;
-      claudeAllow = perms.claudeCode.user.allow;
-      claudeAsk = perms.claudeCode.user.ask;
-      claudeDeny = perms.claudeCode.user.deny;
+      claudeAllow = perms.claudeCode.permissions.allow;
+      claudeAsk = perms.claudeCode.permissions.ask;
+      claudeDeny = perms.claudeCode.permissions.deny;
       claudeDomains = perms.claudeCode.sandbox.network.allowedDomains;
       claudeFsAllowRead = perms.claudeCode.sandbox.filesystem.allowRead;
       opencodeBash = perms.opencode.permission.bash;
