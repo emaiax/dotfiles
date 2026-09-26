@@ -4,9 +4,11 @@
       "cat",
       "chmod",
       "command",
+      "docker",
       "echo",
       "find",
       "fj",
+      "gh",
       "git",
       "grep",
       "head",
@@ -23,6 +25,7 @@
       "which"
     ],
     "ask": [
+      "docker prune",
       "git push",
       "python3",
       "rm -rf"
@@ -50,11 +53,7 @@
       "gh issue create",
       "gh issue edit"
     ],
-    "denySoft": [
-      "fj issue create",
-      "fj issue edit",
-      "fj issue comment"
-    ],
+    "denySoft": [],
     "extraAllow": [],
     "extraAsk": [],
     "extraDeny": []
@@ -138,9 +137,11 @@
       "command(cat *)",
       "command(chmod *)",
       "command(command *)",
+      "command(docker *)",
       "command(echo *)",
       "command(find *)",
       "command(fj *)",
+      "command(gh *)",
       "command(git *)",
       "command(grep *)",
       "command(head *)",
@@ -155,6 +156,23 @@
       "command(ssh -o ProxyCommand=)",
       "command(tail *)",
       "command(which *)"
+    ],
+    "ask": [
+      "command(docker prune *)",
+      "command(git push *)",
+      "command(python3 *)",
+      "command(rm -rf *)",
+      "command(git checkout .)"
+    ],
+    "deny": [
+      "command(gh pr close *)",
+      "command(gh pr comment *)",
+      "command(gh pr create *)",
+      "command(gh pr merge *)",
+      "command(gh issue close *)",
+      "command(gh issue comment *)",
+      "command(gh issue create *)",
+      "command(gh issue edit *)"
     ]
   }
 }

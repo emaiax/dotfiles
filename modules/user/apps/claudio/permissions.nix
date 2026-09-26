@@ -29,9 +29,11 @@ let
         "cat"
         "chmod"
         "command"
+        "docker"
         "echo"
         "find"
         "fj"
+        "gh"
         "git"
         "grep"
         "head"
@@ -51,6 +53,7 @@ let
 
       # destructive and hard to undo
       ask = [
+        "docker prune"
         "git push"
         "python3"
         "rm -rf"
@@ -81,9 +84,9 @@ let
 
       # reversible: rendered as prose in autoMode.soft_deny instead of a hard deny (sandbox-notes.md).
       denySoft = [
-        "fj issue create"
-        "fj issue edit"
-        "fj issue comment"
+        # "fj issue create"
+        # "fj issue edit"
+        # "fj issue comment"
       ];
 
       # docker/gh/fj/ssh don't compose with the sandbox; excluded commands run fully unwrapped, a hole rather

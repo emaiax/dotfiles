@@ -161,23 +161,27 @@ cli_backends_run() {
   # 8. Behavioral test of smart-merge logic
   if [[ -f "$agy_settings_json" ]]; then
     local test_live test_merged
-    test_live='{"colorScheme":"old","enableTelemetry":true,"trustedWorkspaces":["/test/worktree"],"permissions":{"allow":["command(adhoc-tool)"]}}'
+    test_live='{"colorScheme":"old","enableTelemetry":true,"trustedWorkspaces":["/test/worktree"],"permissions":{"allow":["command(adhoc-tool)"],"ask":["command(adhoc-ask)"],"deny":["command(adhoc-deny)"]}}'
     test_merged=$(echo "$test_live" | jq -s --slurpfile nix "$agy_settings_json" '
       .[0] as $live | $nix[0] as $nix |
       ($live * $nix) * {
         trustedWorkspaces: ($live.trustedWorkspaces // []),
         permissions: {
-          allow: ((($live.permissions.allow // []) + ($nix.permissions.allow // [])) | unique)
+          allow: ((($live.permissions.allow // []) + ($nix.permissions.allow // [])) | unique),
+          ask: ((($live.permissions.ask // []) + ($nix.permissions.ask // [])) | unique),
+          deny: ((($live.permissions.deny // []) + ($nix.permissions.deny // [])) | unique)
         }
       }
     ')
-    local merged_ws merged_adhoc merged_git merged_cs
+    local merged_ws merged_adhoc merged_git merged_cs merged_ask_adhoc merged_deny_adhoc
     merged_ws=$(echo "$test_merged" | jq -r '.trustedWorkspaces[0] // empty')
     merged_adhoc=$(echo "$test_merged" | jq -r '.permissions.allow[] | select(. == "command(adhoc-tool)")' 2>/dev/null || true)
     merged_git=$(echo "$test_merged" | jq -r '.permissions.allow[] | select(. == "command(git *)")' 2>/dev/null || true)
     merged_cs=$(echo "$test_merged" | jq -r '.colorScheme')
+    merged_ask_adhoc=$(echo "$test_merged" | jq -r '.permissions.ask[] | select(. == "command(adhoc-ask)")' 2>/dev/null || true)
+    merged_deny_adhoc=$(echo "$test_merged" | jq -r '.permissions.deny[] | select(. == "command(adhoc-deny)")' 2>/dev/null || true)
 
-    if [[ "$merged_ws" == "/test/worktree" && "$merged_adhoc" == "command(adhoc-tool)" && "$merged_git" == "command(git *)" && "$merged_cs" == "tokyo night" ]]; then
+    if [[ "$merged_ws" == "/test/worktree" && "$merged_adhoc" == "command(adhoc-tool)" && "$merged_git" == "command(git *)" && "$merged_cs" == "tokyo night" && "$merged_ask_adhoc" == "command(adhoc-ask)" && "$merged_deny_adhoc" == "command(adhoc-deny)" ]]; then
       t_record PASS smart-merge-preserves-and-unions agy
     else
       t_record FAIL smart-merge-preserves-and-unions agy "merge failed: $test_merged"
@@ -224,6 +228,8 @@ cli_backends_run() {
       };
     in {
       agyAllow = perms.antigravity.permissions.allow;
+      agyAsk = perms.antigravity.permissions.ask;
+      agyDeny = perms.antigravity.permissions.deny;
       claudeAllow = perms.claudeCode.user.allow;
       claudeAsk = perms.claudeCode.user.ask;
       claudeDeny = perms.claudeCode.user.deny;
@@ -234,8 +240,10 @@ cli_backends_run() {
   " 2>/dev/null || true)
 
   if [[ -n "$eval_json" ]]; then
-    local has_agy_cargo has_claude_cargo has_claude_rtk_cargo has_claude_ask_kubectl has_opencode_cargo
+    local has_agy_cargo has_agy_ask_pulumi has_agy_deny_tool has_claude_cargo has_claude_rtk_cargo has_claude_ask_kubectl has_opencode_cargo
     has_agy_cargo=$(echo "$eval_json" | jq -r '.agyAllow[] | select(. == "command(cargo *)")' 2>/dev/null || true)
+    has_agy_ask_pulumi=$(echo "$eval_json" | jq -r '.agyAsk[] | select(. == "command(pulumi *)")' 2>/dev/null || true)
+    has_agy_deny_tool=$(echo "$eval_json" | jq -r '.agyDeny[] | select(. == "command(dangerous-tool *)")' 2>/dev/null || true)
     has_claude_cargo=$(echo "$eval_json" | jq -r '.claudeAllow[] | select(. == "Bash(cargo:*)")' 2>/dev/null || true)
     has_claude_rtk_cargo=$(echo "$eval_json" | jq -r '.claudeAllow[] | select(. == "Bash(rtk cargo:*)")' 2>/dev/null || true)
     has_claude_ask_kubectl=$(echo "$eval_json" | jq -r '.claudeAsk[] | select(. == "Bash(kubectl delete:*)")' 2>/dev/null || true)
@@ -245,6 +253,18 @@ cli_backends_run() {
       t_record PASS declarative-extra-allow-agy agy
     else
       t_record FAIL declarative-extra-allow-agy agy "cargo * missing in agy allow: $eval_json"
+    fi
+
+    if [[ "$has_agy_ask_pulumi" == "command(pulumi *)" ]]; then
+      t_record PASS declarative-extra-ask-agy agy
+    else
+      t_record FAIL declarative-extra-ask-agy agy "pulumi * missing in agy ask: $eval_json"
+    fi
+
+    if [[ "$has_agy_deny_tool" == "command(dangerous-tool *)" ]]; then
+      t_record PASS declarative-extra-deny-agy agy
+    else
+      t_record FAIL declarative-extra-deny-agy agy "dangerous-tool * missing in agy deny: $eval_json"
     fi
 
     if [[ "$has_claude_cargo" == "Bash(cargo:*)" && "$has_claude_rtk_cargo" == "Bash(rtk cargo:*)" ]]; then
