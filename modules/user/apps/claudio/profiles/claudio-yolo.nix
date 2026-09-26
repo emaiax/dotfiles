@@ -82,7 +82,37 @@ in
             exec claude --dangerously-skip-permissions --settings ${settingsFile} "$@"
             ;;
           opencode)
-            exec opencode --auto "$@"
+            has_print=0
+            prompt=""
+            extra_args=()
+            while [[ $# -gt 0 ]]; do
+              case "$1" in
+                -p|--print)
+                  has_print=1
+                  if [[ $# -lt 2 ]]; then
+                    echo "claude-yolo: missing argument for $1" >&2
+                    exit 1
+                  fi
+                  prompt="$2"
+                  shift 2
+                  ;;
+                --print=*)
+                  has_print=1
+                  prompt="''${1#*=}"
+                  shift
+                  ;;
+                *)
+                  extra_args+=("$1")
+                  shift
+                  ;;
+              esac
+            done
+
+            if [[ $has_print -eq 1 ]]; then
+              exec opencode run --auto "''${extra_args[@]}" "$prompt"
+            else
+              exec opencode --auto "''${extra_args[@]}"
+            fi
             ;;
           *)
             echo "claude-yolo: unknown backend '$backend' (supported: agy, claude-code, opencode)" >&2

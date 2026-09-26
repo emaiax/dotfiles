@@ -107,6 +107,8 @@
         "/Users/emaiax/go"
       ],
       "allowWrite": [
+        "/nix/var/nix/daemon-socket/socket",
+        "/Users/emaiax/.docker/run/docker.sock",
         "/Users/emaiax/.asdf",
         "/Users/emaiax/.bun",
         "/Users/emaiax/.bundle",
