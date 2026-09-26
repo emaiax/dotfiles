@@ -42,7 +42,7 @@ claudio/
 
 ### Decoupled Core
 - **Prompts & Instructions**: [`AGENTS.md`](AGENTS.md), [`docs/`](docs/), and [`skills/`](skills/) follow standard conventions discovered natively by both Antigravity CLI (`agy`) and Claude Code (`~/.claude/`).
-- **Security Policy as Data**: [`permissions.nix`](permissions.nix) defines raw lists of commands (`ask`, `denyHard`, `denySoft`), credential paths, and network targets independently of any specific agent implementation.
+- **Security Policy as Data**: [`permissions.nix`](permissions.nix) defines raw lists of commands (`ask`, `deny`, `denySoft`), credential paths, and network targets independently of any specific agent implementation.
 
 ---
 
@@ -120,7 +120,7 @@ programs.claudio = {
         "brew install *"
         "kubectl apply *"
       ];
-      extraDenyHard = [
+      extraDeny = [
         "sudo nix-collect-garbage *"
         "sops decrypt *"
         "op item delete *"

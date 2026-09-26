@@ -69,7 +69,7 @@ cli_backends_run() {
     # 1b. Extra ask gate: kubectl delete
     local extra_policy
     extra_policy=$(mktemp)
-    jq '.commands.extraAsk = ["kubectl delete *", "pulumi *"] | .commands.extraDenyHard = ["dangerous-tool *"] | .filesystem.credentials.extra = ["'"$HOME"'/.kube/config"]' "$policy_file" > "$extra_policy"
+    jq '.commands.extraAsk = ["kubectl delete *", "pulumi *"] | .commands.extraDeny = ["dangerous-tool *"] | .filesystem.credentials.extra = ["'"$HOME"'/.kube/config"]' "$policy_file" > "$extra_policy"
 
     res=$(echo '{"toolCall":{"name":"run_command","args":{"CommandLine":"kubectl delete pod foo"}}}' | env -u CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS bash "$hook_bin" "$extra_policy")
     if [[ $(echo "$res" | jq -r '.decision') == "ask" ]]; then
@@ -82,7 +82,7 @@ cli_backends_run() {
     if [[ $(echo "$res" | jq -r '.decision') == "deny" ]]; then
       t_record PASS hook-extra-deny-tool agy
     else
-      t_record FAIL hook-extra-deny-tool agy "expected deny for extraDenyHard, got: $res"
+      t_record FAIL hook-extra-deny-tool agy "expected deny for extraDeny, got: $res"
     fi
 
     res=$(echo "{\"toolCall\":{\"name\":\"view_file\",\"args\":{\"AbsolutePath\":\"${HOME}/.kube/config\"}}}" | bash "$hook_bin" "$extra_policy")
@@ -211,7 +211,7 @@ cli_backends_run() {
           commands = {
             extraAllow = [ \"cargo *\" \"pnpm *\" \"terraform plan *\" ];
             extraAsk = [ \"pulumi *\" \"kubectl delete *\" ];
-            extraDenyHard = [ \"dangerous-tool *\" ];
+            extraDeny = [ \"dangerous-tool *\" ];
           };
           network = {
             extraAllowedDomains = [ \"api.linear.app\" ];

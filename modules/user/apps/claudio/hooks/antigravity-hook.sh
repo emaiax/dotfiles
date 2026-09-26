@@ -115,16 +115,16 @@ if [[ "$TOOL_NAME" == "run_command" ]]; then
     #   - BLOCKED: run_command(CommandLine="fj release create v1.0.0")
     #              -> {"decision":"deny","reason":"Command is hard denied by claudio policy"}
     # ---------------------------------------------------------------------------
-    IS_DENY_HARD=$(jq -r --arg cmd "$BARE_CMD" '
-      ((.commands.denyHard // []) + (.commands.extraDenyHard // [])) |
+    IS_DENIED=$(jq -r --arg cmd "$BARE_CMD" '
+      ((.commands.deny // []) + (.commands.extraDeny // [])) |
       any(. as $entry |
         ($entry | rtrimstr(" *") | rtrimstr("*")) as $clean |
         ($cmd == $clean or ($cmd | startswith($clean + " ")))
       )
     ' "$POLICY_JSON")
 
-    if [[ "$IS_DENY_HARD" == "true" ]]; then
-      echo '{"decision":"deny","reason":"Command is hard denied by claudio policy"}'
+    if [[ "$IS_DENIED" == "true" ]]; then
+      echo '{"decision":"deny","reason":"Command is denied by claudio policy"}'
       exit 0
     fi
 

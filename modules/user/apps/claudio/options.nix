@@ -43,7 +43,7 @@
           description = "Commands requiring interactive human confirmation before execution.";
         };
 
-        extraDenyHard = lib.mkOption {
+        extraDeny = lib.mkOption {
           type = lib.types.listOf lib.types.str;
           default = [ ];
           example = [

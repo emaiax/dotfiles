@@ -5,6 +5,7 @@
     "allow": [
       "command(cat *)",
       "command(chmod *)",
+      "command(command *)",
       "command(echo *)",
       "command(find *)",
       "command(fj *)",
@@ -15,13 +16,13 @@
       "command(just *)",
       "command(ls *)",
       "command(nix *)",
-      "command(python3 *)",
       "command(readlink *)",
+      "command(rg *)",
       "command(rtk *)",
       "command(sort *)",
+      "command(ssh -o ProxyCommand=)",
       "command(tail *)",
-      "command(which *)",
-      "command(ssh -o ProxyCommand=)"
+      "command(which *)"
     ],
     "ask": [],
     "deny": []
