@@ -1,0 +1,203 @@
+# Claude Code: settings generation, the Seatbelt sandbox, and the auto-mode classifier config, all in one file
+# since nothing else contributes to programs.claude-code.settings. Background: ../docs/sandbox-notes.md.
+{
+  claudioPath,
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+let
+  home = config.home.homeDirectory;
+  claudioCfg = config.programs.claudio;
+
+  # Shared with opencode/default.nix. ask/deny and the sandbox's filesystem/network both come back fully
+  # rendered to Claude's native shape, this file only wires perms.claudeCode in.
+  perms = import ../permissions.nix {
+    inherit home lib;
+    inherit (claudioCfg) permissions;
+  };
+
+  # Live checkout path, wrapped in `bash "path"` rather than direct exec: docs/sandbox-notes.md's
+  # "Hook command wiring" section has the why.
+  rtkHook = {
+    matcher = "Bash";
+    hooks = [
+      {
+        type = "command";
+        command = ''bash "${claudioPath}/hooks/rtk-hook.sh"'';
+        statusMessage = "Applying RTK token-reduction filter";
+      }
+    ];
+  };
+
+  claudeSettingsJson = (pkgs.formats.json { }).generate "claude-code-settings.json" (
+    config.programs.claude-code.settings
+  );
+
+  # Claude Code's installer can leave installed_plugins.json pinned older than what's already cached,
+  # breaking every DB write. Bump this to move the pin; the activation below fixes the pointer.
+  claudeMemVersion = "13.15.2";
+in
+{
+  # nix always wins now: a differing existing file gets backed up to .bak first (flake.nix's
+  # backupFileExtension convention), then overwritten, instead of the install being skipped entirely.
+  home.activation.claudeCodeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    existing="${claudioPath}/claude-code/settings.json"
+
+    if [[ -e "$existing" ]] && ! diff -q ${claudeSettingsJson} "$existing" >/dev/null; then
+      cp "$existing" "$existing.bak"
+      echo "[claude-code] settings.json changed, backed up previous content to $existing.bak" >&2
+    fi
+
+    install -Dm644 ${claudeSettingsJson} "$existing"
+  '';
+
+  # Idempotent past claudeMemVersion matching. Install has no version arg, so it just fetches latest;
+  # the real job here is fixing drift, a cached version installed_plugins.json never got pointed at.
+  home.activation.claudeMemVersionPin = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    pluginsJson="$HOME/.claude/plugins/installed_plugins.json"
+    targetDir="$HOME/.claude/plugins/cache/thedotmack/claude-mem/${claudeMemVersion}"
+
+    if [[ ! -d "$targetDir" ]]; then
+      echo "[claude-mem] ${claudeMemVersion} not in cache, running claude plugin install" >&2
+      "${config.programs.claude-code.package}/bin/claude" plugin install claude-mem@thedotmack -s user -y >/dev/null 2>&1 || true
+    fi
+
+    if [[ -d "$targetDir" && -f "$pluginsJson" ]]; then
+      current="$(${pkgs.jq}/bin/jq -r '.plugins["claude-mem@thedotmack"][0].version // empty' "$pluginsJson" 2>/dev/null || true)"
+
+      if [[ "$current" != "${claudeMemVersion}" ]]; then
+        echo "[claude-mem] pinning installed_plugins.json to ${claudeMemVersion} (was: ''${current:-none})" >&2
+        tmp="$(mktemp)"
+        ${pkgs.jq}/bin/jq \
+          --arg version "${claudeMemVersion}" \
+          --arg path "$targetDir" \
+          '.plugins["claude-mem@thedotmack"][0].version = $version | .plugins["claude-mem@thedotmack"][0].installPath = $path' \
+          "$pluginsJson" > "$tmp" && mv "$tmp" "$pluginsJson"
+
+        pkill -f "claude-mem/.*/scripts/worker-service.cjs" 2>/dev/null || true
+        pkill -f "claude-mem/.*/scripts/mcp-server.cjs" 2>/dev/null || true
+        echo "[claude-mem] killed stale daemons, they respawn on next use" >&2
+      fi
+    elif [[ ! -d "$targetDir" ]]; then
+      echo "[claude-mem] ${claudeMemVersion} still not cached after install attempt, leaving installed_plugins.json alone" >&2
+    fi
+  '';
+
+  home.file."${config.programs.claude-code.configDir}/settings.json" = lib.mkForce {
+    source = config.lib.file.mkOutOfStoreSymlink "${claudioPath}/claude-code/settings.json";
+    force = true;
+  };
+
+  home.file."${config.programs.claude-code.configDir}/CLAUDE.md" = {
+    source = config.lib.file.mkOutOfStoreSymlink "${claudioPath}/AGENTS.md";
+    force = true;
+  };
+
+  home.file."${config.programs.claude-code.configDir}/hooks" = {
+    source = config.lib.file.mkOutOfStoreSymlink "${claudioPath}/hooks";
+    force = true;
+  };
+
+  home.file."${config.programs.claude-code.configDir}/docs" = {
+    source = config.lib.file.mkOutOfStoreSymlink "${claudioPath}/docs";
+    force = true;
+  };
+
+  home.file."${config.programs.claude-code.configDir}/skills" = {
+    source = config.lib.file.mkOutOfStoreSymlink "${claudioPath}/skills";
+    force = true;
+  };
+
+  programs.claude-code = {
+    enable = true;
+
+    settings = {
+      "$schema" = "https://json.schemastore.org/claude-code-settings.json";
+
+      model = "sonnet";
+      theme = "dark";
+
+      agentPushNotifEnabled = true;
+      includeCoAuthoredBy = false;
+
+      hooks.PreToolUse = lib.optional claudioCfg.rtk.enable rtkHook;
+
+      extraKnownMarketplaces = {
+        obsidian-skills = {
+          source = {
+            source = "github";
+            repo = "kepano/obsidian-skills";
+          };
+        };
+        humanizer = {
+          source = {
+            source = "github";
+            repo = "blader/humanizer";
+          };
+        };
+        thedotmack = {
+          source = {
+            source = "github";
+            repo = "thedotmack/claude-mem";
+          };
+        };
+      };
+
+      enabledPlugins = {
+        "claude-mem@thedotmack" = true; # semantic memory across sessions
+        "obsidian@obsidian-skills" = true; # obsidian markdown, bases, JSON Canvas and `obsidian` CLI
+        "humanizer@humanizer" = true; # rewrites AI-generated text to strip telltale patterns
+        "superpowers@claude-plugins-official" = true; # superpowers: code analysis, refactoring, and generation
+      };
+
+      # No `permissions` key here on purpose, every profile opts in on its own: docs/sandbox-notes.md's
+      # "Bare claude has zero permissions of its own" and "permissions.nix: policy is data" sections.
+
+      # Two ways to write a sandbox rule that silently does nothing: a trailing slash voids the entry on 2.1.222
+      # (fixed in 2.1.224), and a glob like `$HOME/*` matches nothing and fails open.
+      sandbox = {
+        enabled = true;
+
+        # without both, the boundary is advisory: Claude may retry a blocked command unsandboxed, or continue if Seatbelt is unavailable
+        allowUnsandboxedCommands = false;
+        failIfUnavailable = true;
+
+        autoAllowBashIfSandboxed = true;
+
+        # docker/gh/fj policy: permissions.nix's claudeCode.sandbox.excludedCommands.
+        inherit (perms.claudeCode.sandbox) excludedCommands;
+
+        # Without this, `open -a <App>` fails with kLSUnknownErr: launching another app's process needs a
+        # mach-lookup to RunningBoard/launchservicesd that the sandbox blocks.
+        allowAppleEvents = true;
+
+        network = perms.claudeCode.sandbox.network;
+        filesystem = perms.claudeCode.sandbox.filesystem;
+      };
+
+      # docs/sandbox-notes.md's "autoMode: prose a model judges" section has the design rationale.
+      autoMode = {
+        environment = [
+          "$defaults"
+
+          "Organization: personal single-developer setup, no company. Primary use of Claude Code: software development plus Nix-based infrastructure automation."
+
+          "Internal package registry: none. Nix is the package manager, so its configured substituters are the expected download sources and flake inputs are fetched from their upstream forges."
+
+          "Repository visibility: assume a repository is public unless something in the session shows otherwise, since several are mirrored publicly. Treat anything committed as published."
+
+          "Additional context: this machine is a personal workstation, not a shared or production host."
+        ];
+
+        # Counterpart of permissions.nix's denySoft; phrasing rules in sandbox-notes.md's "autoMode" section.
+        soft_deny = [
+          "$defaults"
+
+          "Anything that appears publicly under the operator's name on a code forge, including opening or closing pull requests, submitting reviews, creating or editing issues, and commenting on any of them, is theirs to initiate rather than the agent's. Do not do these unprompted."
+        ];
+      };
+    };
+  };
+}

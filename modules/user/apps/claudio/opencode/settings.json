@@ -1,0 +1,36 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "autoupdate": "notify",
+  "compaction": {
+    "auto": true
+  },
+  "model": "anthropic/claude-sonnet-5",
+  "permission": {
+    "bash": {
+      "*": "allow"
+    },
+    "doom_loop": "deny",
+    "edit": "allow",
+    "external_directory": "ask",
+    "glob": "allow",
+    "grep": "allow",
+    "lsp": "allow",
+    "read": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.env.example": "allow"
+    },
+    "task": "allow",
+    "webfetch": "allow",
+    "websearch": "allow"
+  },
+  "plugin": [
+    "superpowers@git+https://github.com/obra/superpowers.git",
+    "opencode-supermemory"
+  ],
+  "share": "disabled",
+  "shell": "zsh",
+  "small_model": "anthropic/claude-haiku-4-5-20251001",
+  "snapshot": true
+}

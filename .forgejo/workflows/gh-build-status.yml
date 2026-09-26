@@ -37,7 +37,7 @@ jobs:
     permissions:
       statuses: write
     container:
-      image: ${{ vars.CI_IMAGE_REGISTRY }}/homelab/dudumox-ci:latest
+      image: ${{ vars.CI_IMAGE_REGISTRY }}/homelab/node-alpine:latest
     steps:
       - name: poll GitHub's build.yml run and relay its result here
         run: |
@@ -62,7 +62,7 @@ jobs:
             body="${raw%$'\n'*}"
 
             if [ "$http_code" = "200" ]; then
-              # node, not jq: guaranteed present in this image, jq isn't.
+              # node: this image ships node either way (the base for every homelab CI image), so no extra dependency.
               fields="$(node -e '
                 const d = JSON.parse(require("fs").readFileSync(0, "utf8"));
                 const run = d.workflow_runs && d.workflow_runs[0];

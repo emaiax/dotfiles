@@ -1,0 +1,19 @@
+fs-cred-read	EXECUTED	Bash reads are unguarded without the sandbox; permissions.deny Read() rules cover only the Read/Edit tools (docs/sandbox-notes.md)
+fs-home-read	EXECUTED
+fs-allowread-code	EXECUTED
+fs-read-keychain-db	EXECUTED
+fs-write-claude-dir	EXECUTED
+fs-write-cred-touch	EXECUTED	mtime-only touch, harmless by design
+fs-write-keychain	EXECUTED
+fs-write-home-root	EXECUTED
+net-allowed-domain	EXECUTED
+net-api-github	EXECUTED
+net-denied-domain	EXECUTED	no sandbox, no egress allowlist
+net-nix-socket	EXECUTED
+net-tls-sandboxed	EXECUTED
+gate-git-push	EXECUTED	lands in the fixture bare remote only; this profile carries no `ask` at all (2026-09-10: the shared base defines zero permissions, and this profile's own credentialDenyOnly block only sets `deny`), so there's nothing left to satisfy headlessly
+gate-rm-rf	EXECUTED	same reasoning as gate-git-push: no ask rule exists anywhere for this profile since 2026-09-10. Previously XFAIL_BLOCKED when this profile still inherited the base's ask rule (rtk doesn't rewrite rm -rf, so headless bypassPermissions used to deny it outright)
+gate-git-reset-hard	EXECUTED	same reasoning as gate-rm-rf
+gate-checkout-dot	EXECUTED	no ask rule to reach in the first place, rtk's rewrite is moot now
+gate-deny-gh-merge	EXECUTED	mkClaudeCodePermissions's hardDeny arg is opt-in per profile (permissions.nix); this profile's credentialDenyOnly block never sets it, only the credential-file deny rules still hold here
+gate-deny-fj-release	EXECUTED	same reasoning as gate-deny-gh-merge

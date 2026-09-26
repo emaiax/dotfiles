@@ -67,3 +67,17 @@ ssh-keygen NAME COMMENT:
 
 copy-ssh-key-to-host key host:
   ssh-copy-id -i {{key}} {{host}}
+
+edit-secrets secret_file="secrets/secrets.enc.yaml":
+	sops edit {{secret_file}}
+
+set-secret secret_file key:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	read -rs -p "value: " value
+	echo
+	printf '%s' "$value" | jq -Rs . | sops set "{{secret_file}}" "[\"{{key}}\"]" --value-stdin
+
+# remove one key
+unset-secret secret_file key:
+	sops unset {{secret_file}} "[\"{{key}}\"]"

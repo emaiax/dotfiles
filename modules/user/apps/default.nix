@@ -1,7 +1,7 @@
 {
   imports = [
     ./agent-jail
-    ./coding-agents
+    ./claudio
     ./cursor
     ./iterm2
     ./raycast

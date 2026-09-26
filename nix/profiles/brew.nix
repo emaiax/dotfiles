@@ -37,6 +37,7 @@
       #
       "docker-desktop" # docker desktop for mac
       "github" # github desktop for mac
+      "postman" # postman for mac
       # "tableplus" # installed via setapp
 
       # Media
@@ -55,13 +56,15 @@
       #
       "bambu-studio" # bambu studio for mac
       "logi-options+" # logitech options
+      "macparakeet" # dictate and transcribe
       "setapp" # setapp for mac
+      "thaw" # menubar manager
       "the-unarchiver" # unarchiver
     ];
 
     masApps = {
       "Amphetamine" = 937984704;
-      "Outlook" = 985367838;
+      # "Outlook" = 985367838;
       "Tailscale" = 1475387142;
     };
   };

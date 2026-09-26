@@ -5,6 +5,7 @@
     * ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAThvvZjzCVQw5OVznRb/xvWN/bGMAmfdyDGdISZPips
     * ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINLMC5il0Ji5XzSEzIylvAKwfNt0iRprU1i0igVfa69l
     * ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIM/6f4x2IMtnHjZNr2dvNgiywZhVhhUOvst2zsw3xoOr
+    * ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICC4jwHE1yxkAeo2GcIY/Xd74geeHdHazO++fK8O+CgL
   '';
 
   home.packages = with pkgs; [
@@ -27,7 +28,7 @@
       # https://docs.github.com/en/authentication/managing-commit-signature-verification/telling-git-about-your-signing-key#telling-git-about-your-ssh-key
       #
       commit.gpgSign = true;
-      gpg.allowedSignersFile = "~/.ssh/allowed_signers";
+      gpg.ssh.allowedSignersFile = "~/.ssh/allowed_signers";
       gpg.format = "ssh";
       tag.gpgSign = true;
 

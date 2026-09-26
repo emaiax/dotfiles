@@ -22,8 +22,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # rtk isn't in nixpkgs; build it from upstream source, mirroring
-    # dudumox's `rtk-src` input.
+    # rtk isn't in nixpkgs; build it from upstream source
     rtk-src = {
       url = "github:rtk-ai/rtk";
       flake = false;
@@ -56,7 +55,13 @@
 
             useGlobalPkgs = true;
             useUserPackages = true;
-            extraSpecialArgs = { inherit inputs; };
+
+            extraSpecialArgs = rec {
+              inherit inputs;
+
+              dotfilesPath = "${host.user.homeDirectory}/${host.user.repo}";
+              claudioPath = "${dotfilesPath}/modules/user/apps/claudio";
+            };
 
             users.${host.user.username} = {
               # Used for backwards compatibility, please read the changelog before changing.

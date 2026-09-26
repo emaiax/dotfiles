@@ -2,11 +2,7 @@ keys:
   - &emaiax age1yhmyckwlsp00w53ttfelgptw2u4ms5rn3x0zd94fmvu94t24usvqkk0zxv
 
 creation_rules:
-  - path_regex: secrets/.*\.enc\.yaml$
-    key_groups:
-      - age:
-          - *emaiax
-  - path_regex: secrets/agent-jail-profiles\.enc\.json$
+  - path_regex: \.enc\.(json|yaml)$
     key_groups:
       - age:
           - *emaiax

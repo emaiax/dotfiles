@@ -3,6 +3,7 @@ rec {
     emaiax = {
       username = "emaiax";
       homeDirectory = "/Users/emaiax";
+      repo = "code/dotfiles";
     };
   };
 

@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+asana-ro: read-only Asana API queries. No MCP, no OAuth app, no write code path.
+
+Setup (also rotates an existing token):
+  security add-generic-password -U -a "$USER" -s asana-ro-pat -w <personal-access-token>
+
+Usage:
+  asana-ro me
+  asana-ro workspaces
+  asana-ro projects --workspace <gid>
+  asana-ro tasks --project <gid>
+  asana-ro task <gid>
+  asana-ro raw <api-path> [query-param=value ...]
+USAGE
+}
+
+token() {
+  security find-generic-password -a "$USER" -s asana-ro-pat -w
+}
+
+# The only network call site in this script, always GET. There is no argument or code path here
+# that can turn this into a write, which is the point of the whole script.
+get() {
+  local path="$1"
+  shift
+  local query=""
+  if [[ $# -gt 0 ]]; then
+    query="?$(IFS='&'; echo "$*")"
+  fi
+  curl -sS --fail-with-body \
+    -H "Authorization: Bearer $(token)" \
+    "https://app.asana.com/api/1.0${path}${query}"
+}
+
+cmd="${1:-}"
+shift || true
+
+case "$cmd" in
+  me)
+    get "/users/me" "opt_fields=name,email,workspaces.name"
+    ;;
+  workspaces)
+    get "/workspaces" "opt_fields=name,gid"
+    ;;
+  projects)
+    [[ "${1:-}" == "--workspace" && -n "${2:-}" ]] || { usage; exit 1; }
+    get "/projects" "workspace=$2" "opt_fields=name,gid"
+    ;;
+  tasks)
+    [[ "${1:-}" == "--project" && -n "${2:-}" ]] || { usage; exit 1; }
+    get "/tasks" "project=$2" "opt_fields=name,gid,completed,assignee.name,due_on"
+    ;;
+  task)
+    [[ -n "${1:-}" ]] || { usage; exit 1; }
+    get "/tasks/$1" "opt_fields=name,notes,completed,assignee.name,due_on,projects.name"
+    ;;
+  raw)
+    [[ -n "${1:-}" ]] || { usage; exit 1; }
+    path="$1"
+    shift
+    get "$path" "$@"
+    ;;
+  *)
+    usage
+    exit 1
+    ;;
+esac

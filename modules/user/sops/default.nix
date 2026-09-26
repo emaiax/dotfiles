@@ -10,8 +10,9 @@ in
     age.keyFile = ageKeyFile;
   };
 
-  # so `sops <file>` works from an interactive shell without exporting this
-  # by hand — sops's own default XDG lookup doesn't reliably resolve on
-  # macOS outside a session that already has XDG_CONFIG_HOME set.
+  # sops's XDG lookup doesn't reliably resolve on macOS without this.
   home.sessionVariables.SOPS_AGE_KEY_FILE = ageKeyFile;
+
+  # Homelab domain suffix, general-purpose (not one app's secret) — exported to the shell in shell/zsh.nix.
+  sops.secrets.homelab-domain = { };
 }

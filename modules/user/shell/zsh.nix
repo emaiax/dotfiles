@@ -16,6 +16,10 @@ in
       export PATH="${config.home.homeDirectory}/.asdf/shims:$PATH"
 
       any-nix-shell zsh --info-right | source /dev/stdin
+
+      # decrypted async by a launchd agent, so this may not exist yet on a fresh login
+      [[ -r "${config.sops.secrets.homelab-domain.path}" ]] &&
+        export HOMELAB_DOMAIN="$(<"${config.sops.secrets.homelab-domain.path}")"
     '';
 
     shellAliases = {
@@ -37,7 +41,8 @@ in
       cat = "bat -pp"; # bat: cat on steroids
       j = "just"; # just: task runner
 
-      # claude: `claude-trust` and `claude-remote` dropped, both pinned a weaker posture than the default now provides. See coding-agents/claude-sandbox.nix.
+      # claude: `claude-trust` and `claude-remote` dropped, both pinned a weaker posture than the default now
+      # provides. See apps/claudio/permissions.nix.
 
       # claude-mem: semantic memory across sessions (see claude-mem.nix)
       claude-mem = "bun \"$(ls -dt ~/.claude/plugins/cache/thedotmack/claude-mem/*/scripts/worker-service.cjs 2>/dev/null | head -1)\"";
