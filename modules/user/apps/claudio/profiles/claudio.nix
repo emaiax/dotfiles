@@ -24,8 +24,7 @@ let
       network.allowUnixSockets = [ obsidianSocket ];
     };
 
-    # An "auto" profile (not yolo like claudio-thebot): defaultMode lives here since this is what opts into
-    # "auto" mode, not every plain `claude` session (docs/sandbox-notes.md).
+    # default permissions with auto mode
     permissions = perms.claudeCode.permissions // {
       defaultMode = "auto";
     };
@@ -36,12 +35,13 @@ in
 {
   home.packages = [
     (pkgs.writeShellApplication {
-      name = "claudio";
       runtimeInputs = [
-        config.programs.claude-code.package
         config.programs.antigravity-cli.package
+        config.programs.claude-code.package
         config.programs.opencode.package
       ];
+
+      name = "claudio";
       text = ''
         default_backend="${config.programs.claudio.backend}"
         backend="$default_backend"

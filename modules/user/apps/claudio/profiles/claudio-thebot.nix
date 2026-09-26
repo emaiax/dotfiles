@@ -44,12 +44,13 @@ let
       fi
     '';
 
-  # bypassPermissions skips auto mode entirely, no carve-out needed here. Empty object:
-  # docs/sandbox-notes.md's "claude-yolo: what it actually trades away" section has the history.
-  settingsFile = (pkgs.formats.json { }).generate "claudio-thebot-settings.json" {
+  settings = {
     sandbox.enabled = false;
+
     permissions = { };
   };
+
+  settingsFile = (pkgs.formats.json { }).generate "claudio-thebot-settings.json" settings;
 
   claudioCoreArgs = ''
     --add-dir "${claudioCore}" \
@@ -151,8 +152,8 @@ in
     # no sandbox, no permission prompts
     (pkgs.writeShellApplication {
       runtimeInputs = [
-        config.programs.claude-code.package
         config.programs.antigravity-cli.package
+        config.programs.claude-code.package
         config.programs.opencode.package
       ];
 

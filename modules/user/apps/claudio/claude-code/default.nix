@@ -117,13 +117,10 @@ in
       "$schema" = "https://json.schemastore.org/claude-code-settings.json";
 
       model = "sonnet";
-
-      includeCoAuthoredBy = false;
       theme = "dark";
 
-      # Was hand-added to settings.json only, never here, until deleting+regenerating that file (2026-08-31,
-      # sandbox *.local/ssh work) silently dropped it. Declared here now so it survives the next regeneration.
       agentPushNotifEnabled = true;
+      includeCoAuthoredBy = false;
 
       hooks.PreToolUse = lib.optional claudioCfg.rtk.enable rtkHook;
 
