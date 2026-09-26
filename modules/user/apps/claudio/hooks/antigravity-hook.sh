@@ -42,10 +42,18 @@ if [[ "$TOOL_NAME" =~ ^(view_file|read_file|write_to_file|replace_file_content)$
   PATH_ARG=$(echo "$PAYLOAD" | jq -r '.toolCall.args.AbsolutePath // .toolCall.args.TargetFile // empty')
 
   if [[ -n "$PATH_ARG" && -f "$POLICY_JSON" ]]; then
-    IS_CRED_DENIED=$(jq -r --arg path "$PATH_ARG" '
-      ((.filesystem.credentials.dirs + (.filesystem.credentials.extra // [])) | any(. as $dir | ($path == $dir or ($path | startswith($dir + "/")))))
+    NORMALIZED_PATH="${PATH_ARG/#\~/${HOME:-}}"
+
+    IS_CRED_DENIED=$(jq -r --arg path "$NORMALIZED_PATH" '
+      (
+        ((.filesystem.credentials.dirs + (.filesystem.credentials.extra // [])) |
+        any(. as $dir | ($path == $dir or ($path | startswith($dir + "/")))))
+      )
       or
-      ((.filesystem.credentials.files + (.filesystem.credentials.extra // [])) | any(. as $file | ($path == $file or ($path | startswith($file)))))
+      (
+        ((.filesystem.credentials.files + (.filesystem.credentials.extra // [])) |
+        any(. as $file | ($path == $file or ($path | startswith($file)))))
+      )
     ' "$POLICY_JSON")
 
     if [[ "$IS_CRED_DENIED" == "true" ]]; then
@@ -85,10 +93,30 @@ if [[ "$TOOL_NAME" == "run_command" ]]; then
     #   - BLOCKED: run_command(CommandLine="grep token ~/.config/sops/secrets.yaml")
     #              -> {"decision":"deny","reason":"Credential path blocked by claudio policy"}
     # ---------------------------------------------------------------------------
-    IS_CRED_IN_CMD=$(jq -r --arg cmd "$CMD" '
-      ((.filesystem.credentials.dirs + (.filesystem.credentials.extra // [])) | any(. as $dir | ($cmd | contains($dir))))
+    HOME_DIR="${HOME:-$(jq -r '.filesystem.home // empty' "$POLICY_JSON")}"
+
+    IS_CRED_IN_CMD=$(jq -r --arg cmd "$CMD" --arg home "$HOME_DIR" '
+      def variants($h):
+        . as $p |
+        if ($h != "" and ($p | startswith($h))) then
+          ($p | ltrimstr($h)) as $rel |
+          [$p, "~" + $rel, "$HOME" + $rel, "${HOME}" + $rel]
+        elif ($h != "" and ($p | startswith("~/"))) then
+          ($p | ltrimstr("~")) as $rel |
+          [$p, $h + $rel, "$HOME" + $rel, "${HOME}" + $rel]
+        else
+          [$p]
+        end;
+
+      (
+        ((.filesystem.credentials.dirs + (.filesystem.credentials.extra // [])) |
+        any(variants($home)[] as $v | ($cmd | contains($v))))
+      )
       or
-      ((.filesystem.credentials.files + (.filesystem.credentials.extra // [])) | any(. as $file | ($cmd | contains($file))))
+      (
+        ((.filesystem.credentials.files + (.filesystem.credentials.extra // [])) |
+        any(variants($home)[] as $v | ($cmd | contains($v))))
+      )
     ' "$POLICY_JSON")
 
     if [[ "$IS_CRED_IN_CMD" == "true" ]]; then
@@ -149,12 +177,16 @@ if [[ "$TOOL_NAME" == "run_command" ]]; then
     # ---------------------------------------------------------------------------
     if [[ -z "${CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS:-}" ]]; then
       IS_ASK=$(jq -r --arg cmd "$BARE_CMD" '
-        ((.commands.ask // []) + (.commands.extraAsk // [])) | any(. as $entry |
-          ($entry | rtrimstr(" *") | rtrimstr("*")) as $clean |
-          ($cmd == $clean or ($cmd | startswith($clean + " ")))
+        (
+          ((.commands.ask // []) + (.commands.extraAsk // [])) | any(. as $entry |
+            ($entry | rtrimstr(" *") | rtrimstr("*")) as $clean |
+            ($cmd == $clean or ($cmd | startswith($clean + " ")))
+          )
         )
         or
-        ((.commands.askExact // []) | any(. as $entry | ($cmd == $entry)))
+        (
+          ((.commands.askExact // []) | any(. as $entry | ($cmd == $entry)))
+        )
       ' "$POLICY_JSON")
 
       if [[ "$IS_ASK" == "true" ]]; then
