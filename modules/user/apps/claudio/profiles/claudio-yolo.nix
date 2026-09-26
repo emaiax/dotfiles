@@ -17,7 +17,9 @@ let
 
   settings = {
     sandbox.enabled = false;
+
     permissions = {
+      # hard deny rules for credentials directories and files
       deny = perms.claudeCode.credentialDenyRules;
     };
   };
@@ -28,11 +30,13 @@ in
   home.packages = [
     (pkgs.writeShellApplication {
       name = "claude-yolo";
+
       runtimeInputs = [
-        config.programs.claude-code.package
         config.programs.antigravity-cli.package
+        config.programs.claude-code.package
         config.programs.opencode.package
       ];
+
       text = ''
         default_backend="${config.programs.claudio.backend}"
         backend="$default_backend"

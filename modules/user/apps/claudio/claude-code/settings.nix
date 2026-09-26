@@ -32,8 +32,8 @@ let
   extraPathRules = path: (fileRules path) ++ (dirRules path);
 
   credentialDenyRules =
-    lib.concatMap fileRules policy.filesystem.credentials.files
-    ++ lib.concatMap dirRules policy.filesystem.credentials.dirs
+    lib.concatMap dirRules policy.filesystem.credentials.dirs
+    ++ lib.concatMap fileRules policy.filesystem.credentials.files
     ++ lib.concatMap extraPathRules (policy.filesystem.credentials.extra or [ ]);
 
   askRules =
@@ -43,16 +43,21 @@ let
   denyCommands = policy.commands.deny or [ ];
 in
 {
+  inherit credentialDenyRules;
+
   sandbox = {
     excludedCommands = policy.commands.bypassSandboxSeatbelt;
     network = policy.network;
+
     filesystem = {
       disabled = true; # allowWrite is a no-op upstream; network sandbox stays active
       allowRead =
         policy.network.allowUnixSockets
         ++ policy.filesystem.toolchainReadOnly
         ++ policy.filesystem.toolchainReadWrite;
-      allowWrite = policy.filesystem.toolchainReadWrite;
+
+      allowWrite = policy.network.allowUnixSockets ++ policy.filesystem.toolchainReadWrite;
+
       denyRead = [
         policy.filesystem.home
       ]

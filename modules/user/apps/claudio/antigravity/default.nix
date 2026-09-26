@@ -61,13 +61,15 @@ in
     enable = true;
 
     settings = {
-      altScreenMode = lib.mkDefault "always";
-      artifactReviewPolicy = lib.mkDefault "agent-decides";
-      colorScheme = lib.mkDefault "tokyo night";
-      enableTelemetry = lib.mkDefault false;
-      showFeedbackSurvey = lib.mkDefault false;
-      toolPermission = lib.mkDefault "request-review";
-      verbosity = lib.mkDefault "low";
+      altScreenMode = "always";
+      colorScheme = "tokyo night";
+
+      artifactReviewPolicy = "agent-decides";
+      toolPermission = "request-review";
+
+      enableTelemetry = false;
+      showFeedbackSurvey = false;
+      verbosity = "low";
     };
 
     permissions = perms.antigravity.permissions;
