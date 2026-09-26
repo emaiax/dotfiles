@@ -81,37 +81,18 @@ let
     };
   };
 
-  claudeCode = {
-    sandbox = mkSandbox;
-    user = mkPermissions { hardDeny = true; };
-    yolo = { };
-    credentialDenyOnly = {
-      deny = credentialDenyRules;
-    };
-  };
-
-  forProfile =
-    profile:
-    if profile == "claudio" then
-      claudeCode.user // { defaultMode = "auto"; }
-    else if profile == "claudio-yolo" then
-      claudeCode.credentialDenyOnly
-    else if profile == "claudio-thebot" then
-      claudeCode.yolo
-    else
-      throw "Unknown claudio profile: ${profile}";
 in
 {
   inherit
     credentialDenyRules
     mkPermissions
     mkSandbox
-    forProfile
     ;
-  inherit (claudeCode)
-    sandbox
-    user
-    yolo
-    credentialDenyOnly
-    ;
+
+  sandbox = mkSandbox;
+  user = mkPermissions { hardDeny = true; };
+  yolo = { };
+  credentialDenyOnly = {
+    deny = credentialDenyRules;
+  };
 }

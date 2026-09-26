@@ -48,7 +48,7 @@ let
   # empty object: docs/sandbox-notes.md's "claude-yolo: what it actually trades away" section has the history.
   settingsFile = (pkgs.formats.json { }).generate "claudio-thebot-settings.json" {
     sandbox.enabled = false;
-    permissions = perms.forProfile "claudio-thebot";
+    permissions = perms.claudeCode.yolo;
   };
 
   claudioCoreArgs = ''

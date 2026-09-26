@@ -218,6 +218,4 @@ in
     opencode
     policy
     ;
-
-  inherit (claudeCode) forProfile;
 }
