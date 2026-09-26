@@ -1,0 +1,160 @@
+{
+  "commands": {
+    "allow": [
+      "cat",
+      "chmod",
+      "command",
+      "echo",
+      "find",
+      "fj",
+      "git",
+      "grep",
+      "head",
+      "jq",
+      "just",
+      "ls",
+      "nix",
+      "readlink",
+      "rg",
+      "rtk",
+      "sort",
+      "ssh -o ProxyCommand=",
+      "tail",
+      "which"
+    ],
+    "ask": [
+      "git push",
+      "python3",
+      "rm -rf"
+    ],
+    "askExact": [
+      "git checkout ."
+    ],
+    "bypassSandboxSeatbelt": [
+      "docker *",
+      "rtk docker *",
+      "gh *",
+      "rtk gh *",
+      "fj *",
+      "rtk fj *",
+      "ssh *",
+      "rtk ssh *"
+    ],
+    "deny": [
+      "gh pr close",
+      "gh pr comment",
+      "gh pr create",
+      "gh pr merge",
+      "gh issue close",
+      "gh issue comment",
+      "gh issue create",
+      "gh issue edit"
+    ],
+    "denySoft": [
+      "fj issue create",
+      "fj issue edit",
+      "fj issue comment"
+    ],
+    "extraAllow": [],
+    "extraAsk": [],
+    "extraDeny": []
+  },
+  "filesystem": {
+    "credentials": {
+      "dirs": [
+        "/Users/emaiax/.aws",
+        "/Users/emaiax/.config/1Password",
+        "/Users/emaiax/.config/sops",
+        "/Users/emaiax/.gnupg",
+        "/Users/emaiax/.ssh"
+      ],
+      "extra": [],
+      "files": [
+        "/Users/emaiax/.claude/.credentials.json",
+        "/Users/emaiax/.netrc",
+        "/Users/emaiax/.npmrc",
+        "/Users/emaiax/.local/share/opencode/auth.json",
+        "/Users/emaiax/.local/share/opencode/mcp-auth.json"
+      ]
+    },
+    "home": "/Users/emaiax",
+    "sockets": [
+      "/nix/var/nix/daemon-socket/socket",
+      "/Users/emaiax/.docker/run/docker.sock"
+    ],
+    "toolchainReadOnly": [
+      "/Users/emaiax/Library/Keychains",
+      "/Users/emaiax/.zshrc",
+      "/Users/emaiax/.zshenv",
+      "/Users/emaiax/.cache/nix",
+      "/Users/emaiax/.local/state/nix",
+      "/Users/emaiax/.nix-defexpr",
+      "/Users/emaiax/.nix-profile",
+      "/Users/emaiax/.ssh/*.pub",
+      "/Users/emaiax/.ssh/allowed_signers",
+      "/Users/emaiax/.ssh/config",
+      "/Users/emaiax/.ssh/known_hosts"
+    ],
+    "toolchainReadWrite": [
+      "/Users/emaiax/.asdf",
+      "/Users/emaiax/.bun",
+      "/Users/emaiax/.bundle",
+      "/Users/emaiax/.cache",
+      "/Users/emaiax/.claude",
+      "/Users/emaiax/.claude-mem",
+      "/Users/emaiax/.config",
+      "/Users/emaiax/.gem",
+      "/Users/emaiax/.gitconfig",
+      "/Users/emaiax/.hex",
+      "/Users/emaiax/.local",
+      "/Users/emaiax/.mix",
+      "/Users/emaiax/.npm",
+      "/Users/emaiax/.terraform.d",
+      "/Users/emaiax/Library/Application Support/rtk",
+      "/Users/emaiax/Library/Caches",
+      "/Users/emaiax/code",
+      "/Users/emaiax/go"
+    ]
+  },
+  "network": {
+    "allowMachLookup": [
+      "com.apple.trustd.agent"
+    ],
+    "allowUnixSockets": [
+      "/nix/var/nix/daemon-socket/socket",
+      "/Users/emaiax/.docker/run/docker.sock"
+    ],
+    "allowedDomains": [
+      "*.emx.casa",
+      "*.local",
+      "api.github.com",
+      "app.asana.com",
+      "github.com",
+      "registry.yarnpkg.com"
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "command(cat *)",
+      "command(chmod *)",
+      "command(command *)",
+      "command(echo *)",
+      "command(find *)",
+      "command(fj *)",
+      "command(git *)",
+      "command(grep *)",
+      "command(head *)",
+      "command(jq *)",
+      "command(just *)",
+      "command(ls *)",
+      "command(nix *)",
+      "command(readlink *)",
+      "command(rg *)",
+      "command(rtk *)",
+      "command(sort *)",
+      "command(ssh -o ProxyCommand=)",
+      "command(tail *)",
+      "command(which *)"
+    ]
+  }
+}

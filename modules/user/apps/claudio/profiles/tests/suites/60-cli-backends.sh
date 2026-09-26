@@ -267,4 +267,15 @@ cli_backends_run() {
   else
     t_record FAIL declarative-permissions-eval agy "failed to evaluate permissions.nix with extra permissions"
   fi
+
+  # 11. Tracked claudio-policy.json artifacts exist and contain valid JSON
+  local b pfile
+  for b in antigravity claude-code opencode; do
+    pfile="$TESTS_ROOT/../../$b/claudio-policy.json"
+    if [[ -f "$pfile" ]] && jq empty "$pfile" 2>/dev/null; then
+      t_record PASS "policy-artifact-$b" "$b"
+    else
+      t_record FAIL "policy-artifact-$b" "$b" "missing or invalid JSON in $pfile"
+    fi
+  done
 }
