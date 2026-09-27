@@ -1,6 +1,5 @@
 {
   imports = [
-    ./agent-jail
     ./claudio
     ./cursor
     ./iterm2
