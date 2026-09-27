@@ -47,6 +47,6 @@
     ]
   },
   "showFeedbackSurvey": false,
-  "toolPermission": "request-review",
+  "toolPermission": "always-proceed",
   "verbosity": "low"
 }

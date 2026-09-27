@@ -65,7 +65,7 @@ in
       colorScheme = "tokyo night";
 
       artifactReviewPolicy = "agent-decides";
-      toolPermission = "request-review";
+      toolPermission = "always-proceed";
 
       enableTelemetry = false;
       showFeedbackSurvey = false;
