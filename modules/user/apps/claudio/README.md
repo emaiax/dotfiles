@@ -150,12 +150,12 @@ Full policy definitions are documented in [`permissions.tsv`](permissions.tsv).
 
 | Backend | Profile | Mode | Credentials Protection | Destructive Command Gate | Hard Deny (Merge/Release) | RTK Rewrites | Sandbox Layer |
 | :--- | :--- | :--- | :--- | :--- | :---: | :--- | :--- |
-| **agy** | `claudio` | `default` | 🛑 (file tools + cmd inspection) | 🟡 (interactive prompt) | 🛑 | ⚡ (`rtk rewrite`) | Terminal restrictions (`--sandbox` optional) |
-| **agy** | `claudio-yolo` | `bypass` | 🛑 (file tools + cmd inspection) | 🟢 (`CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS=1`) | 🛑 | ⚡ (`rtk rewrite`) | ⚪ None |
-| **agy** | `claudio-thebot` | `bypass` | 🛑 (file tools + cmd inspection) | 🟢 (`CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS=1`) | 🛑 | ⚡ (`rtk rewrite`) | ⚪ None (`identity-bin` PATH injection) |
-| **claude-code** | `claudio` | `auto` | 🛑 (Read/Edit tool rules) | 🟡 (interactive prompt) | 🛑 | ⚡ (`rtk hook claude`) | Seatbelt network allowlist (filesystem disabled) |
-| **claude-code** | `claudio-yolo` | `bypass` | 🛑 (`credentialDenyOnly`) | 🟢 (`--dangerously-skip-permissions`) | 🟢 | ⚡ (`rtk hook claude`) | ⚪ None (`sandbox.enabled = false`) |
-| **claude-code** | `claudio-thebot` | `bypass` | 🟢 (clean `identity-bin` environment) | 🟢 (`--dangerously-skip-permissions`) | 🟢 | ⚡ (`rtk hook claude`) | ⚪ None (`sandbox.enabled = false`) |
+| **agy** | `claudio` | `default` | 🛑 (file tools + cmd inspection, ~/$HOME expanded) | 🟡 (interactive prompt) | 🛑 | ⚡ (`rtk rewrite`) | Terminal restrictions (`--sandbox` optional) |
+| **agy** | `claudio-yolo` | `bypass` | 🛑 (file tools + cmd inspection, ~/$HOME expanded) | 🟢 (`CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS=1`) | 🛑 | ⚡ (`rtk rewrite`) | ⚪ None |
+| **agy** | `claudio-thebot` | `bypass` | 🛑 (file tools + cmd inspection, ~/$HOME expanded) | 🟢 (`CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS=1`) | 🛑 | ⚡ (`rtk rewrite`) | ⚪ None (`identity-bin` PATH injection) |
+| **claude-code** | `claudio` | `auto` | 🛑 (Read/Edit tool rules; Bash reads unguarded) | 🟡 (interactive prompt) | 🛑 | ⚡ (`rtk hook claude`) | Seatbelt network allowlist (filesystem disabled) |
+| **claude-code** | `claudio-yolo` | `bypass` | 🛑 (`credentialDenyOnly`: Read/Edit tools) | 🟢 (`--dangerously-skip-permissions`) | 🟢 | ⚡ (`rtk hook claude`) | ⚪ None (`sandbox.enabled = false`) |
+| **claude-code** | `claudio-thebot` | `bypass` | 🟢 (unrestricted; `permissions: {}`) | 🟢 (`--dangerously-skip-permissions`) | 🟢 | ⚡ (`rtk hook claude`) | ⚪ None (`sandbox.enabled = false`) |
 | **opencode** | `claudio` | `default` | 🛑 (`*.env` patterns) | 🟢 (flat bash allow, `external_directory` = 🟡) | 🟢 | ⚪ None | ⚪ None |
 | **opencode** | `claudio-yolo` | `auto` | 🛑 (`*.env` patterns) | 🟢 (`--auto`) | 🟢 | ⚪ None | ⚪ None |
 | **opencode** | `claudio-thebot` | `auto` | 🛑 (`*.env` patterns) | 🟢 (`--auto`) | 🟢 | ⚪ None | ⚪ None |
@@ -164,10 +164,14 @@ Full policy definitions are documented in [`permissions.tsv`](permissions.tsv).
 
 | Rule Type | Target | Claude: claudio | Claude: claudio-yolo | Claude: claudio-thebot | AGY: claudio | AGY: claudio-yolo | AGY: claudio-thebot | OpenCode |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Command** | `docker prune` | 🟡 | 🟢 | 🟢 | 🟡 | 🟢 | 🟢 | 🟢 |
 | **Command** | `fj pr create` | 🟠 | 🟢 | 🟢 | 🟠 | 🟠 | 🟠 | 🟢 |
 | **Command** | `fj pr merge` | 🛑 | 🟢 | 🟢 | 🛑 | 🛑 | 🛑 | 🟢 |
 | **Command** | `fj release` | 🛑 | 🟢 | 🟢 | 🛑 | 🛑 | 🛑 | 🟢 |
-| **Command** | `gh pr create` | 🟠 | 🟢 | 🟢 | 🟠 | 🟠 | 🟠 | 🟢 |
+| **Command** | `gh issue *` | 🛑 | 🟢 | 🟢 | 🛑 | 🛑 | 🛑 | 🟢 |
+| **Command** | `gh pr close` | 🛑 | 🟢 | 🟢 | 🛑 | 🛑 | 🛑 | 🟢 |
+| **Command** | `gh pr comment` | 🛑 | 🟢 | 🟢 | 🛑 | 🛑 | 🛑 | 🟢 |
+| **Command** | `gh pr create` | 🛑 | 🟢 | 🟢 | 🛑 | 🛑 | 🛑 | 🟢 |
 | **Command** | `gh pr merge` | 🛑 | 🟢 | 🟢 | 🛑 | 🛑 | 🛑 | 🟢 |
 | **Command** | `gh release` | 🛑 | 🟢 | 🟢 | 🛑 | 🛑 | 🛑 | 🟢 |
 | **Command** | `git checkout .` | 🟡 | 🟢 | 🟢 | 🟡 | 🟢 | 🟢 | 🟢 |
@@ -177,6 +181,7 @@ Full policy definitions are documented in [`permissions.tsv`](permissions.tsv).
 | **Command** | `git rebase` | 🟡 | 🟢 | 🟢 | 🟡 | 🟢 | 🟢 | 🟢 |
 | **Command** | `git reset --hard` | 🟡 | 🟢 | 🟢 | 🟡 | 🟢 | 🟢 | 🟢 |
 | **Command** | `git restore` | 🟡 | 🟢 | 🟢 | 🟡 | 🟢 | 🟢 | 🟢 |
+| **Command** | `python3` | 🟡 | 🟢 | 🟢 | 🟡 | 🟢 | 🟢 | 🟢 |
 | **Command** | `rm -rf` | 🟡 | 🟢 | 🟢 | 🟡 | 🟢 | 🟢 | 🟢 |
 | **Directory** | `~/.aws` | 🛑 | 🛑 | 🟢 | 🛑 | 🛑 | 🛑 | 🟢 |
 | **Directory** | `~/.config/1Password` | 🛑 | 🛑 | 🟢 | 🛑 | 🛑 | 🛑 | 🟢 |
@@ -185,6 +190,7 @@ Full policy definitions are documented in [`permissions.tsv`](permissions.tsv).
 | **Directory** | `~/.ssh` | 🛑 | 🛑 | 🟢 | 🛑 | 🛑 | 🛑 | 🟢 |
 | **File** | `~/.claude/.credentials.json` | 🛑 | 🛑 | 🟢 | 🛑 | 🛑 | 🛑 | 🟢 |
 | **File** | `~/.local/share/opencode/auth.json` | 🛑 | 🛑 | 🟢 | 🛑 | 🛑 | 🛑 | 🟢 |
+| **File** | `~/.local/share/opencode/mcp-auth.json` | 🛑 | 🛑 | 🟢 | 🛑 | 🛑 | 🛑 | 🟢 |
 | **File** | `~/.netrc` | 🛑 | 🛑 | 🟢 | 🛑 | 🛑 | 🛑 | 🟢 |
 | **File** | `~/.npmrc` | 🛑 | 🛑 | 🟢 | 🛑 | 🛑 | 🛑 | 🟢 |
 | **Pattern** | `*.env` | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | 🛑 |
@@ -201,6 +207,11 @@ Full policy definitions are documented in [`permissions.tsv`](permissions.tsv).
 | 🛑 | **Deny** | Hard blocked by security hook or permission rules (fails immediately) |
 | ⚡ | **RTK Rewrite** | Command intercepted and compressed via RTK to optimize tokens |
 | ⚪ | **None** | No restriction or interception layer applied |
+
+### Security Gating & CLI Dispatch Notes
+
+- **Antigravity Hook Protection**: Enforced via `PreToolUse` hook ([`antigravity-hook.sh`](hooks/antigravity-hook.sh)). Both file manipulation tools (`view_file`, `replace_file_content`, etc.) and shell commands (`run_command`) resolve tilde (`~`) and `$HOME` environment prefixes against canonical credential paths before running.
+- **Unified Batch Execution (`-p` / `--print`)**: All wrappers (`claudio`, `claude-yolo`, `claudio-thebot`) accept `-p "<prompt>"` / `--print "<prompt>"`. When dispatching to OpenCode, the flag is translated into `opencode run` (or `opencode run --auto` for YOLO/thebot profiles), preserving bot identity injection.
 
 ### Antigravity Settings & Activation Lifecycle
 
