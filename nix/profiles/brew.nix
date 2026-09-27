@@ -12,6 +12,10 @@
     onActivation.upgrade = true;
     onActivation.cleanup = "zap";
 
+    taps = [
+      "abue-ammar/tinycast"
+    ];
+
     brews = [
       # "container" # apple containers
       "mas"
@@ -28,6 +32,7 @@
       "contexts" # context menu for mac
       "obsidian" # note taking
       "rectangle" # window manager
+      "tinycast"
       "todoist-app" # task manager
       "zen" # zen browser
       # "antinote" # installed via setapp
