@@ -13,7 +13,10 @@
     onActivation.cleanup = "zap";
 
     taps = [
-      "abue-ammar/tinycast"
+      {
+        name = "abue-ammar/tinycast";
+        trusted = true;
+      }
     ];
 
     brews = [
