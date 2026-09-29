@@ -22,6 +22,8 @@ let
       # hard deny rules for credentials directories and files
       deny = perms.claudeCode.credentialDenyRules;
     };
+
+    skipDangerousModePermissionPrompt = true;
   };
 
   settingsFile = (pkgs.formats.json { }).generate "claude-yolo-settings.json" settings;
