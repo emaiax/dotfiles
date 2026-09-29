@@ -47,9 +47,10 @@ in
 
           # utilities
           #
+          eamodio.gitlens
           mechatroner.rainbow-csv
           naumovs.color-highlight
-          eamodio.gitlens
+          pomdtr.excalidraw-editor
           vscodevim.vim
           wakatime.vscode-wakatime
         ];

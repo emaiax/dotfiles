@@ -3,7 +3,7 @@
   "[elixir]": { "editor.defaultFormatter": "JakeBecker.elixir-ls" },
   "[go]": {
     "editor.codeActionsOnSave": { "source.organizeImports": "explicit" },
-    "editor.defaultFormatter": "golang.go",
+    "editor.defaultFormatter": "golang.go"
   },
   "[html]": { "editor.defaultFormatter": "vscode.html-language-features" },
   "[nix]": { "editor.defaultFormatter": "brettm12345.nixfmt-vscode" },
@@ -29,6 +29,7 @@
   "elixirLS.dialyzerEnabled": false,
   "elixirLS.fetchDeps": false,
   "elixirLS.useCurrentRootFolderAsProjectDir": true,
+  "excalidraw.theme": "auto",
   "explorer.confirmDelete": false,
   "explorer.confirmDragAndDrop": false,
   "extensions.ignoreRecommendations": true,
@@ -46,5 +47,5 @@
   "security.workspace.trust.untrustedFiles": "open",
   "telemetry.telemetryLevel": "off",
   "workbench.colorTheme": "Mayukai Mirage Gruvbox Darktooth",
-  "workbench.hover.delay": 500,
+  "workbench.hover.delay": 500
 }
