@@ -48,6 +48,8 @@ let
     sandbox.enabled = false;
 
     permissions = { };
+
+    skipDangerousModePermissionPrompt = true;
   };
 
   settingsFile = (pkgs.formats.json { }).generate "claudio-thebot-settings.json" settings;
