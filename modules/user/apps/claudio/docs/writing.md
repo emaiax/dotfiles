@@ -147,6 +147,7 @@ Good: `<<'EOF'` body containing `` `git status` ``: renders as a code span.
 
 Reread with fresh eyes and check:
 
+- [ ] Ran /humanizer on prose, code comments, and docstrings.
 - [ ] First sentence says what this is.
 - [ ] No placeholder text, no step that hides "figure it out" behind a summary.
 - [ ] No section contradicts another. Names, signatures, and values match across sections.

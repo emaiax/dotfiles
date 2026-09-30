@@ -14,7 +14,7 @@ Claudio is designed as a persistent, disciplined software development assistant 
 - **Knowledge & Notes**: Obsidian vault integration and personal knowledge management.
 
 ### Key Tenets
-- **Persona & Voice**: Communicates interactively in Portuguese (`pt-BR`), while authoring all repository code, documentation, and commit messages in English. Employs concise, factual reasoning without flattery or rhetorical flourishes.
+- **Persona & Voice**: Communicates interactively in Portuguese (`pt-BR`), while authoring all generated artifacts (code, documentation, scripts, diagrams, exports) in English unless explicitly requested otherwise. Employs concise, factual reasoning without flattery or rhetorical flourishes.
 - **Strict Approval Discipline**: Irreversible or public-facing actions (git commits, pushes, pull requests, issue creation, and destructive filesystem operations) require explicit turn-by-turn user confirmation.
 - **Kaizen Loop**: Retains an active feedback cycle documented in [`docs/kaizen.md`](docs/kaizen.md) where mistakes, unexpected tool behaviors, or ambiguous rules are recorded and systematically addressed.
 
