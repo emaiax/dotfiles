@@ -1,0 +1,65 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+    {
+      "type": "line", "id": "cross_vertical", "x": 200, "y": 0, "width": 0, "height": 400,
+      "strokeColor": "#1e1e1e", "backgroundColor": "transparent", "fillStyle": "solid",
+      "strokeWidth": 2, "strokeStyle": "solid", "roughness": 0, "opacity": 100,
+      "angle": 0, "seed": 1, "version": 1, "versionNonce": 1, "isDeleted": false,
+      "groupIds": [], "boundElements": null, "link": null, "locked": false,
+      "points": [[0, 0], [0, 400]]
+    },
+    {
+      "type": "line", "id": "cross_horizontal", "x": 0, "y": 200, "width": 400, "height": 0,
+      "strokeColor": "#1e1e1e", "backgroundColor": "transparent", "fillStyle": "solid",
+      "strokeWidth": 2, "strokeStyle": "solid", "roughness": 0, "opacity": 100,
+      "angle": 0, "seed": 2, "version": 1, "versionNonce": 2, "isDeleted": false,
+      "groupIds": [], "boundElements": null, "link": null, "locked": false,
+      "points": [[0, 0], [400, 0]]
+    },
+    {
+      "type": "text", "id": "label_strengths", "x": 30, "y": 30, "width": 140, "height": 25,
+      "text": "Strengths", "originalText": "Strengths", "fontSize": 16, "fontFamily": 3,
+      "textAlign": "left", "verticalAlign": "top", "strokeColor": "#047857",
+      "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 0, "opacity": 100, "angle": 0, "seed": 3,
+      "version": 1, "versionNonce": 3, "isDeleted": false, "groupIds": [],
+      "boundElements": null, "link": null, "locked": false, "containerId": null,
+      "lineHeight": 1.25
+    },
+    {
+      "type": "text", "id": "label_weaknesses", "x": 230, "y": 30, "width": 150, "height": 25,
+      "text": "Weaknesses", "originalText": "Weaknesses", "fontSize": 16, "fontFamily": 3,
+      "textAlign": "left", "verticalAlign": "top", "strokeColor": "#b91c1c",
+      "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 0, "opacity": 100, "angle": 0, "seed": 4,
+      "version": 1, "versionNonce": 4, "isDeleted": false, "groupIds": [],
+      "boundElements": null, "link": null, "locked": false, "containerId": null,
+      "lineHeight": 1.25
+    },
+    {
+      "type": "text", "id": "label_opportunities", "x": 30, "y": 230, "width": 160, "height": 25,
+      "text": "Opportunities", "originalText": "Opportunities", "fontSize": 16, "fontFamily": 3,
+      "textAlign": "left", "verticalAlign": "top", "strokeColor": "#6d28d9",
+      "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 0, "opacity": 100, "angle": 0, "seed": 5,
+      "version": 1, "versionNonce": 5, "isDeleted": false, "groupIds": [],
+      "boundElements": null, "link": null, "locked": false, "containerId": null,
+      "lineHeight": 1.25
+    },
+    {
+      "type": "text", "id": "label_threats", "x": 230, "y": 230, "width": 130, "height": 25,
+      "text": "Threats", "originalText": "Threats", "fontSize": 16, "fontFamily": 3,
+      "textAlign": "left", "verticalAlign": "top", "strokeColor": "#b45309",
+      "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 0, "opacity": 100, "angle": 0, "seed": 6,
+      "version": 1, "versionNonce": 6, "isDeleted": false, "groupIds": [],
+      "boundElements": null, "link": null, "locked": false, "containerId": null,
+      "lineHeight": 1.25
+    }
+  ],
+  "appState": {"viewBackgroundColor": "#ffffff", "gridSize": 20},
+  "files": {}
+}
