@@ -21,6 +21,71 @@ let
     "${home}/.docker/run/docker.sock" # allow docker subcommand to reach its daemon
   ];
 
+  ghPolicy = {
+    allow =
+      let
+        readOnlyOptions = [
+          "list"
+          "view"
+        ];
+
+        ghListViewCommands =
+          cmds: lib.concatMap (cmd: map (option: "gh ${cmd} ${option}") readOnlyOptions) cmds;
+      in
+      [
+        "gh --help"
+        "gh --version"
+        "gh help"
+
+        "gh browse"
+        "gh search"
+        "gh status"
+
+        "gh cache list"
+        "gh label list"
+        "gh org list"
+
+        "gh config get"
+        "gh config list"
+
+        "gh issue status"
+        "gh pr checks"
+        "gh pr diff"
+        "gh pr status"
+
+        "gh ruleset check"
+        "gh ruleset list"
+        "gh ruleset view"
+
+        "gh run watch"
+
+        "gh variable get"
+        "gh variable list"
+      ]
+      ++ ghListViewCommands [
+        "gist"
+        "issue"
+        "pr"
+        "release"
+        "repo"
+        "run"
+        "workflow"
+      ];
+
+    deny = [
+      "gh pr close"
+      "gh pr comment"
+      "gh pr create"
+      "gh pr edit"
+      "gh pr merge"
+
+      "gh issue close"
+      "gh issue comment"
+      "gh issue create"
+      "gh issue edit"
+    ];
+  };
+
   policy = {
     commands = {
       inherit extraAllow extraAsk extraDeny;
@@ -32,7 +97,6 @@ let
         "docker"
         "find"
         "fj"
-        "gh"
         "git"
         "grep"
         "jq"
@@ -44,14 +108,19 @@ let
         "ssh -o ProxyCommand="
         "tail"
       ]
+      ++ ghPolicy.allow
       ++ extraAllow;
 
       # destructive and hard to undo
       ask = [
         "docker prune"
+        "gh workflow run"
+        "gh repo clone"
+        "git clone"
         "git push"
         "python3"
         "rm -rf"
+
         # "git checkout --" # checkout changes to tracked files only
         # "git clean" # remove untracked files from the working directory
         # "git rebase" # reapply commits on top of another base tip
@@ -65,24 +134,7 @@ let
       askExact = [ "git checkout ." ];
 
       # irreversible. universal deny tier across all agents and tools
-      deny = [
-        "gh pr close"
-        "gh pr comment"
-        "gh pr create"
-        "gh pr merge"
-        "gh issue close"
-        "gh issue comment"
-        "gh issue create"
-        "gh issue edit"
-      ]
-      ++ extraDeny;
-
-      # reversible: rendered as prose in autoMode.soft_deny instead of a hard deny (sandbox-notes.md).
-      denySoft = [
-        # "fj issue create"
-        # "fj issue edit"
-        # "fj issue comment"
-      ];
+      deny = [ ] ++ ghPolicy.deny ++ extraDeny;
 
       # docker/gh/fj/ssh don't compose with the sandbox; excluded commands run fully unwrapped, a hole rather
       # than containment. Needs an `rtk `-prefixed twin per entry: docs/sandbox-notes.md's "escape" section.

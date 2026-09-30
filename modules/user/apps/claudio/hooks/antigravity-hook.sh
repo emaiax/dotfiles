@@ -194,10 +194,34 @@ if [[ "$TOOL_NAME" == "run_command" ]]; then
         exit 0
       fi
     fi
+
+    # ---------------------------------------------------------------------------
+    # 2.4. Allowlist verification and unlisted command fallback gate
+    #
+    # What:
+    #   Verifies if the command matches any declared `commands.allow` entry.
+    #   If a command is neither in allow nor deny, it falls back to interactive
+    #   confirmation (`ask`), matching Claude Code's fail-closed auto-mode behavior.
+    #   In YOLO mode (`CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS=1`), the prompt is bypassed.
+    # ---------------------------------------------------------------------------
+    IS_ALLOWED=$(jq -r --arg cmd "$BARE_CMD" '
+      ((.commands.allow // []) + (.commands.extraAllow // [])) |
+      any(. as $entry |
+        ($entry | rtrimstr(" *") | rtrimstr("*")) as $clean |
+        ($cmd == $clean or ($cmd | startswith($clean + " ")))
+      )
+    ' "$POLICY_JSON")
+
+    if [[ "$IS_ALLOWED" != "true" ]]; then
+      if [[ -z "${CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS:-}" ]]; then
+        echo '{"decision":"ask","reason":"Command not in allowlist per claudio policy"}'
+        exit 0
+      fi
+    fi
   fi
 
   # ---------------------------------------------------------------------------
-  # 2.4. Token optimization via RTK rewrite
+  # 2.5. Token optimization via RTK rewrite
   #
   # What:
   #   Rewrites verbose commands through `rtk` (e.g. `git diff`, `git log`, `grep`).
