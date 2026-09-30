@@ -22,62 +22,55 @@ let
   ];
 
   ghPolicy = {
-    allow = [
-      # read-only commands
-      "gh --help"
-      "gh --version"
-      "gh help"
+    allow =
+      let
+        readOnlyOptions = [
+          "list"
+          "view"
+        ];
 
-      "gh browse"
-      "gh search"
-      "gh status"
+        ghListViewCommands =
+          cmds: lib.concatMap (cmd: map (option: "gh ${cmd} ${option}") readOnlyOptions) cmds;
+      in
+      [
+        "gh --help"
+        "gh --version"
+        "gh help"
 
-      "gh cache list"
-      "gh label list"
-      "gh org list"
+        "gh browse"
+        "gh search"
+        "gh status"
 
-      "gh config get"
-      "gh config list"
+        "gh cache list"
+        "gh label list"
+        "gh org list"
 
-      "gh discussion list"
-      "gh discussion view"
-      "gh gist list"
-      "gh gist view"
+        "gh config get"
+        "gh config list"
 
-      "gh issue list"
-      "gh issue status"
-      "gh issue view"
+        "gh issue status"
+        "gh pr checks"
+        "gh pr diff"
+        "gh pr status"
 
-      "gh pr checks"
-      "gh pr diff"
-      "gh pr list"
-      "gh pr status"
-      "gh pr view"
+        "gh ruleset check"
+        "gh ruleset list"
+        "gh ruleset view"
 
-      "gh project field-list"
-      "gh project item-list"
-      "gh project list"
-      "gh project view"
+        "gh run watch"
 
-      "gh release list"
-      "gh release view"
-      "gh repo list"
-      "gh repo view"
-
-      "gh ruleset check"
-      "gh ruleset list"
-      "gh ruleset view"
-
-      "gh run list"
-      "gh run view"
-      "gh run watch"
-
-      "gh variable get"
-      "gh variable list"
-
-      "gh workflow list"
-      "gh workflow view"
-    ];
+        "gh variable get"
+        "gh variable list"
+      ]
+      ++ ghListViewCommands [
+        "gist"
+        "issue"
+        "pr"
+        "release"
+        "repo"
+        "run"
+        "workflow"
+      ];
 
     deny = [
       "gh pr close"
