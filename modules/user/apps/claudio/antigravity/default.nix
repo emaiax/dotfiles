@@ -94,6 +94,11 @@ in
     force = true;
   };
 
+  home.file.".gemini/config/plugins" = {
+    source = config.lib.file.mkOutOfStoreSymlink "${claudioPath}/plugins";
+    force = true;
+  };
+
   home.file.".gemini/config/hooks.json" = {
     source = hooksJson;
     force = true;

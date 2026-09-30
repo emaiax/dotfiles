@@ -1,0 +1,4 @@
+{
+  "name": "humanizer",
+  "description": "Rewrite AI-generated text to strip telltale patterns based on Wikipedia signs of AI writing."
+}
