@@ -241,7 +241,7 @@ Claudio configures persona, security policies, skills, and token reduction acros
 | **Hook: SessionStart** | ✅ (plugin lifecycle) | ⚪ None | ✅ (plugin lifecycle) |
 | **RTK Rewrites** | ⚡ Intercepts commands via hook | ⚡ Rewrites via `antigravity-hook.sh` | ⚪ Not configured |
 | **Memory Plugins** | `claude-mem@thedotmack` | ⚪ Session log search | `opencode-supermemory` |
-| **Workflow Plugins** | `superpowers`, `humanizer`, `obsidian` | `humanizer` (bundled plugin) | `superpowers@git+...` |
+| **Workflow Plugins** | `superpowers`, `humanizer`, `obsidian` | `humanizer`, `obsidian`, `superpowers` (bundled) | `superpowers@git+...` |
 
 ### Backend Specifics
 
