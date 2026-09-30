@@ -117,12 +117,12 @@ cli_backends_run() {
       t_record FAIL hook-ask-gh-workflow-run agy "expected ask for gh workflow run, got: $res"
     fi
 
-    # 2d. Unlisted gh command: gh auth token (deny)
-    res=$(echo '{"toolCall":{"name":"run_command","args":{"CommandLine":"gh auth token"}}}' | bash "$hook_bin" "$policy_file")
-    if [[ $(echo "$res" | jq -r '.decision') == "deny" ]]; then
-      t_record PASS hook-deny-gh-auth-token agy
+    # 2d. Unlisted command falls back to ask (not in allow, not in deny)
+    res=$(echo '{"toolCall":{"name":"run_command","args":{"CommandLine":"gh auth token"}}}' | env -u CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS bash "$hook_bin" "$policy_file")
+    if [[ $(echo "$res" | jq -r '.decision') == "ask" ]]; then
+      t_record PASS hook-ask-unlisted-cmd agy
     else
-      t_record FAIL hook-deny-gh-auth-token agy "expected deny for unlisted gh command, got: $res"
+      t_record FAIL hook-ask-unlisted-cmd agy "expected ask for unlisted command, got: $res"
     fi
 
     # 3. Credential path in file tool: ~/.ssh

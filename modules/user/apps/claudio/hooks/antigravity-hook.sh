@@ -196,26 +196,25 @@ if [[ "$TOOL_NAME" == "run_command" ]]; then
     fi
 
     # ---------------------------------------------------------------------------
-    # 2.4. Scoped CLI allowlist enforcement (e.g. gh read-only)
+    # 2.4. Allowlist verification and unlisted command fallback gate
     #
     # What:
-    #   Restricts `gh` execution strictly to declared `commands.allow` entries.
-    #
-    # Why:
-    #   Guarantees that unlisted `gh` subcommands fail closed across both
-    #   Claude Code and Antigravity CLI without manual denylist enumeration.
+    #   Verifies if the command matches any declared `commands.allow` entry.
+    #   If a command is neither in allow nor deny, it falls back to interactive
+    #   confirmation (`ask`), matching Claude Code's fail-closed auto-mode behavior.
+    #   In YOLO mode (`CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS=1`), the prompt is bypassed.
     # ---------------------------------------------------------------------------
-    if [[ "$BARE_CMD" =~ ^gh(\ |$) ]]; then
-      IS_ALLOWED=$(jq -r --arg cmd "$BARE_CMD" '
-        ((.commands.allow // []) + (.commands.extraAllow // [])) |
-        any(. as $entry |
-          ($entry | rtrimstr(" *") | rtrimstr("*")) as $clean |
-          ($cmd == $clean or ($cmd | startswith($clean + " ")))
-        )
-      ' "$POLICY_JSON")
+    IS_ALLOWED=$(jq -r --arg cmd "$BARE_CMD" '
+      ((.commands.allow // []) + (.commands.extraAllow // [])) |
+      any(. as $entry |
+        ($entry | rtrimstr(" *") | rtrimstr("*")) as $clean |
+        ($cmd == $clean or ($cmd | startswith($clean + " ")))
+      )
+    ' "$POLICY_JSON")
 
-      if [[ "$IS_ALLOWED" != "true" ]]; then
-        echo '{"decision":"deny","reason":"gh command is not in read-only allowlist per claudio policy"}'
+    if [[ "$IS_ALLOWED" != "true" ]]; then
+      if [[ -z "${CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS:-}" ]]; then
+        echo '{"decision":"ask","reason":"Command not in allowlist per claudio policy"}'
         exit 0
       fi
     fi
