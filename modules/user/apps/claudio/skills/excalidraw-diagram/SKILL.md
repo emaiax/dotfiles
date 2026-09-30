@@ -462,6 +462,8 @@ Elements render in array order — later elements paint over earlier ones. Order
 
 See `references/element-templates.md` for copy-paste JSON templates for each element type (text, line, dot, rectangle, arrow). Pull colors from `references/color-palette.md` based on each element's semantic purpose.
 
+For a named diagram type (Gantt, UML class, SWOT, Lean Canvas, wireframe, mind map, roadmap), read `references/diagram-type-playbook.md` first — it maps each type to this skill's shape vocabulary.
+
 ---
 
 ## Render & Validate (MANDATORY)
