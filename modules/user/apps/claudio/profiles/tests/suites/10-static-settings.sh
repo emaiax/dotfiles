@@ -71,8 +71,8 @@ static_settings_run() {
   assert_jq static-claudio-obsidian-socket claudio "${OVERLAY[claudio]}" '.sandbox.network.allowUnixSockets | join(",")' "$h/.obsidian-cli.sock"
 
   # claude-yolo overlay opts back into just the credential-file deny (sandbox-notes.md): exactly
-  # {permissions:{deny:[...]},sandbox:{enabled:false}}. Key-set + individual rules, not a full literal diff.
-  assert_jq static-claudeyolo-overlay-keys claude-yolo "${OVERLAY[claude-yolo]}" '. | keys | sort | join(",")' 'permissions,sandbox'
+  # {permissions:{deny:[...]},sandbox:{enabled:false},skipDangerousModePermissionPrompt:true}.
+  assert_jq static-claudeyolo-overlay-keys claude-yolo "${OVERLAY[claude-yolo]}" '. | keys | sort | join(",")' 'permissions,sandbox,skipDangerousModePermissionPrompt'
   assert_jq static-claudeyolo-permissions-keys claude-yolo "${OVERLAY[claude-yolo]}" '.permissions | keys | join(",")' 'deny'
   assert_jq static-claudeyolo-sandbox-shape claude-yolo "${OVERLAY[claude-yolo]}" '.sandbox | keys | join(",")' 'enabled'
   assert_jq static-claudeyolo-sandbox-enabled-false claude-yolo "${OVERLAY[claude-yolo]}" '.sandbox.enabled' 'false'
@@ -83,9 +83,10 @@ static_settings_run() {
   assert_jq static-claudeyolo-no-ask claude-yolo "${OVERLAY[claude-yolo]}" '.permissions | has("ask")' 'false'
   assert_jq static-claudeyolo-no-allow claude-yolo "${OVERLAY[claude-yolo]}" '.permissions | has("allow")' 'false'
 
-  # claudio-thebot overlay: yolo-only since the 2026-09-10 consolidation, {permissions:{},sandbox:{enabled:false}},
+  # claudio-thebot overlay: yolo-only since the 2026-09-10 consolidation,
+  # {permissions:{},sandbox:{enabled:false},skipDangerousModePermissionPrompt:true},
   # the same zero-permissions posture as the base, asserted explicitly here rather than left implicit.
-  if [[ $(jq -Sc . "${OVERLAY[claudio-thebot]}") == '{"permissions":{},"sandbox":{"enabled":false}}' ]]; then
+  if [[ $(jq -Sc . "${OVERLAY[claudio-thebot]}") == '{"permissions":{},"sandbox":{"enabled":false},"skipDangerousModePermissionPrompt":true}' ]]; then
     t_record PASS static-overlay-shape claudio-thebot
   else
     t_record FAIL static-overlay-shape claudio-thebot "overlay is $(jq -Sc . "${OVERLAY[claudio-thebot]}")"

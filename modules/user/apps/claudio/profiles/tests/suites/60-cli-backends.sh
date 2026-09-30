@@ -101,6 +101,30 @@ cli_backends_run() {
       t_record FAIL hook-deny-gh-merge agy "expected deny, got: $res"
     fi
 
+    # 2b. Scoped allowlist: gh pr view (allow)
+    res=$(echo '{"toolCall":{"name":"run_command","args":{"CommandLine":"gh pr view 123"}}}' | bash "$hook_bin" "$policy_file")
+    if [[ $(echo "$res" | jq -r '.decision') == "allow" ]]; then
+      t_record PASS hook-allow-gh-pr-view agy
+    else
+      t_record FAIL hook-allow-gh-pr-view agy "expected allow for gh pr view, got: $res"
+    fi
+
+    # 2c. Ask gate: gh workflow run (ask)
+    res=$(echo '{"toolCall":{"name":"run_command","args":{"CommandLine":"gh workflow run test.yml"}}}' | env -u CLAUDIO_DANGEROUSLY_SKIP_PERMISSIONS bash "$hook_bin" "$policy_file")
+    if [[ $(echo "$res" | jq -r '.decision') == "ask" ]]; then
+      t_record PASS hook-ask-gh-workflow-run agy
+    else
+      t_record FAIL hook-ask-gh-workflow-run agy "expected ask for gh workflow run, got: $res"
+    fi
+
+    # 2d. Unlisted gh command: gh auth token (deny)
+    res=$(echo '{"toolCall":{"name":"run_command","args":{"CommandLine":"gh auth token"}}}' | bash "$hook_bin" "$policy_file")
+    if [[ $(echo "$res" | jq -r '.decision') == "deny" ]]; then
+      t_record PASS hook-deny-gh-auth-token agy
+    else
+      t_record FAIL hook-deny-gh-auth-token agy "expected deny for unlisted gh command, got: $res"
+    fi
+
     # 3. Credential path in file tool: ~/.ssh
     res=$(echo "{\"toolCall\":{\"name\":\"view_file\",\"args\":{\"AbsolutePath\":\"${HOME}/.ssh/id_ed25519\"}}}" | bash "$hook_bin" "$policy_file")
     if [[ $(echo "$res" | jq -r '.decision') == "deny" ]]; then
