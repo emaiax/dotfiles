@@ -228,6 +228,10 @@ After all sections are in place, read through the complete JSON and check:
 
 Fix any alignment or binding issues before rendering.
 
+### Before You Render: Dangling-Binding Check
+
+Live-canvas tools treat "confirm the canvas is empty before drawing" as mandatory, because ghost elements from a prior diagram silently break new arrow bindings. The static-file equivalent: before adding a new section, reread the current `elements` array and confirm every `id` referenced by a `boundElements`, `startBinding`, or `endBinding` still exists in the array. A deleted or renamed element left dangling in another element's binding fails the same way a ghost canvas element does — the arrow won't render bound, and it will not fail loudly.
+
 **Phase 3: Render & validate**
 
 Now run the render-view-fix loop from the Render & Validate section. This is where you'll catch visual issues that aren't obvious from JSON — overlaps, clipping, imbalanced composition.
@@ -358,6 +362,8 @@ Colors encode information, not decoration. Every color choice should come from `
 
 **Do not invent new colors.** If a concept doesn't fit an existing semantic category, use Primary/Neutral or Secondary.
 
+**Fill palette budget**: no more than 3-4 distinct fill colors per diagram. Same architectural/semantic role always gets the same fill+stroke pair.
+
 ---
 
 ## Modern Aesthetics
@@ -404,6 +410,14 @@ Guide the eye: typically left→right or top→bottom for sequences, radial for 
 ### Connections Required
 Position alone doesn't show relationships. If A relates to B, there must be an arrow.
 
+### Spacing & Layout Budget
+
+Concrete numbers to sketch coordinates against, not just "give it whitespace":
+
+- **Column pitch**: budget 440px per column when arrows carry labels (230px box + 210px gap). Gap between adjacent boxes must stay >=150px or arrow labels bleed into the neighboring shape.
+- **Row pitch**: budget ~350px per row (160px box height + 190px gap for arrows, labels, and breathing room).
+- **Zone backgrounds**: compute before placing the shapes inside them. `y = row_y - 50`, `height = box_height + 100` — at least 50px padding on every side, never hugging the contents.
+
 ---
 
 ## Text Rules
@@ -419,6 +433,8 @@ Position alone doesn't show relationships. If A relates to B, there must be an a
 ```
 
 Settings: `fontSize: 16`, `fontFamily: 3`, `textAlign: "center"`, `verticalAlign: "middle"`
+
+**Minimum sizes**: 14px absolute floor, 16px for shape labels and zone headings, 24px for the diagram title. Below 14 the label is unreadable once the PNG is scaled down for viewing.
 
 ---
 
@@ -437,6 +453,10 @@ Settings: `fontSize: 16`, `fontFamily: 3`, `textAlign: "center"`, `verticalAlign
   "files": {}
 }
 ```
+
+### Element Paint Order
+
+Elements render in array order — later elements paint over earlier ones. Order the `elements` array: zone/section backgrounds first, then shapes, then arrows, then standalone text last. A zone background placed after its contents will cover them.
 
 ## Element Templates
 
