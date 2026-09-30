@@ -233,7 +233,7 @@ Claudio configures persona, security policies, skills, and token reduction acros
 
 | Feature | Claude Code | Antigravity (`agy`) | OpenCode |
 | :--- | :---: | :---: | :---: |
-| **Plugin Ecosystem** | Native Marketplace (`extraKnownMarketplaces`, `enabledPlugins`) | ⚪ None (uses native skills/MCP) | Git URLs & npm packages (`plugin = [...]`) |
+| **Plugin Ecosystem** | Native Marketplace (`extraKnownMarketplaces`, `enabledPlugins`) | ✅ Declarative bundles (`~/.gemini/config/plugins`) | Git URLs & npm packages (`plugin = [...]`) |
 | **Skills Directory** | ✅ (`~/.claude/skills`) | ✅ (`~/.gemini/config/skills`) | ✅ (`~/.config/opencode/skills`) |
 | **MCP Servers** | ✅ (`mcpServers` in settings) | ✅ (`mcpServers` in settings) | ✅ (`mcp` in `opencode.json`) |
 | **Hook: PreToolUse** | ✅ (`hooks.PreToolUse`) | ✅ (`hooks.json` matcher) | ⚪ None |
@@ -241,12 +241,12 @@ Claudio configures persona, security policies, skills, and token reduction acros
 | **Hook: SessionStart** | ✅ (plugin lifecycle) | ⚪ None | ✅ (plugin lifecycle) |
 | **RTK Rewrites** | ⚡ Intercepts commands via hook | ⚡ Rewrites via `antigravity-hook.sh` | ⚪ Not configured |
 | **Memory Plugins** | `claude-mem@thedotmack` | ⚪ Session log search | `opencode-supermemory` |
-| **Workflow Plugins** | `superpowers`, `humanizer`, `obsidian` | ⚪ Handled via prompt / skills | `superpowers@git+...` |
+| **Workflow Plugins** | `superpowers`, `humanizer`, `obsidian` | `humanizer` (bundled plugin) | `superpowers@git+...` |
 
 ### Backend Specifics
 
 - **Claude Code**: Supports declarative plugins through GitHub sources and the official plugin marketplace. Hooks are defined directly in `settings.json` and intercept tool calls before and after execution.
-- **Antigravity (`agy`)**: Operates without a plugin marketplace. Extensions use native skills and MCP servers. Hooks run through a standalone `hooks.json` dispatcher ([`antigravity-hook.sh`](hooks/antigravity-hook.sh)), evaluating security policy and rewriting commands for RTK token compression.
+- **Antigravity (`agy`)**: Supports plugin bundles (`plugin.json` with bundled skills, rules, hooks, and MCP servers) managed declaratively via `~/.gemini/config/plugins`. Hooks run through a standalone `hooks.json` dispatcher ([`antigravity-hook.sh`](hooks/antigravity-hook.sh)), evaluating security policy and rewriting commands for RTK token compression.
 - **OpenCode**: Installs plugins specified as npm packages or git repositories in `opencode.json`. It does not support Claudio's declarative hook layer, so command rewrites and dynamic permission interceptors are not available.
 
 ---
