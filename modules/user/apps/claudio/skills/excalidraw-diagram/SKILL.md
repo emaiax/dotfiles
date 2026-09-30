@@ -230,7 +230,7 @@ Fix any alignment or binding issues before rendering.
 
 ### Before You Render: Dangling-Binding Check
 
-Live-canvas tools treat "confirm the canvas is empty before drawing" as mandatory, because ghost elements from a prior diagram silently break new arrow bindings. The static-file equivalent: before adding a new section, reread the current `elements` array and confirm every `id` referenced by a `boundElements`, `startBinding`, or `endBinding` still exists in the array. A deleted or renamed element left dangling in another element's binding fails the same way a ghost canvas element does — the arrow won't render bound, and it will not fail loudly.
+Live-canvas tools treat "confirm the canvas is empty before drawing" as mandatory, because ghost elements from a prior diagram silently break new arrow bindings. The static-file equivalent: before adding a new section, reread the current `elements` array and confirm every `id` referenced by a `boundElements`, `startBinding`, or `endBinding` still exists in the array. A deleted or renamed element left dangling in another element's binding fails the same way a ghost canvas element does: the arrow won't render bound, and it will not fail loudly.
 
 **Phase 3: Render & validate**
 
@@ -416,7 +416,7 @@ Concrete numbers to sketch coordinates against, not just "give it whitespace":
 
 - **Column pitch**: budget 440px per column when arrows carry labels (230px box + 210px gap). Gap between adjacent boxes must stay >=150px or arrow labels bleed into the neighboring shape.
 - **Row pitch**: budget ~350px per row (160px box height + 190px gap for arrows, labels, and breathing room).
-- **Zone backgrounds**: compute before placing the shapes inside them. `y = row_y - 50`, `height = box_height + 100` — at least 50px padding on every side, never hugging the contents.
+- **Zone backgrounds**: compute before placing the shapes inside them. `y = row_y - 50`, `height = box_height + 100`, at least 50px padding on every side, never hugging the contents.
 
 ---
 
@@ -456,19 +456,21 @@ Settings: `fontSize: 16`, `fontFamily: 3`, `textAlign: "center"`, `verticalAlign
 
 ### Element Paint Order
 
-Elements render in array order — later elements paint over earlier ones. Order the `elements` array: zone/section backgrounds first, then shapes, then arrows, then standalone text last. A zone background placed after its contents will cover them.
+Elements render in array order: later elements paint over earlier ones. Order the `elements` array: zone/section backgrounds first, then shapes, then arrows, then standalone text last. A zone background placed after its contents will cover them.
 
 ## Element Templates
 
 See `references/element-templates.md` for copy-paste JSON templates for each element type (text, line, dot, rectangle, arrow). Pull colors from `references/color-palette.md` based on each element's semantic purpose.
 
-For a named diagram type (Gantt, UML class, SWOT, Lean Canvas, wireframe, mind map, roadmap), read `references/diagram-type-playbook.md` first — it maps each type to this skill's shape vocabulary.
+For a named diagram type (Gantt, UML class, SWOT, Lean Canvas, wireframe, mind map, roadmap), read `references/diagram-type-playbook.md` first: it maps each type to this skill's shape vocabulary.
 
 ---
 
 ## Render & Validate (MANDATORY)
 
 You cannot judge a diagram from JSON alone. After generating or editing the Excalidraw JSON, you MUST render it to PNG, view the image, and fix what you see — in a loop until it's right. This is a core part of the workflow, not a final check.
+
+**Fork note:** the `cd .claude/skills/excalidraw-diagram/references` shown below assumes a project-local install. This fork installs at the user level instead, at one of `~/.claude/skills/excalidraw-diagram/references`, `~/.config/opencode/skills/excalidraw-diagram/references`, or `~/.gemini/config/skills/excalidraw-diagram/references` depending on the agent host, so `cd` to whichever of those actually exists, not the literal path below.
 
 ### How to Render
 

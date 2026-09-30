@@ -50,8 +50,8 @@ All elements share these:
 | `points` | Array of [x, y] coordinates |
 | `startBinding` | Connection to start shape |
 | `endBinding` | Connection to end shape |
-| `startArrowhead` | null, "arrow", "bar", "dot", "triangle" |
-| `endArrowhead` | null, "arrow", "bar", "dot", "triangle" |
+| `startArrowhead` | null, "arrow", "bar", "dot", "circle", "circle_outline", "triangle", "triangle_outline", "diamond", "diamond_outline", "crowfoot_one", "crowfoot_many", "crowfoot_one_or_many" |
+| `endArrowhead` | null, "arrow", "bar", "dot", "circle", "circle_outline", "triangle", "triangle_outline", "diamond", "diamond_outline", "crowfoot_one", "crowfoot_many", "crowfoot_one_or_many" |
 
 ## Binding Format
 

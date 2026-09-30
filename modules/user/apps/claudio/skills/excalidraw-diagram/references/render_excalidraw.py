@@ -81,7 +81,7 @@ def render(
         from playwright.sync_api import sync_playwright
     except ImportError:
         print("ERROR: playwright not installed.", file=sys.stderr)
-        print("Run: cd .claude/skills/excalidraw-diagram/references && uv sync && uv run playwright install chromium", file=sys.stderr)
+        print(f"Run: cd {Path(__file__).parent} && uv sync && uv run playwright install chromium", file=sys.stderr)
         sys.exit(1)
 
     # Read and validate
@@ -128,7 +128,7 @@ def render(
         except Exception as e:
             if "Executable doesn't exist" in str(e) or "browserType.launch" in str(e):
                 print("ERROR: Chromium not installed for Playwright.", file=sys.stderr)
-                print("Run: cd .claude/skills/excalidraw-diagram/references && uv run playwright install chromium", file=sys.stderr)
+                print(f"Run: cd {Path(__file__).parent} && uv run playwright install chromium", file=sys.stderr)
                 sys.exit(1)
             raise
 
@@ -136,6 +136,13 @@ def render(
             viewport={"width": vp_width, "height": vp_height},
             device_scale_factor=scale,
         )
+        # Surfaced on stderr so a hung `wait_for_function` (e.g. a broken esm.sh
+        # import) points at the actual failing resource instead of a bare timeout.
+        # The console message alone (e.g. "Failed to load resource: 404") never
+        # includes the URL; the response listener is what makes the URL actionable.
+        page.on("console", lambda msg: print(f"[page console {msg.type}] {msg.text}", file=sys.stderr) if msg.type == "error" else None)
+        page.on("pageerror", lambda exc: print(f"[page error] {exc}", file=sys.stderr))
+        page.on("response", lambda res: print(f"[page response {res.status}] {res.url}", file=sys.stderr) if res.status >= 400 else None)
 
         # Load the template
         page.goto(template_url)

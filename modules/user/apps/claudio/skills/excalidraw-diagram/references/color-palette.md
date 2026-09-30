@@ -60,6 +60,31 @@ Used for code snippets, data examples, and other concrete evidence inside techni
 
 ---
 
+## Grayscale (Wireframes Only)
+
+The one diagram type that doesn't pull from the semantic table above. See `references/diagram-type-playbook.md`'s Wireframes & Mockups entry.
+
+| Use | Color |
+|-----|-------|
+| Screen/control container fill | `#f1f5f9` |
+| Container/control stroke | `#64748b` (reuses the Slate value from Text Colors above) |
+| Body-copy placeholder lines | `#cbd5e1` |
+| Annotation callout accent | `#b45309` (reuses the Decision stroke above) |
+
+---
+
+## Status Colors (Roadmap)
+
+Reuses three existing semantic rows from the Shape Colors table above. See `references/diagram-type-playbook.md`'s Roadmap entry.
+
+| Status | Semantic row to reuse |
+|--------|------------------------|
+| Planned | Inactive/Disabled (`#dbeafe` / `#1e40af`, dashed stroke) |
+| In progress | Decision (`#fef3c7` / `#b45309`) |
+| Done | End/Success (`#a7f3d0` / `#047857`) |
+
+---
+
 ## Background
 
 | Property | Value |
