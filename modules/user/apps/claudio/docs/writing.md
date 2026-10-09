@@ -1,6 +1,8 @@
 # Writing
 
-Applies to any prose that ends up rendered by markdown or git, or read by another human or agent: commit message bodies, PR and issue descriptions, review comments, design docs, ADRs, READMEs, runbooks, skill and instruction files, multi-sentence comments in config files.
+Applies to any prose a human or agent reads in its rendered form, whatever does the rendering: markdown, git, or HTML. Commit message bodies, PR and issue descriptions, review comments, design docs, ADRs, READMEs, runbooks, skill and instruction files, multi-sentence comments in config files, and published HTML artifacts.
+
+The test is the artifact the text lands in, never the file that produces it. A heredoc that builds a PR body, a Nix string that renders a page, an HTML artifact published for someone to read: all prose, all covered. This test governs every section below, not only the wrapping mechanics. An enumerated list of formats invites reading the scope as closed, which is how an HTML artifact shipped with dramatic headlines and em dashes while every rule against both sat in this file.
 
 Sections 1 to 7 are voice and structure, they apply to everything. "Commit messages" and "PR and issue descriptions" add rules for those two artifacts. "Never hard-wrap" and "Punctuation" are mechanics. "Before you ship" is the checklist.
 
@@ -118,12 +120,12 @@ Structural line breaks are fine and expected:
 - code, YAML, JSON blocks
 - blockquote lines
 
-Judge by the artifact the text ends up in, not by the file that produces it:
+The scope test at the top of this file decides whether a given text wraps. Two cases worth spelling out:
 
 - A heredoc, string literal, or template that builds a commit body, PR body, or doc produces prose. Its output is the artifact, so it must not be wrapped, even though it lives inside a script
 - A comment in source code is not part of the code: it's a brief explanation of why that piece exists, at most 2 lines of 120 characters each
 
-The test: does the text get rendered by markdown or git, or does it get read inside the source file? Rendered means no wrap. Read in place means wrap.
+Rendered means no wrap. Read in place means wrap.
 
 ## Quoting a heredoc
 
