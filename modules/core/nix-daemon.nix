@@ -79,6 +79,16 @@
         "root"
         host.user.username
       ];
+
+      # The homelab's own Attic cache, by mDNS name so no private hostname is written down here.
+      # `extra-` appends: plain `substituters` replaces the default and would mean restating
+      # cache.nixos.org by hand, where one omission breaks every build.
+      extra-substituters = [ "http://attic.local:8080/templates" ];
+      extra-trusted-public-keys = [ "templates:CbOCy0MrH4DpwLyNt+zq6kRh+R5y9+YCMvWe44b20Qc=" ];
+
+      # The cache only answers on the LAN, so off-network every query round pays a failed
+      # connection before falling through to cache.nixos.org. Five seconds bounds that.
+      connect-timeout = 5;
     };
 
     extraOptions = ''
