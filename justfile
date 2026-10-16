@@ -45,6 +45,17 @@ nix-cleanup:
 	# reshim asdf if exists
 	if command -v asdf > /dev/null; then asdf reshim; fi
 
+# flush the macOS DNS cache, including the negative answers mDNSResponder keeps
+[macos]
+flush-mdns-responder:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	# dscacheutil alone leaves mDNSResponder's own cache untouched, which is
+	# where a stale NXDOMAIN for a name that now exists survives a flush.
+	sudo dscacheutil -flushcache
+	sudo killall -HUP mDNSResponder
+	echo "flushed"
+
 # start a nix repl with the nixpkgs flake
 repl:
 	@nix repl -f '<nixpkgs>'
