@@ -40,6 +40,7 @@ in
       be = "bundle exec"; # bundle: rails apps
       cat = "bat -pp"; # bat: cat on steroids
       j = "just"; # just: task runner
+      vim = "nvim"; # override
 
       # claude: `claude-trust` and `claude-remote` dropped, both pinned a weaker posture than the default now
       # provides. See apps/claudio/permissions.nix.
