@@ -84,10 +84,14 @@
         host.user.username
       ];
 
-      # The homelab's own Attic cache, by mDNS name so no private hostname is written down here.
+      # The homelab's own Attic cache, by a private name so no real hostname is written down
+      # here. Not the guest's `.local` name: macOS routes `.local` to mDNSResponder by rule and
+      # never asks a resolver, which cost 5s a lookup against the 5s connect-timeout below, so
+      # every narinfo timed out and retried. `.internal` is ICANN-reserved for private use and
+      # goes to the homelab resolver like any other name, measured at 0.01s.
       # `extra-` appends: plain `substituters` replaces the default and would mean restating
       # cache.nixos.org by hand, where one omission breaks every build.
-      extra-substituters = [ "http://attic.local:8080/templates" ];
+      extra-substituters = [ "http://attic.internal:8080/templates" ];
       extra-trusted-public-keys = [ "templates:CbOCy0MrH4DpwLyNt+zq6kRh+R5y9+YCMvWe44b20Qc=" ];
 
       # The cache only answers on the LAN, so off-network every query round pays a failed
