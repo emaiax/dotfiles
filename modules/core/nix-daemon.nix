@@ -10,7 +10,11 @@
     package = lib.mkDefault pkgs.nix;
 
     linux-builder = {
-      enable = true;
+      # Off by default: this VM is the only aarch64-linux thing in the system
+      # closure, so it exists to build itself, and a qemu 11.1 bump on
+      # 2026-10-16 broke it in a way whose fix needed the VM to apply. The rest
+      # of this block still works, set true when a nixosTest needs a builder.
+      enable = false;
       ephemeral = true;
 
       maxJobs = 4;
