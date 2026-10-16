@@ -1,10 +1,11 @@
 {
   imports = [
-    ./cli
     ./apps
-    ./shell
+    ./cli
+    ./editor
     ./git
     ./packages
+    ./shell
     ./sops
   ];
 
