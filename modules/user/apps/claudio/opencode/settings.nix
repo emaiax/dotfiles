@@ -7,6 +7,7 @@ let
   denyCommands = policy.commands.deny or [ ];
 in
 {
+  "$schema" = "https://opencode.ai/config.json";
   permission = {
     read = {
       "*" = "allow";
