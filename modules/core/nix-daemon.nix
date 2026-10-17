@@ -97,6 +97,11 @@
       # The cache only answers on the LAN, so off-network every query round pays a failed
       # connection before falling through to cache.nixos.org. Five seconds bounds that.
       connect-timeout = 5;
+
+      # Nix retries a failing substituter 5 times by default with growing backoff, so each
+      # narinfo only the Attic has costs 25-30s while it is down. Two attempts measured 181s
+      # for 3 dead paths in dudumox, against over 450s at the default.
+      download-attempts = 2;
     };
 
     extraOptions = ''
