@@ -15,12 +15,19 @@
     ]
   },
   "enabledPlugins": {
+    "claude-hud@claude-hud": true,
     "claude-mem@thedotmack": true,
     "humanizer@humanizer": true,
     "obsidian@obsidian-skills": true,
     "superpowers@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
+    "claude-hud": {
+      "source": {
+        "repo": "jarrodwatts/claude-hud",
+        "source": "github"
+      }
+    },
     "humanizer": {
       "source": {
         "repo": "blader/humanizer",
@@ -173,6 +180,10 @@
         "registry.yarnpkg.com"
       ]
     }
+  },
+  "statusLine": {
+    "command": "/nix/store/7cr3l1m9yyng2hscs8lj4x4bj0hm7908-nodejs-24.21.0/bin/node /Users/emaiax/.claude/plugins/claude-hud/statusline.mjs",
+    "type": "command"
   },
   "theme": "dark"
 }
