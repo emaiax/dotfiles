@@ -7,7 +7,8 @@
 }:
 let
   # Same name on the LAN and over the tailnet: the homelab DNS answers with Traefik's LAN or tailnet IP.
-  domain = "emx.casa";
+  # The domain is a sops secret, so Alloy reads it from the decrypted file at runtime, not at build time.
+  domainFile = config.sops.secrets.homelab-domain.path;
   hostname = osConfig.networking.hostName;
 
   logDir = "${config.home.homeDirectory}/Library/Logs";
@@ -16,6 +17,10 @@ let
   # SopsNix/stdout is not shipped: sops-nix prints a generated age private key there.
   # max_backoff_retries keeps logs queued in memory while offline, the default drops them after about 6 minutes.
   river = ''
+    local.file "domain" {
+      filename = "${domainFile}"
+    }
+
     prometheus.exporter.unix "mac" {
       disable_collectors = ["thermal"]
     }
@@ -37,7 +42,7 @@ let
 
     prometheus.remote_write "homelab" {
       endpoint {
-        url = "https://prometheus.${domain}/api/v1/write"
+        url = "https://prometheus." + string.trim_space(local.file.domain.content) + "/api/v1/write"
       }
 
       external_labels = { hostname = "${hostname}" }
@@ -57,7 +62,7 @@ let
 
     loki.write "homelab" {
       endpoint {
-        url = "https://loki.${domain}/loki/api/v1/push"
+        url = "https://loki." + string.trim_space(local.file.domain.content) + "/loki/api/v1/push"
         max_backoff_retries = 1000
       }
 
