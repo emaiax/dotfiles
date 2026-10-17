@@ -21,13 +21,16 @@ let
   );
 in
 {
+  # Same rule as claude-code/default.nix: nix always wins, a differing existing file is backed up to .bak first.
   home.activation.opencodeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     existing="${claudioPath}/opencode/settings.json"
-    if [[ ! -e "$existing" ]]; then
-      install -Dm644 ${opencodeSettingsJson} "$existing"
-    elif ! diff -q ${opencodeSettingsJson} "$existing" >/dev/null; then
-      echo "opencode: $existing differs from the generated settings, leaving it alone" >&2
+
+    if [[ -e "$existing" ]] && ! diff -q ${opencodeSettingsJson} "$existing" >/dev/null; then
+      cp "$existing" "$existing.bak"
+      echo "[opencode] settings.json changed, backed up previous content to $existing.bak" >&2
     fi
+
+    install -Dm644 ${opencodeSettingsJson} "$existing"
   '';
 
   home.file."${config.xdg.configHome}/opencode/opencode.json" = lib.mkForce {
