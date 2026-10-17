@@ -5,6 +5,5 @@ result
 .claude/
 docs/superpowers/
 .worktrees/
-modules/user/apps/claudio/claude-code/settings.json.bak
 modules/user/apps/claudio/skills/synced/
-modules/user/apps/claudio/opencode/settings.json.bak
+*.bak
