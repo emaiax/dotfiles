@@ -20,10 +20,18 @@ let
       disable_collectors = ["thermal"]
     }
 
+    discovery.relabel "mac" {
+      targets = prometheus.exporter.unix.mac.targets
+
+      rule {
+        target_label = "job"
+        replacement  = "node-exporter"
+      }
+    }
+
     prometheus.scrape "mac" {
-      targets         = prometheus.exporter.unix.mac.targets
+      targets         = discovery.relabel.mac.output
       forward_to      = [prometheus.remote_write.homelab.receiver]
-      job_name        = "node-exporter"
       scrape_interval = "30s"
     }
 
