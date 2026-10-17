@@ -14,6 +14,7 @@ let
   stateDir = "${config.xdg.dataHome}/alloy";
 
   # SopsNix/stdout is not shipped: sops-nix prints a generated age private key there.
+  # max_backoff_retries keeps logs queued in memory while offline, the default drops them after about 6 minutes.
   river = ''
     prometheus.exporter.unix "mac" {
       disable_collectors = ["thermal"]
@@ -49,6 +50,7 @@ let
     loki.write "homelab" {
       endpoint {
         url = "https://loki.${domain}/loki/api/v1/push"
+        max_backoff_retries = 1000
       }
 
       external_labels = { hostname = "${hostname}" }
