@@ -38,6 +38,12 @@ let
   # Claude Code's installer can leave installed_plugins.json pinned older than what's already cached,
   # breaking every DB write. Bump this to move the pin; the activation below fixes the pointer.
   claudeMemVersion = "13.15.2";
+
+  # What /claude-hud:setup copies into the config dir. It runs the newest installed claude-hud, so this pin never needs a bump.
+  claudeHudLauncher = pkgs.fetchurl {
+    url = "https://raw.githubusercontent.com/jarrodwatts/claude-hud/v0.11.3/scripts/statusline.mjs";
+    hash = "sha256-D9Zz5Iq1ykjhUqhNoiEcIG+9w626AdMH5dE81XEiSZ8=";
+  };
 in
 {
   # nix always wins now: a differing existing file gets backed up to .bak first (flake.nix's
@@ -95,6 +101,9 @@ in
     force = true;
   };
 
+  home.file."${config.programs.claude-code.configDir}/plugins/claude-hud/statusline.mjs".source =
+    claudeHudLauncher;
+
   home.file."${config.programs.claude-code.configDir}/hooks" = {
     source = config.lib.file.mkOutOfStoreSymlink "${claudioPath}/hooks";
     force = true;
@@ -122,6 +131,12 @@ in
       agentPushNotifEnabled = true;
       includeCoAuthoredBy = false;
 
+      # /claude-hud:setup would write this into settings.json, which every switch regenerates from here.
+      statusLine = {
+        type = "command";
+        command = "${pkgs.nodejs}/bin/node ${config.programs.claude-code.configDir}/plugins/claude-hud/statusline.mjs";
+      };
+
       hooks.PreToolUse = lib.optional claudioCfg.rtk.enable rtkHook;
 
       extraKnownMarketplaces = {
@@ -143,12 +158,19 @@ in
             repo = "thedotmack/claude-mem";
           };
         };
+        claude-hud = {
+          source = {
+            source = "github";
+            repo = "jarrodwatts/claude-hud";
+          };
+        };
       };
 
       enabledPlugins = {
         "claude-mem@thedotmack" = true; # semantic memory across sessions
         "obsidian@obsidian-skills" = true; # obsidian markdown, bases, JSON Canvas and `obsidian` CLI
         "humanizer@humanizer" = true; # rewrites AI-generated text to strip telltale patterns
+        "claude-hud@claude-hud" = true; # status line: context usage, tool activity, agent progress
         "superpowers@claude-plugins-official" = true; # superpowers: code analysis, refactoring, and generation
       };
 
