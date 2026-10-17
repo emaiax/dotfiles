@@ -240,6 +240,7 @@ Claudio configures persona, security policies, skills, and token reduction acros
 | **Hook: PostToolUse** | ✅ (`hooks.PostToolUse`) | ✅ (`hooks.json` matcher) | ⚪ None |
 | **Hook: SessionStart** | ✅ (plugin lifecycle) | ⚪ None | ✅ (plugin lifecycle) |
 | **RTK Rewrites** | ⚡ Intercepts commands via hook | ⚡ Rewrites via `antigravity-hook.sh` | ⚪ Not configured |
+| **Status Line** | `claude-hud@claude-hud`, `statusLine` declared in Nix | ⚪ None | ⚪ None |
 | **Memory Plugins** | `claude-mem@thedotmack` | ⚪ Session log search | `opencode-supermemory` |
 | **Workflow Plugins** | `superpowers`, `humanizer`, `obsidian` | `humanizer`, `obsidian`, `superpowers` (bundled) | `superpowers@git+...` |
 
