@@ -1,5 +1,6 @@
 {
   imports = [
+    ./alloy
     ./claudio
     ./cursor
     ./iterm2
