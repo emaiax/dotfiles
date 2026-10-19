@@ -37,7 +37,7 @@ let
 
   # Claude Code's installer can leave installed_plugins.json pinned older than what's already cached,
   # breaking every DB write. Bump this to move the pin; the activation below fixes the pointer.
-  claudeMemVersion = "13.15.2";
+  claudeMemVersion = "14.0.1";
 
   # What /claude-hud:setup copies into the config dir. It runs the newest installed claude-hud, so this pin never needs a bump.
   claudeHudLauncher = pkgs.fetchurl {
