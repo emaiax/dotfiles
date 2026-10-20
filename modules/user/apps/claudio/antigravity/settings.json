@@ -17,6 +17,7 @@
       "command(just *)",
       "command(ls *)",
       "command(nix *)",
+      "command(python3 *)",
       "command(rg *)",
       "command(rtk *)",
       "command(ssh -o ProxyCommand=)",
@@ -63,7 +64,6 @@
       "command(gh repo clone *)",
       "command(git clone *)",
       "command(git push *)",
-      "command(python3 *)",
       "command(rm -rf *)",
       "command(git checkout .)"
     ],

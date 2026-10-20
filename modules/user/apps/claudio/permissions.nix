@@ -103,6 +103,7 @@ let
         "just"
         "ls"
         "nix"
+        "python3"
         "rg"
         "rtk"
         "ssh -o ProxyCommand="
@@ -118,7 +119,6 @@ let
         "gh repo clone"
         "git clone"
         "git push"
-        "python3"
         "rm -rf"
 
         # "git checkout --" # checkout changes to tracked files only

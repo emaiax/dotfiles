@@ -45,3 +45,39 @@ Format, one item per block:
 - Remove or merge instead: the hard-wrap section's "Judge by the artifact ... The test: does the text get rendered by markdown or git" paragraphs now duplicate the generalized scope test, so both shrink to one sentence pointing at the top of the file. Net change is roughly one line added for two trimmed.
 - Still open: the mechanical half. Em dashes, curly quotes and emoji are greppable and `docs/general.md`'s "enforce with linters, not prose" applies, but there is no check that scans generated HTML or artifacts. Voice cannot be linted and stays a reading task.
 
+
+## 2026-10-18 fj command without a body opened $EDITOR inside a Bash tool call and hung
+- What happened: a batched shell line for dudumox PR #925 contained a stray `fj pr comment 921` with no body. `fj` opened `$EDITOR` on a non-interactive shell, the Bash call hit its 120s timeout and went to the background, and when the stuck process was killed the rest of the line ran, posting the issue comment a second time after it had already been posted by hand. Result: a duplicate comment on #921, edited into a one-line note since `fj` cannot delete comments and no API token is available on the workstation.
+- Rule missing or unclear: `docs/fj-cli.md` and dudumox's `docs/stack/forgejo.md` document that `fj issue edit <n> body` with no argument opens `$EDITOR`, but nothing says that every `fj ... comment` / `create` / `edit` form without an explicit body does the same, and nothing says to never chain a second write after a command that may block.
+- Proposed fix (file + diff): `docs/fj-cli.md`, one line: "Any `fj` write without an explicit body or `--body-file` opens `$EDITOR` and hangs a tool call; always pass the body, and run `fj` writes one per Bash call so a hang cannot replay the rest of the line." Also set `EDITOR=false` for the session when driving `fj` from a tool, so a missing body fails fast instead of blocking.
+- Remove or merge instead: fold into the existing `fj` gotchas list in `docs/fj-cli.md` rather than a new section.
+
+## 2026-10-18 a per-guest ssh loop got port 22 filtered between the workstation and the node
+- What happened: the first run of dudumox `scripts/pve-upgrade/guests.sh status` opened one ssh session per guest per check, 173 connections in 30 minutes. Minutes later no SYN from the workstation reached `proxmox:22` any more (tcpdump on the node saw none, ping and port 8006 still fine, no fail2ban or firewall rule on the node), so something upstream, most likely the router's IPS, read it as SSH brute force. Work continued through a jump host (`PVE_UPGRADE_JUMP=minimox`).
+- Rule missing or unclear: nothing limits connection rate to a homelab host. "Read-only" is not "harmless": a burst of connections is itself a signal to intrusion detection.
+- Proposed fix (file + diff): `docs/development.md`, homelab bullet, one line: "Batch remote reads into one ssh session per run (`bash -s` with the script on stdin). A loop that opens a connection per item looks like a scan to the router and gets the workstation blocked on that port."
+- Remove or merge instead: none, the homelab bullet has no connection guidance yet.
+
+## 2026-10-18 a PR shipped with "test plan: all checked" while the apply paths had never executed
+- What happened: dudumox PR #957 (pve-upgrade stage scripts) was verified only in `--check`, which prints writes instead of running them. `/code-review` found six bugs in the `--apply` branches: awk column numbers off by one in the roster filters, a probe query() refuses, scp ignoring the jump host, a restore test falling through into a full backup. The check runs were green because those lines never ran.
+- Rule missing or unclear: `~/.claude/CLAUDE.md` "never claim something works without having watched it pass" was read as satisfied by the dry-run output. A dry run exercises the control flow up to each write, not the write's arguments or what follows it.
+- Proposed fix (file + diff): `docs/development.md`, workflow bullet, one line: "A dry-run or `--check` mode proves nothing about the apply path. Before claiming a write path works, run it against a stub (ssh/exec replaced by a function that records the call) or a fixture, and list that run in the test plan."
+- Remove or merge instead: none; the testing bullet has no dry-run guidance yet.
+
+## 2026-10-19 called a correct Asana task ID the "stolen" one without checking
+- What happened: the user said PR safxgroup/saf#29296 was using someone else's Asana task and that they would create their own. After they updated the PR, I read the body, saw ID `1219472627851014`, and said the PR still pointed at the stolen task. I treated that ID as the stolen one on two grounds: the vault note recorded it, and the link label had changed while the ID had not. Neither showed which task was the stolen one. The PR body's edit history showed the same ID going back to 16/10, and the user confirmed it is the right task.
+- Rule missing or unclear: `docs/writing.md` requires stating status as what was run and what was seen. Nothing covers the step before that: when the user's framing ("it's using a stolen task") leaves a fact unstated (which ID is the stolen one), I filled the gap with an inference and reported it as a defect.
+- Proposed fix (file + diff): `docs/development.md`, Workflow, one line: "Before reporting something as wrong, name the evidence that proves it is wrong. If the only evidence is an assumption about what the user meant, ask instead of asserting."
+- Remove or merge instead: none yet. If it recurs, merge it with the `docs/writing.md` line on reporting status as what was run and seen, since both are about evidence-backed claims.
+
+## 2026-10-20 Planning task grew into experiments and a docs PR
+- What happened: Asked to research the anota stack and plan the MVP as issues, I let research subagents run local experiments (scratch Swift builds, headless nvim) and proposed a `docs/research/` PR. Eduardo clarified the task was exploration plus issues only, no code and no tests.
+- Rule missing or unclear: nothing says a planning or research request stays read-only and its output stays in the channel the user named.
+- Proposed fix (file + diff): `docs/development.md` Workflow, add: "A plan or research request is read-only: no builds, runs, or tests, and the output goes where the user said (issues, chat), not into a new PR."
+- Remove or merge instead: none.
+
+## 2026-10-20 workflow subagents edited files with python3 heredocs and stopped on every call
+- What happened: in workflow `aif-review-fixes-1`, the fix agents ran 25 `python3 - <<'EOF'` edits across 7 branches. `python3` is on the ask list in `permissions.nix`, so every edit waited for the user. I already knew this from earlier in the same session and did not put it in the agent prompts.
+- Rule missing or unclear: nothing says that tool constraints I learn in a session must be passed on to the subagents I dispatch. Subagents get CLAUDE.md, but they do not get what I learned during the session.
+- Proposed fix (file + diff): `docs/development.md` Workflow, one line: "Edit files with the Edit and Write tools, never python3, sed -i, or heredoc rewrites: python3 is on the permission ask list. Put this line in every subagent and workflow prompt that edits files."
+- Remove or merge instead: none.
