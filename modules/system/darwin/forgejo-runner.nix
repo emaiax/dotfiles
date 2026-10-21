@@ -46,8 +46,15 @@ in
 {
   home-manager.users.${user}.sops.secrets.dudupro-forgejo-runner-secret = { };
 
-  # A daemon, not a user agent: macOS local network privacy blocks launchd agents from reaching the LAN forge,
-  # daemons are exempt (https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy).
+  # Local network privacy blocked the runner both as an agent and as a daemon running as a user,
+  # so the forge stops counting as local network.
+  # Only Traefik's address, which fronts the forge. Takes effect after a reboot (TN3179, macOS 15.5+).
+  system.defaults.CustomSystemPreferences."com.apple.network.local-network".AllowedWiFiLocalNetworkAddresses =
+    [
+      "192.168.68.21/32"
+    ];
+
+  # https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy
   # The sops secrets are decrypted by a user agent at login, until then the start script fails and KeepAlive retries.
   launchd.daemons.forgejo-runner.command = lib.getExe start;
   launchd.daemons.forgejo-runner.serviceConfig = {
