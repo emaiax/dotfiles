@@ -11,7 +11,8 @@ let
   runner = lib.getExe pkgs.forgejo-runner;
 
   domainFile = hm.sops.secrets.homelab-domain.path;
-  secretFile = hm.sops.secrets.dudupro-forgejo-runner-secret.path;
+  secretName = "${host.hostname}-forgejo-runner-secret";
+  secretFile = hm.sops.secrets.${secretName}.path;
 
   logDir = "${host.user.homeDirectory}/Library/Logs";
   stateDir = "${hm.xdg.stateHome}/forgejo-runner";
@@ -34,21 +35,30 @@ let
       mkdir -p "${stateDir}/work"
       cd "${stateDir}"
       if [[ ! -e .runner ]]; then
+        # Plain assignments, so errexit stops here if sops hasn't decrypted yet, instead of registering with empty values.
+        domain=$(<"${domainFile}")
+        secret=$(<"${secretFile}")
         ${runner} create-runner-file --config "${runnerConfig}" \
-          --instance "https://forgejo.$(<"${domainFile}")" \
+          --instance "https://forgejo.$domain" \
           --name ${host.hostname} \
-          --secret "$(<"${secretFile}")"
+          --secret "$secret"
       fi
       exec ${runner} daemon --config "${runnerConfig}"
     '';
   };
 in
 {
-  home-manager.users.${user}.sops.secrets.dudupro-forgejo-runner-secret = { };
+  home-manager.users.${user}.sops.secrets.${secretName} = { };
 
-  # A daemon, not a user agent: macOS local network privacy blocks launchd agents from reaching the LAN forge,
-  # daemons are exempt (https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy).
-  # The sops secrets are decrypted by a user agent at login, until then the start script fails and KeepAlive retries.
+  # Local network privacy blocked the runner as an agent and as a daemon running as a user (TN3179, macOS 15.5+).
+  # This exempts only Traefik's address, which fronts the forge. Takes effect after a reboot.
+  system.defaults.CustomSystemPreferences."com.apple.network.local-network".AllowedWiFiLocalNetworkAddresses =
+    [
+      "192.168.68.21/32"
+    ];
+
+  # Only the first registration reads the sops secrets, which a user agent decrypts at login.
+  # Before that the start script exits and KeepAlive retries, once .runner exists it starts at boot.
   launchd.daemons.forgejo-runner.command = lib.getExe start;
   launchd.daemons.forgejo-runner.serviceConfig = {
     UserName = user;
