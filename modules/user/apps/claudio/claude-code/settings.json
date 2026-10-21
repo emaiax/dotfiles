@@ -171,6 +171,7 @@
       "rtk ssh *"
     ]
   },
+  "skipWorkflowUsageWarning": true,
   "theme": "dark",
   "agentPushNotifEnabled": true,
   "autoMode": {
@@ -185,6 +186,5 @@
       "Repository visibility: assume a repository is public unless something in the session shows otherwise, since several are mirrored publicly. Treat anything committed as published.",
       "Additional context: this machine is a personal workstation, not a shared or production host."
     ]
-  },
-  "skipWorkflowUsageWarning": true
+  }
 }
