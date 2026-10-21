@@ -111,3 +111,9 @@ Format, one item per block:
 - Rule missing or unclear: one-off. `docs/workflows/deploy.md` already explains what `off main` means.
 - Proposed fix (file + diff): none.
 - Remove or merge instead: none.
+
+## 2026-10-21 Branched a PR from a local main that had an unpushed commit
+- What happened: I cut `fix-216-zsh-edit-command-line` from local `main`, which carried `ae5eacd`, a kaizen and settings commit that had not been pushed. PR #217 showed +38/-2 for a 6-line zsh fix and merged with the unrelated commit inside it. `/code-review` caught it after the merge.
+- Rule missing or unclear: `docs/development.md` says "Worktree + branch before any change" but not which base. I did not compare local `main` with `origin/main` before branching.
+- Proposed fix (file + diff): `docs/development.md`, Workflow: `+ - Branch from origin/<default> after a git fetch, never from the local default branch: it can hold unpushed commits.`
+- Remove or merge instead: merge into the existing "Worktree + branch before any change" bullet instead of adding a new one.
