@@ -1,0 +1,22 @@
+# Builds the real dudupro system on dudupro itself: the persistent `macos` runner, host mode, using the Mac's nix store.
+# A job queued while the Mac sleeps waits, the autoscaler's orphaned-job alert is the reminder.
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      # --no-link: the workspace persists between runs, a result symlink there would pin old closures against GC.
+      - run: nix build --no-link .#darwinConfigurations.dudupro.system
