@@ -1,8 +1,7 @@
 # 🏠 Dotfiles
 
 [![fast-ci](https://forgejo.emx.casa/emaiax/dotfiles/badges/workflows/fast-ci.yml/badge.svg?branch=main)](https://forgejo.emx.casa/emaiax/dotfiles/actions?workflow=fast-ci.yml)
-[![gh-build-status](https://forgejo.emx.casa/emaiax/dotfiles/badges/workflows/gh-build-status.yml/badge.svg?branch=main)](https://forgejo.emx.casa/emaiax/dotfiles/actions?workflow=gh-build-status.yml)
-[![Build](https://github.com/emaiax/dotfiles/actions/workflows/build.yml/badge.svg)](https://github.com/emaiax/dotfiles/actions/workflows/build.yml)
+[![build](https://forgejo.emx.casa/emaiax/dotfiles/badges/workflows/build.yml/badge.svg?branch=main)](https://forgejo.emx.casa/emaiax/dotfiles/actions?workflow=build.yml)
 
 > Declarative system configuration using Nix with cross-platform support for macOS
 
@@ -21,7 +20,7 @@ A comprehensive, modular configuration management system built on [Nix][nix] tha
 - **🍺 Homebrew Integration**: Declarative Homebrew package management through Nix
 - **⚡ Development Tools**: Pre-configured CLI tools, shell environment, and development applications
 - **🎨 macOS Customization**: System appearance, dock, finder, and security settings
-- **🔄 Automated Updates**: Renovate for dependency management, Forgejo Actions for cheap checks, GitHub Actions for the aarch64-darwin build
+- **🔄 Automated Updates**: Renovate for dependency management, Forgejo Actions for cheap checks and the aarch64-darwin build
 - **📦 Flake-based**: Modern Nix flakes for reproducible and composable configurations
 
 ## 🏗️ Architecture
@@ -189,11 +188,10 @@ just ssh-keygen my-key "email@example.com"
 
 ## 🔄 Continuous Integration
 
-Development happens on a self-hosted Forgejo instance, which push-mirrors to GitHub:
+Development happens on a self-hosted Forgejo instance, which push-mirrors to GitHub. GitHub runs no workflows:
 
 - **Forgejo (`.forgejo/workflows/fast-ci.yml`)**: `nix fmt`, `nix flake check`, and an eval-only check of the aarch64-darwin closure — cheap, runs on every push/PR
-- **GitHub (`.github/workflows/build.yml`)**: the actual aarch64-darwin build, on a real `macos-15` runner and only on push to `main` — Forgejo has no macOS runner and can't do this itself
-- **Forgejo (`.forgejo/workflows/gh-build-status.yml`)**: relays `build.yml`'s result back onto the Forgejo commit status. The Forgejo instance is LAN-only, so GitHub's runner can't report back directly — this runs the other way instead, polling GitHub's Actions API from a self-hosted runner that has both outbound internet and local access to Forgejo's own API
+- **Forgejo (`.forgejo/workflows/build.yml`)**: the real aarch64-darwin build of dudupro, on every push/PR, run by the persistent `macos` runner on dudupro itself (`modules/system/darwin/forgejo-runner.nix`). A job waits while the Mac sleeps
 - **Dependency Updates**: Renovate, cross-repo automation that runs from a sibling repo, not a workflow in this one
 
 ## 🗑️ Uninstallation
