@@ -117,3 +117,15 @@ Format, one item per block:
 - Rule missing or unclear: `docs/development.md` says "Worktree + branch before any change" but not which base. I did not compare local `main` with `origin/main` before branching.
 - Proposed fix (file + diff): `docs/development.md`, Workflow: `+ - Branch from origin/<default> after a git fetch, never from the local default branch: it can hold unpushed commits.`
 - Remove or merge instead: merge into the existing "Worktree + branch before any change" bullet instead of adding a new one.
+
+## 2026-10-21 Ran a bare git stash in a PR worktree to get a lint baseline
+- What happened: to compare markdownlint results on claudio-core PR #35 against main, I put `git stash -q` in the middle of a `nix shell -c sh -c "..."` line inside the PR worktree. It stashed all 12 staged changes, so the lychee run after it checked main's files instead of the PR's. I restored with `git stash apply --index <sha>` and dropped the entry. Nothing was lost, and lychee was rerun on the real changes.
+- Rule missing or unclear: one-off. The harness already warns against bare `git stash` in worktrees because the stash stack is shared across them. I wrote the baseline step inline and did not reread the line before running it.
+- Proposed fix (file + diff): none. For a before/after comparison, run the tool in the main checkout, which already sits on main.
+- Remove or merge instead: none.
+
+## 2026-10-21 Wrote owner/repo#N in chat and it rendered as a github.com link
+- What happened: reporting claudio-core PR #35 and dotfiles PR #224, I wrote `claudio-thebot/claudio-core#35` and `emaiax/dotfiles#224`. Eduardo saw them as github.com links. The GitHub copies are archived, the work lives on forgejo.emx.casa.
+- Rule missing or unclear: nothing says how to reference forge objects in chat. The shorthand is right inside a Forgejo issue or PR body, where Forgejo resolves it, and wrong in the terminal.
+- Proposed fix (file + diff): `docs/development.md`, Workflow, one line: "In chat, reference issues and PRs by full forge URL (`https://forgejo.emx.casa/<owner>/<repo>/pulls/<n>`), never `owner/repo#N`: the terminal links the shorthand to github.com."
+- Remove or merge instead: none.
