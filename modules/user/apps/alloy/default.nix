@@ -52,6 +52,7 @@ let
       path_targets = [
         { __path__ = "${logDir}/SopsNix/stderr", job = "sops-nix" },
         { __path__ = "${logDir}/alloy.log", job = "alloy" },
+        { __path__ = "${logDir}/forgejo-runner.log", job = "forgejo-runner" },
       ]
     }
 
