@@ -13,7 +13,7 @@ Flag and argument quirks for `gh` (GitHub CLI) that its own `--help` text doesn'
   - `-T`/`--template <file>` picks a specific PR template file when the repo has more than one.
   - Without `--title`/`--body`/`--fill` it prompts interactively, unverified whether that hangs or errors in a non-interactive session here, don't rely on it.
 - `gh issue create`
-  - Same flag-based pattern. `-T`/`--template <name>` matches the template's `name:` field, same convention as `fj`.
+  - Same flag-based pattern. `-T`/`--template <name>` matches the template's `name:` field, unlike `fj`, which takes the filename id.
   - `gh` has no `fj issue templates`-equivalent listing command.
 - `gh pr merge`
   - Needs an explicit strategy flag, `-m`/`--merge`, `-r`/`--rebase`, or `-s`/`--squash`, no default.

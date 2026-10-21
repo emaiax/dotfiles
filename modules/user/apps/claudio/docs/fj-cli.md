@@ -24,7 +24,9 @@ Flag and argument quirks for `fj` (forgejo-cli) that its own `--help` text doesn
 - `fj pr merge <ID>`
   - ID positional. Does not delete the source branch by default, pass `-d`/`--delete` for that.
   - `-M`/`--method` picks the merge style (`merge`, `rebase`, `rebase-merge`, `squash`, `manual`).
-- `fj issue create --template <name>`
-  - Matches the template's `name:` field, not its filename. Run `fj issue templates` first to get the exact name.
+- `fj issue create --template <id>`
+  - `<id>` is the left column of `fj issue templates` (the filename without extension, `infra`), not the `name:` field. Seen on dudumox: `--template Feature` failed with `Could not find template`, `--template infra` matched.
+  - A YAML form template makes fj parse `--body-file` as answers to the form fields, so the file must follow the scaffold the template's editor view produces (textareas in `~~~~~ markdown` fences, inputs prefixed `> `, dropdowns as `- [x] Option`). Anything else fails with `unexpected content on line N`. `--template` and `--body` are mutually exclusive. The capture-and-replay procedure for that scaffold is in dudumox `docs/stack/forgejo.md`, section "Issues"; use it, not a free-form body through the API, or the issue lands without the form's Type field and label.
+  - For what `fj` cannot do at all (delete a comment, edit a review), the Forgejo API takes the bot token: `curl -H "Authorization: token $(<~/.config/sops-nix/secrets/claudio-thebot-fj-token)" https://forgejo.emx.casa/api/v1/...`. That file is the source the `claudio-identity-fj` wrapper reads (`profiles/claudio-thebot.nix`), and `$(<file)` keeps the value out of the transcript. Calls made with it act as `claudio-thebot`.
   - Without `--body-file` it opens an interactive editor and hangs in a non-interactive session.
 - `fj actions tasks`: paginated, 20 tasks per page. Pass `-p <N>`/`--page <N>` if the job you're chasing isn't on the first page.
