@@ -1,18 +1,20 @@
 {
   config,
+  host,
   lib,
-  osConfig,
   pkgs,
   ...
 }:
 let
+  user = host.user.username;
+  hm = config.home-manager.users.${user};
   runner = lib.getExe pkgs.forgejo-runner;
 
-  domainFile = config.sops.secrets.homelab-domain.path;
-  secretFile = config.sops.secrets.dudupro-forgejo-runner-secret.path;
+  domainFile = hm.sops.secrets.homelab-domain.path;
+  secretFile = hm.sops.secrets.dudupro-forgejo-runner-secret.path;
 
-  logDir = "${config.home.homeDirectory}/Library/Logs";
-  stateDir = "${config.xdg.stateHome}/forgejo-runner";
+  logDir = "${host.user.homeDirectory}/Library/Logs";
+  stateDir = "${hm.xdg.stateHome}/forgejo-runner";
 
   # Host mode: jobs run straight on the Mac and reuse its nix store, the workspace under work/ is kept as a cache.
   runnerConfig = (pkgs.formats.yaml { }).generate "forgejo-runner.yml" {
@@ -34,22 +36,26 @@ let
       if [[ ! -e .runner ]]; then
         ${runner} create-runner-file --config "${runnerConfig}" \
           --instance "https://forgejo.$(<"${domainFile}")" \
-          --name ${osConfig.networking.hostName} \
+          --name ${host.hostname} \
           --secret "$(<"${secretFile}")"
       fi
       exec ${runner} daemon --config "${runnerConfig}"
     '';
   };
 in
-lib.mkIf (osConfig.networking.hostName == "dudupro") {
-  sops.secrets.dudupro-forgejo-runner-secret = { };
+{
+  home-manager.users.${user}.sops.secrets.dudupro-forgejo-runner-secret = { };
 
-  launchd.agents.forgejo-runner = {
-    enable = true;
-    config = {
-      ProgramArguments = [ (lib.getExe start) ];
-      # launchd agents get a minimal PATH. Jobs need nix, git, the CLT's swift, and node for JS actions like checkout.
-      EnvironmentVariables.PATH = lib.concatStringsSep ":" [
+  # A daemon, not a user agent: macOS local network privacy blocks launchd agents from reaching the LAN forge,
+  # daemons are exempt (https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy).
+  # The sops secrets are decrypted by a user agent at login, until then the start script fails and KeepAlive retries.
+  launchd.daemons.forgejo-runner.command = lib.getExe start;
+  launchd.daemons.forgejo-runner.serviceConfig = {
+    UserName = user;
+    # launchd gives a minimal PATH. Jobs need nix, git, the CLT's swift, and node for JS actions like checkout.
+    EnvironmentVariables = {
+      HOME = host.user.homeDirectory;
+      PATH = lib.concatStringsSep ":" [
         "${pkgs.nodejs_24}/bin"
         "/nix/var/nix/profiles/default/bin"
         "/run/current-system/sw/bin"
@@ -58,10 +64,10 @@ lib.mkIf (osConfig.networking.hostName == "dudupro") {
         "/usr/sbin"
         "/sbin"
       ];
-      RunAtLoad = true;
-      KeepAlive = true;
-      StandardOutPath = "${logDir}/forgejo-runner.log";
-      StandardErrorPath = "${logDir}/forgejo-runner.log";
     };
+    RunAtLoad = true;
+    KeepAlive = true;
+    StandardOutPath = "${logDir}/forgejo-runner.log";
+    StandardErrorPath = "${logDir}/forgejo-runner.log";
   };
 }
