@@ -17,6 +17,12 @@ in
 
       any-nix-shell zsh --info-right | source /dev/stdin
 
+      # ctrl+g opens the current command line in $VISUAL (falls back to $EDITOR), from insert and normal mode
+      autoload -Uz edit-command-line
+      zle -N edit-command-line
+      bindkey -M viins '^G' edit-command-line
+      bindkey -M vicmd '^G' edit-command-line
+
       # decrypted async by a launchd agent, so this may not exist yet on a fresh login
       [[ -r "${config.sops.secrets.homelab-domain.path}" ]] &&
         export HOMELAB_DOMAIN="$(<"${config.sops.secrets.homelab-domain.path}")"

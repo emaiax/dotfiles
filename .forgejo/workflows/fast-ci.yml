@@ -36,5 +36,5 @@ jobs:
       # with no macOS builder involved, since evaluation is architecture-
       # independent — only *building* the closure needs the real system.
       # Genuine build-time failures (bad fetches, hash mismatches) still only
-      # surface on GitHub's macos-15 runner; see build.yml.
+      # surface on the Mac runner; see build.yml.
       - run: ./scripts/nix-locked.sh nix eval .#darwinConfigurations.dudupro.config.system.build.toplevel.drvPath --show-trace

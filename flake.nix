@@ -78,9 +78,6 @@
 
       mkDarwinHost =
         host:
-        {
-          extraModules ? [ ],
-        }:
         nix-darwin.lib.darwinSystem {
           system = host.arch; # uses host's arch (aarch64/x86_64)
 
@@ -107,24 +104,11 @@
             #
             ./nix/hosts/${host.hostname}.nix # host-specific overrides
             ./nix/profiles/${host.user.username}.nix # user-specific overrides
-          ]
-          ++ extraModules;
+          ];
         };
     in
     {
-      darwinConfigurations = builtins.mapAttrs (name: host: mkDarwinHost host { }) inventory.hosts;
-
-      # CI builds the full darwin system closure on an ephemeral macOS runner,
-      # which cannot build nix.linux-builder's aarch64-linux VM image itself
-      # (no way to run Linux binaries on macOS, no remote builder registered)
-      # and has no guarantee that cache.nixos.org already has that VM
-      # substituted for whatever nixpkgs revision the flake currently pins.
-      # This mirrors dudupro with linux-builder disabled so CI still catches
-      # real eval/build regressions without depending on that cache.
-      checks.aarch64-darwin.build-dudupro =
-        (mkDarwinHost inventory.hosts.dudupro {
-          extraModules = [ { nix.linux-builder.enable = nixpkgs.lib.mkForce false; } ];
-        }).config.system.build.toplevel;
+      darwinConfigurations = builtins.mapAttrs (name: host: mkDarwinHost host) inventory.hosts;
 
       formatter = nixpkgs.lib.genAttrs [
         "x86_64-darwin"

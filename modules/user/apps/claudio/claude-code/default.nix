@@ -130,6 +130,7 @@ in
 
       agentPushNotifEnabled = true;
       includeCoAuthoredBy = false;
+      skipWorkflowUsageWarning = true;
 
       # /claude-hud:setup would write this into settings.json, which every switch regenerates from here.
       statusLine = {
