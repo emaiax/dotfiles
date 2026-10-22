@@ -129,3 +129,9 @@ Format, one item per block:
 - Rule missing or unclear: nothing says how to reference forge objects in chat. The shorthand is right inside a Forgejo issue or PR body, where Forgejo resolves it, and wrong in the terminal.
 - Proposed fix (file + diff): `docs/development.md`, Workflow, one line: "In chat, reference issues and PRs by full forge URL (`https://forgejo.emx.casa/<owner>/<repo>/pulls/<n>`), never `owner/repo#N`: the terminal links the shorthand to github.com."
 - Remove or merge instead: none.
+
+## 2026-10-22 Merge-based stack sync broke GitHub's "rebase stack"
+- What happened: a stack of 8 stacked PRs on a work GitHub repo was kept in sync with `merge development` and `merge <parent>`, as `updating-stacked-prs` says. GitHub's "rebase stack" button replays commits one by one and stopped at the first branch with merge commits, twice. The second time, an IDE `git pull` had merged the old history back into a branch that had already been rebased locally. Separately, a `git fetch && git reset --hard` I handed over to run with `!` ran in the wrong worktree because it had no `git -C`, and `gh` reads failed because `GH_TOKEN` pointed at an account with no access to the org.
+- Rule missing or unclear: `updating-stacked-prs` only covers the merge flow and says "never force-push". Nothing says a `!` command needs an explicit worktree. Nothing says `GH_TOKEN` overrides the keyring.
+- Proposed fix (file + diff): `skills/updating-stacked-prs/SKILL.md` gets a "GitHub Stacked PRs" section (linear branches, `--force-with-lease`, no pull, patch comparison, no pinned SHAs), and guardrail 3 scopes "never force-push" to stacks outside it. `docs/development.md` Workflow gets the `git -C` line. `docs/gh-cli.md` gets the `GH_TOKEN` line.
+- Remove or merge instead: none. Each addition is one line or one section, and nothing existing already covers them.

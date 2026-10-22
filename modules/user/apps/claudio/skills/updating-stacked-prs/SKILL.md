@@ -68,8 +68,9 @@ diff.
    - `git push origin <branch>` — if the push is rejected or the remote has
      moved unexpectedly, `git fetch` and `git merge` again (some repos run a
      bot that auto-syncs open PR branches with trunk on its own schedule,
-     creating independent merge commits on the remote); never force-push to
-     resolve this, just merge the divergence like any other
+     creating independent merge commits on the remote); outside GitHub
+     Stacked PRs, never force-push to resolve this, just merge the divergence
+     like any other
    - only now move to the branch that sits on top of this one
 
 4. **Verify every PR's diff after the whole stack is pushed**, not just the
@@ -90,6 +91,16 @@ diff.
    root itself is what's stale. Checking only the branch where the symptom
    surfaced and calling it fixed is the mistake that causes rediscovery of
    the same issue one link further up.
+
+## GitHub Stacked PRs (stack shown in the PR UI)
+
+The merge flow above breaks a stack that GitHub tracks natively: its "rebase stack" button replays commits one by one and stops at the first merge commit in any branch's history. For these stacks, rebase instead of merge, at every hop.
+
+- Keep every branch linear. Move a branch onto its updated parent with `git rebase --onto <new parent> <old parent tip>`, then push with `git push --force-with-lease=<branch>:<old sha> origin <branch>`.
+- Never `git pull` a stack branch. After a UI rebase, run `git fetch origin` and `git reset --hard origin/<branch>` in each worktree. A pull merges the old history back in, the push then goes out as a plain fast-forward, and the next "rebase stack" stops on that branch again.
+- Before each rebase, save the tip as `backup/<branch>-pre-rebase`. After it, compare the branch's own patch, old against new: `diff <(git diff <old parent> <old tip>) <(git diff <new parent> <branch>)`, ignoring `index` and `@@` lines. An empty diff means the rebase lost nothing and invented nothing.
+- A fix made inside a merge resolution disappears on rebase, because the merge commit is never replayed. The patch comparison above is what catches it. Re-add it with `git commit --fixup=<sha>` and `git rebase -i --autosquash`.
+- Don't pin SHAs in notes, plans or PR descriptions. Every UI rebase rewrites all of them. List commit titles and the `git log` command that prints the current SHAs.
 
 ## Worked example
 

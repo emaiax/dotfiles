@@ -3,6 +3,7 @@
 Flag and argument quirks for `gh` (GitHub CLI) that its own `--help` text doesn't warn you about. Read this before any `gh` command in any repo, not just the one where you last used it.
 
 - If the repo defines issue or PR templates, use them, never write a free-form body instead. `gh` has no listing command for either, read `.github/ISSUE_TEMPLATE/` and `.github/PULL_REQUEST_TEMPLATE.md` directly, `gh` only ever looks in `.github/`.
+- `GH_TOKEN` in the environment wins over the keyring account. When `gh` answers `Could not resolve to a Repository`, run `gh auth status` first: the active account may have no access to that org. Ask before switching accounts.
 - Get real help with `gh help <noun> <verb>`, not `<noun> <verb> --help`. Verified this session: `gh pr comment --help`, and bare `gh pr --help`/`gh issue --help`, get intercepted by the `rtk` wrapper: it shows its own generic help, or attempts the real action, instead of gh's help. The `help` subcommand form sidesteps it. `gh pr merge --help` is also blocked outright by the permission layer.
 
 `gh` takes title and body as flags, the opposite of `fj`'s positional arguments (see `fj-cli.md`).
