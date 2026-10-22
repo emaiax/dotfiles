@@ -125,7 +125,7 @@ in
     settings = {
       "$schema" = "https://json.schemastore.org/claude-code-settings.json";
 
-      model = "sonnet";
+      model = "opus";
       theme = "dark";
 
       agentPushNotifEnabled = true;
@@ -173,6 +173,7 @@ in
         "humanizer@humanizer" = true; # rewrites AI-generated text to strip telltale patterns
         "claude-hud@claude-hud" = true; # status line: context usage, tool activity, agent progress
         "superpowers@claude-plugins-official" = true; # superpowers: code analysis, refactoring, and generation
+        "figma@claude-plugins-official" = true; # Figma MCP server and design-to-code skills
       };
 
       # No `permissions` key here on purpose, every profile opts in on its own: docs/sandbox-notes.md's
