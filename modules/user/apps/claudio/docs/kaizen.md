@@ -94,12 +94,6 @@ Format, one item per block:
 - Proposed fix (file + diff): `docs/development.md` Workflow, one line: "On the homelab forge, work starts as a Kaneo ticket, which creates the Forgejo issue; the issue number names the branch and goes in `Closes #N`. No PR without that chain, docs included." Added to anota's AGENTS.md in PR #30.
 - Remove or merge instead: fold into the existing "Worktree + branch before any change" bullet instead of adding a second bullet about the same moment.
 
-## 2026-10-21 Force-pushed a rebased PR branch without asking
-- What happened: PR #1015 merged while PR #1016 was open on dudumox. I rebased `1010-infra-kaneo-agent-key` onto main and ran `git push --force-with-lease` straight away. The rewrite touched only my own three commits, but force-push needs explicit approval and I did not ask.
-- Rule missing or unclear: `docs/development.md` lets me keep pushing to a branch with an open PR without re-asking, and that exception says nothing about force-push. A rebase turns a routine push into a force-push, and the exception read as covering it.
-- Proposed fix (file + diff): `docs/development.md` Workflow, extend the push bullet: "...keep pushing to it without re-asking each time. That never covers a force-push: a rebase that needs one stops for approval first."
-- Remove or merge instead: none, it narrows an existing bullet.
-
 ## 2026-10-21 Built a separate Kaneo identity the operator did not want
 - What happened: #1005, written by an earlier agent session, said Kaneo's writes showing up as the agent was a problem. I built a `kaneo-bot` account for it, applied it live and merged it. The operator wanted the opposite: board writes as `claudio-thebot`. Undoing it took a second token, five re-links and a destroy.
 - Rule missing or unclear: HITL issues get treated as settled requirements even when the agent wrote them. A premise in an agent-authored issue is a proposal, and nothing says to confirm it before building on it.
@@ -129,9 +123,3 @@ Format, one item per block:
 - Rule missing or unclear: nothing says how to reference forge objects in chat. The shorthand is right inside a Forgejo issue or PR body, where Forgejo resolves it, and wrong in the terminal.
 - Proposed fix (file + diff): `docs/development.md`, Workflow, one line: "In chat, reference issues and PRs by full forge URL (`https://forgejo.emx.casa/<owner>/<repo>/pulls/<n>`), never `owner/repo#N`: the terminal links the shorthand to github.com."
 - Remove or merge instead: none.
-
-## 2026-10-22 Merge-based stack sync broke GitHub's "rebase stack"
-- What happened: a stack of 8 stacked PRs on a work GitHub repo was kept in sync with `merge development` and `merge <parent>`, as `updating-stacked-prs` says. GitHub's "rebase stack" button replays commits one by one and stopped at the first branch with merge commits, twice. The second time, an IDE `git pull` had merged the old history back into a branch that had already been rebased locally. Separately, a `git fetch && git reset --hard` I handed over to run with `!` ran in the wrong worktree because it had no `git -C`, and `gh` reads failed because `GH_TOKEN` pointed at an account with no access to the org.
-- Rule missing or unclear: `updating-stacked-prs` only covers the merge flow and says "never force-push". Nothing says a `!` command needs an explicit worktree. Nothing says `GH_TOKEN` overrides the keyring.
-- Proposed fix (file + diff): `skills/updating-stacked-prs/SKILL.md` gets a "GitHub Stacked PRs" section (linear branches, `--force-with-lease`, no pull, patch comparison, no pinned SHAs), and guardrail 3 scopes "never force-push" to stacks outside it. `docs/development.md` Workflow gets the `git -C` line. `docs/gh-cli.md` gets the `GH_TOKEN` line.
-- Remove or merge instead: none. Each addition is one line or one section, and nothing existing already covers them.

@@ -1,6 +1,6 @@
 ---
 name: updating-stacked-prs
-description: Use when syncing a chain of stacked branches/PRs (branch A based on trunk, B based on A, C based on B, ...) with their upstream trunk, after any PR in the chain gets a Copilot-review fix or new commits, or when a PR's GitHub diff shows a file that doesn't belong to it.
+description: Use when syncing a chain of stacked branches/PRs (branch A based on trunk, B based on A, C based on B, ...) with their upstream trunk, after any PR in the chain gets a Copilot-review fix or new commits, when a PR's GitHub diff shows a file that doesn't belong to it, or when GitHub's "rebase stack" button stops on a branch of a native GitHub stack.
 ---
 
 # Updating Stacked PRs
@@ -29,10 +29,13 @@ diff.
 - When a PR's GitHub diff (`gh pr view <n> --json files`) shows a file that
   has nothing to do with the change — this is the direct symptom of a stale
   base somewhere below it in the chain, not a bug in that PR's own commits.
+- When GitHub's "rebase stack" stops on a branch, or a stack shows in the PR UI as a native GitHub stack. Skip the merge-based guardrails below and go straight to "GitHub Stacked PRs".
 - Not for: a single, unstacked branch (there's no chain to walk) or a stack
   you're building for the first time (this is about *maintaining* one).
 
 ## Guardrails
+
+Guardrails 2 and 3 are the merge flow, for stacks GitHub does not track natively. For a native GitHub stack, guardrails 1, 4 and 5 still apply, and "GitHub Stacked PRs" below replaces 2 and 3.
 
 1. **Confirm the real stack order before touching anything.** Don't assume
    from memory or from a note — a base can get retargeted automatically
@@ -68,9 +71,8 @@ diff.
    - `git push origin <branch>` — if the push is rejected or the remote has
      moved unexpectedly, `git fetch` and `git merge` again (some repos run a
      bot that auto-syncs open PR branches with trunk on its own schedule,
-     creating independent merge commits on the remote); outside GitHub
-     Stacked PRs, never force-push to resolve this, just merge the divergence
-     like any other
+     creating independent merge commits on the remote); never force-push to
+     resolve this, just merge the divergence like any other
    - only now move to the branch that sits on top of this one
 
 4. **Verify every PR's diff after the whole stack is pushed**, not just the
@@ -94,12 +96,23 @@ diff.
 
 ## GitHub Stacked PRs (stack shown in the PR UI)
 
-The merge flow above breaks a stack that GitHub tracks natively: its "rebase stack" button replays commits one by one and stops at the first merge commit in any branch's history. For these stacks, rebase instead of merge, at every hop.
+The merge flow above breaks a stack that GitHub tracks natively. Its "rebase stack" button replays commits one by one and stops at the first branch with a merge commit in its history (observed twice on safxgroup/saf in October 2026; unverified against GitHub's docs). Rebase instead of merge, at every hop, and keep every branch linear.
 
-- Keep every branch linear. Move a branch onto its updated parent with `git rebase --onto <new parent> <old parent tip>`, then push with `git push --force-with-lease=<branch>:<old sha> origin <branch>`.
-- Never `git pull` a stack branch. After a UI rebase, run `git fetch origin` and `git reset --hard origin/<branch>` in each worktree. A pull merges the old history back in, the push then goes out as a plain fast-forward, and the next "rebase stack" stops on that branch again.
-- Before each rebase, save the tip as `backup/<branch>-pre-rebase`. After it, compare the branch's own patch, old against new: `diff <(git diff <old parent> <old tip>) <(git diff <new parent> <branch>)`, ignoring `index` and `@@` lines. An empty diff means the rebase lost nothing and invented nothing.
-- A fix made inside a merge resolution disappears on rebase, because the merge commit is never replayed. The patch comparison above is what catches it. Re-add it with `git commit --fixup=<sha>` and `git rebase -i --autosquash`.
+For each branch, from the root to the tip:
+
+1. Check the worktree is clean and has nothing unpushed: `git -C <worktree> status --short` prints nothing, and `git -C <worktree> log --oneline origin/<branch>..<branch>` prints nothing. If either prints something, stop and ask.
+2. Save the tip: `git -C <worktree> branch -f backup/<branch>-pre-rebase <branch>`.
+3. Find the old parent tip, the commit the branch currently sits on. If you moved the parent yourself, it is `backup/<parent>-pre-rebase`. If GitHub's UI moved it, find it in `git -C <worktree> reflog origin/<parent>` (the entry before the latest fetch), or check that `git merge-base <branch> origin/<parent>@{1}` is the parent's old tip.
+4. Rebase: `git -C <worktree> rebase --onto origin/<parent> <old parent tip> <branch>`. For a fixup, use `GIT_SEQUENCE_EDITOR=: git -C <worktree> rebase -i --autosquash origin/<parent>`: the agent shell has no interactive editor.
+5. Compare the commit series: `git -C <worktree> range-diff <old parent tip>..backup/<branch>-pre-rebase origin/<parent>..<branch>`. Every line should be `=`. A `!` line means a commit changed: read it before going on. As a second check, the branch's own patch, old against new, should match: `diff <(git diff <old parent tip> backup/<branch>-pre-rebase | grep -v '^index ' | grep -v '^@@') <(git diff origin/<parent> <branch> | grep -v '^index ' | grep -v '^@@')` prints nothing.
+6. Run the tests and linter for the affected area.
+7. Ask for approval to force-push this branch, naming the branch and the old SHA. An open PR does not cover a force-push.
+8. Push: `git -C <worktree> push --force-with-lease=<branch>:<old sha> origin <branch>`. Only then move to the branch on top.
+
+Rules that hold the whole time:
+
+- Never `git pull` a stack branch. After a UI rebase, run steps 1 and 2, then `git -C <worktree> fetch origin` and `git -C <worktree> reset --hard origin/<branch>`, and ask before the reset. An IDE pull (`pull --ff`, whatever `pull.rebase` says) merges the old history back in. The push then goes out as a plain fast-forward, and the next "rebase stack" stops on that branch again.
+- A fix made inside a merge resolution disappears on rebase, because the merge commit is never replayed. Step 5 is what catches it. Re-add it with `git commit --fixup=<sha>` and the autosquash form in step 4.
 - Don't pin SHAs in notes, plans or PR descriptions. Every UI rebase rewrites all of them. List commit titles and the `git log` command that prints the current SHAs.
 
 ## Worked example
