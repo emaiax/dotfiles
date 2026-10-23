@@ -19,8 +19,35 @@ let
   opencodeSettingsJson = (pkgs.formats.json { }).generate "opencode-settings.json" (
     config.programs.opencode.settings
   );
+
+  # Secrets reach opencode as env vars set only on its own process, so they never land in settings.json or the shell.
+  # opencode.json reads them back with {env:VAR}. https://opencode.ai/docs/config/#env-vars
+  secretEnv = {
+    ASANA_CLIENT_ID = config.sops.secrets.asana-client-id.path;
+    ASANA_CLIENT_SECRET = config.sops.secrets.asana-client-secret.path;
+  };
+
+  opencodeWithSecrets = pkgs.symlinkJoin {
+    inherit (pkgs.opencode) meta;
+    name = "${lib.getName pkgs.opencode}-with-secrets-${lib.getVersion pkgs.opencode}";
+    paths = [ pkgs.opencode ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    # sops-nix decrypts async at login, so a missing file leaves the var unset instead of failing the launch.
+    postBuild = ''
+      wrapProgram $out/bin/opencode ${
+        lib.concatMapAttrsStringSep " " (
+          name: path: "--run ${lib.escapeShellArg ''[[ -r "${path}" ]] && export ${name}="$(<"${path}")"''}"
+        ) secretEnv
+      }
+    '';
+  };
 in
 {
+  sops.secrets = {
+    asana-client-id = { };
+    asana-client-secret = { };
+  };
+
   # Same rule as claude-code/default.nix: nix always wins, a differing existing file is backed up to .bak first.
   home.activation.opencodeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     existing="${claudioPath}/opencode/settings.json"
@@ -55,6 +82,7 @@ in
 
   programs.opencode = {
     enable = true;
+    package = opencodeWithSecrets;
 
     # A separate option, not a settings.json key: the upstream module writes this to its own tui.json instead.
     tui.theme = "system"; # respect the system appearance setting on macOS.
@@ -68,6 +96,17 @@ in
       shell = "zsh"; # match the shell configured in this repo
       snapshot = true; # per-turn undo of file edits (opencode default; explicit for clarity).
       compaction.auto = true;
+
+      mcp.asana = {
+        type = "remote";
+        url = "https://mcp.asana.com/v2/mcp";
+        enabled = true;
+        oauth = {
+          clientId = "{env:ASANA_CLIENT_ID}";
+          clientSecret = "{env:ASANA_CLIENT_SECRET}";
+          redirectUri = "http://127.0.0.1:19876/mcp/oauth/callback";
+        };
+      };
 
       # Plugins loaded at startup. superpowers: brainstorming, planning, and execution workflow skills.
       # supermemory: persistent cross-session memory (requires `bunx opencode-supermemory@latest login`).
