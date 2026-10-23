@@ -56,6 +56,27 @@ flush-mdns-responder:
 	sudo killall -HUP mDNSResponder
 	echo "flushed"
 
+# load a project's flake devShell on cd, safe to rerun (just -f ~/code/dotfiles/justfile direnv-flake)
+[no-cd]
+direnv-flake dir=".":
+	#!/usr/bin/env bash
+	set -euo pipefail
+	cd {{quote(dir)}}
+	if [ ! -f flake.nix ]; then
+		echo "no flake.nix in $PWD" >&2
+		exit 1
+	fi
+	if [ ! -e .envrc ]; then
+		echo "use flake" > .envrc
+		echo "created .envrc"
+	elif ! grep -qxE '[[:space:]]*use flake([[:space:]].*)?' .envrc; then
+		# an existing .envrc is the project's, never rewrite it or trust it blindly
+		echo ".envrc exists without 'use flake', left untouched. Add it yourself, then run 'direnv allow'" >&2
+		exit 1
+	fi
+	direnv allow .
+	echo "direnv allowed $PWD"
+
 # start a nix repl with the nixpkgs flake
 repl:
 	@nix repl -f '<nixpkgs>'
