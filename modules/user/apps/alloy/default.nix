@@ -1,5 +1,6 @@
 {
   config,
+  inputs,
   lib,
   osConfig,
   pkgs,
@@ -13,6 +14,13 @@ let
 
   logDir = "${config.home.homeDirectory}/Library/Logs";
   stateDir = "${config.xdg.dataHome}/alloy";
+  textfileDir = "${config.xdg.stateHome}/alloy-textfile";
+
+  metricsScript = pkgs.writeShellApplication {
+    name = "alloy-mac-metrics";
+    runtimeInputs = [ pkgs.jq ];
+    text = builtins.readFile ./metrics.sh;
+  };
 
   # SopsNix/stdout is not shipped: sops-nix prints a generated age private key there.
   # max_backoff_retries keeps logs queued in memory while offline, the default drops them after about 6 minutes.
@@ -23,6 +31,10 @@ let
 
     prometheus.exporter.unix "mac" {
       disable_collectors = ["thermal"]
+
+      textfile {
+        directory = "${textfileDir}"
+      }
     }
 
     discovery.relabel "mac" {
@@ -52,6 +64,7 @@ let
       path_targets = [
         { __path__ = "${logDir}/SopsNix/stderr", job = "sops-nix" },
         { __path__ = "${logDir}/alloy.log", job = "alloy" },
+        { __path__ = "${logDir}/alloy-mac-metrics.log", job = "alloy-mac-metrics" },
         { __path__ = "${logDir}/forgejo-runner.log", job = "forgejo-runner" },
       ]
     }
@@ -91,6 +104,31 @@ in
       KeepAlive = true;
       StandardOutPath = "${logDir}/alloy.log";
       StandardErrorPath = "${logDir}/alloy.log";
+    };
+  };
+
+  # Hourly: the slowest parts are nix-store --print-dead (about 11s) and softwareupdate (about 6s, needs network).
+  launchd.agents.alloy-mac-metrics = {
+    enable = true;
+    config = {
+      ProgramArguments = [ (lib.getExe metricsScript) ];
+      EnvironmentVariables = {
+        TEXTFILE_DIR = textfileDir;
+        NIXPKGS_LAST_MODIFIED = toString inputs.nixpkgs.lastModified;
+        PATH = lib.concatStringsSep ":" [
+          "/run/current-system/sw/bin"
+          "/nix/var/nix/profiles/default/bin"
+          "/opt/homebrew/bin"
+          "/usr/bin"
+          "/bin"
+          "/usr/sbin"
+          "/sbin"
+        ];
+      };
+      RunAtLoad = true;
+      StartInterval = 3600;
+      StandardOutPath = "${logDir}/alloy-mac-metrics.log";
+      StandardErrorPath = "${logDir}/alloy-mac-metrics.log";
     };
   };
 }
